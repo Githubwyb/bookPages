@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>首页 on 技术的路上奔跑</title>
+    <link>/</link>
+    <description>Recent content in 首页 on 技术的路上奔跑</description>
+    <generator>Hugo -- gohugo.io</generator><atom:link href="/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title></title>
+      <link>/docs/linux-kernel/net/socket/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux-kernel/net/socket/</guid>
+      <description>一、socket相关系统调用 #  1SYSCALL_DEFINE3(socket, int, family, int, type, int, protocol); 2SYSCALL_DEFINE4(socketpair, int, family, int, type, int, protocol, int __user *, usockvec); 3SYSCALL_DEFINE3(bind, int, fd, struct sockaddr __user *, umyaddr, int, addrlen); 4SYSCALL_DEFINE2(listen, int, fd, int, backlog); 5SYSCALL_DEFINE4(accept4, int, fd, struct sockaddr __user *, upeer_sockaddr, int __user *, upeer_addrlen, int, flags); 6SYSCALL_DEFINE3(accept, int, fd, struct sockaddr __user *, upeer_sockaddr, int __user *, upeer_addrlen); 7SYSCALL_DEFINE3(connect, int, fd, struct sockaddr __user *, uservaddr, int, addrlen); 8SYSCALL_DEFINE3(getsockname, int, fd, struct sockaddr __user *, usockaddr, int __user *, usockaddr_len); 9SYSCALL_DEFINE3(getpeername, int, fd, struct sockaddr __user *, usockaddr, int __user *, usockaddr_len); 10SYSCALL_DEFINE6(sendto, int, fd, void __user *, buff, size_t, len, unsigned int, flags, struct sockaddr __user *, addr, int, addr_len); 11SYSCALL_DEFINE4(send, int, fd, void __user *, buff, size_t, len, unsigned int, flags); 12SYSCALL_DEFINE6(recvfrom, int, fd, void __user *, ubuf, size_t, size, unsigned int, flags, struct sockaddr __user *, addr, int __user *, addr_len); 13SYSCALL_DEFINE4(recv, int, fd, void __user *, ubuf, size_t, size, unsigned int, flags); 14SYSCALL_DEFINE5(setsockopt, int, fd, int, level, int, optname, char __user *, optval, int, optlen); 15SYSCALL_DEFINE5(getsockopt, int, fd, int, level, int, optname, char __user *, optval, int __user *, optlen); 16SYSCALL_DEFINE2(shutdown, int, fd, int, how); 17SYSCALL_DEFINE3(sendmsg, int, fd, struct user_msghdr __user *, msg, unsigned int, flags); 18SYSCALL_DEFINE4(sendmmsg, int, fd, struct mmsghdr __user *, mmsg, unsigned int, vlen, unsigned int, flags); 19SYSCALL_DEFINE3(recvmsg, int, fd, struct user_msghdr __user *, msg, unsigned int, flags); 20SYSCALL_DEFINE5(recvmmsg, int, fd, struct mmsghdr __user *, mmsg, unsigned int, vlen, unsigned int, flags, struct __kernel_timespec __user *, timeout); 21SYSCALL_DEFINE5(recvmmsg_time32, int, fd, struct mmsghdr __user *, mmsg, unsigned int, vlen, unsigned int, flags, struct old_timespec32 __user *, timeout); 22SYSCALL_DEFINE2(socketcall, int, call, unsigned long __user *, args); 二、socket创建过程 #   socket创建需要使用family、type和protocol 在底层socket可以说相当于一个基类，将底层不同类型封装成统一的接口  @startuml class net_families { net_proto_family[NPROTO] } class net_proto_family { int	family; int	(*create)(struct net *net, struct socket *sock, int protocol, int kern); struct module	*owner; } class socket() {} class inet_init() {} class inet6_init() {} class af_unix_init() {} &amp;quot;inet_init()&amp;quot; -up-&amp;gt; net_families : sock_register注册AF_INET &amp;quot;inet6_init()&amp;quot; -up-&amp;gt; net_families : sock_register注册AF_INET6 &amp;quot;af_unix_init()&amp;quot; -up-&amp;gt; net_families : sock_register注册AF_UNIX &amp;quot;socket()&amp;quot; -down-&amp;gt; net_proto_family : 调用create &amp;quot;socket()&amp;quot; -down-&amp;gt; net_families : 根据不同的family获取对应的net_proto_family net_proto_family &amp;lt;-left- net_families @enduml 1.</description>
+    </item>
+    
+    <item>
+      <title>container_of() 根据成员地址找其所在结构体</title>
+      <link>/docs/linux-kernel/data-structures/container_of/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux-kernel/data-structures/container_of/</guid>
+      <description>一、源码 #  1// include/linux/kernel.h 2 3/** 4* container_of - cast a member of a structure out to the containing structure 5* @ptr:	the pointer to the member. 6* @type:	the type of the container struct this is embedded in. 7* @member:	the name of the member within the struct. 8* 9*/ 10#define container_of(ptr, type, member) ({	\ 11void *__mptr = (void *)(ptr);	\ 12BUILD_BUG_ON_MSG(!__same_type(*(ptr), ((type *)0)-&amp;gt;member) &amp;amp;&amp;amp;	\ 13!__same_type(*(ptr), void),	\ 14&amp;#34;pointer type mismatch in container_of()&amp;#34;);	\ 15((type *)(__mptr - offsetof(type, member))); }) 二、分析 #   这个东西看了好久才看懂，不过真的很强大 考虑一个场景，我们定义树需要怎么写，类似下面这样  1struct treeNode { 2 treeNode *left; 3 treeNode *right; 4 void *value; 5};  这时发现这个value每次都要定义，并且每个treeNode都需要新建地址 linux的这群大佬就开始搞事情，如果treeNode的地址和value的地址结合一下，不用每次创建两个地址，一个地址搞定 这时候就出现一种定义方式  1struct treeNode { 2 treeNode *left; 3 treeNode *right; 4}; 5 6struct valueTemplate { 7 treeNode node; 8 int value; 9}  这样写，对树操作时不用关心value是啥，只需要关心自己的数据结构实现就好了 但是怎么找到value呢，container_of就出现了  1#define container_of(ptr, type, member) \ 2(type *)((char *)(ptr) - (char *) &amp;amp;((type *)0)-&amp;gt;member) 3 4// 示例用法 5void func(treeNode *node) { 6 valueTemplate *value = container_of(node, struct valueTemplate, node) 7}  展开一下  1valueTemplate *value = (valueTemplate *)((char *)node - (char *)&amp;amp;((valueTemplate *)0)-&amp;gt;node)  加地址是向后偏移，减地址是向前偏移，所以这句话意思是通过成员变量找到结构体指针 使用0地址的成员变量的地址偏移来计算结构体指针到成员变量的偏移量，然后用成员变量地址向前偏移去查找value 这个想法是真的强大  </description>
+    </item>
+    
+    <item>
+      <title></title>
+      <link>/docs/linux-kernel/net/epoll/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux-kernel/net/epoll/</guid>
+      <description> 参考 从linux5.9看网络层的设计  1.1. epoll #   epoll对于fd的储存使用的是红黑树 使用链表保存处于就绪状态的fd  1) 接口定义 #  1// fs/eventpoll.c 2SYSCALL_DEFINE1(epoll_create, int, size) 3{ 4	if (size &amp;lt;= 0) 5	return -EINVAL; 6 7	return do_epoll_create(0); 8} 9 10/* 11* The following function implements the controller interface for 12* the eventpoll file that enables the insertion/removal/change of 13* file descriptors inside the interest set. 14*/ 15SYSCALL_DEFINE4(epoll_ctl, int, epfd, int, op, int, fd, 16	struct epoll_event __user *, event) 17{ 18	struct epoll_event epds; 19 20	if (ep_op_has_event(op) &amp;amp;&amp;amp; 21	copy_from_user(&amp;amp;epds, event, sizeof(struct epoll_event))) 22	return -EFAULT; 23 24	return do_epoll_ctl(epfd, op, fd, &amp;amp;epds, false); 25} 26 27SYSCALL_DEFINE4(epoll_wait, int, epfd, struct epoll_event __user *, events, 28	int, maxevents, int, timeout) 29{ 30	struct timespec64 to; 31 32	return do_epoll_wait(epfd, events, maxevents, 33	ep_timeout_to_timespec(&amp;amp;to, timeout)); 34} 2) 数据结构 #  1 </description>
+    </item>
+    
+    <item>
+      <title>Creating a New Theme</title>
+      <link>/posts/creating-a-new-theme/</link>
+      <pubDate>Sun, 28 Sep 2014 00:00:00 +0000</pubDate>
+      
+      <guid>/posts/creating-a-new-theme/</guid>
+      <description>Introduction #  This tutorial will show you how to create a simple theme in Hugo. I assume that you are familiar with HTML, the bash command line, and that you are comfortable using Markdown to format content. I&amp;rsquo;ll explain how Hugo uses templates and how you can organize your templates to create a theme. I won&amp;rsquo;t cover using CSS to style your theme.
+We&amp;rsquo;ll start with creating a new site with a very basic template.</description>
+    </item>
+    
+    <item>
+      <title>Migrate to Hugo from Jekyll</title>
+      <link>/posts/migrate-from-jekyll/</link>
+      <pubDate>Mon, 10 Mar 2014 00:00:00 +0000</pubDate>
+      
+      <guid>/posts/migrate-from-jekyll/</guid>
+      <description>Move static content to static #  Jekyll has a rule that any directory not starting with _ will be copied as-is to the _site output. Hugo keeps all static content under static. You should therefore move it all there. With Jekyll, something that looked like
+▾ &amp;lt;root&amp;gt;/ ▾ images/ logo.png  should become
+▾ &amp;lt;root&amp;gt;/ ▾ static/ ▾ images/ logo.png  Additionally, you&amp;rsquo;ll want any files that should reside at the root (such as CNAME) to be moved to static.</description>
+    </item>
+    
+    <item>
+      <title></title>
+      <link>/docs/linux-kernel/net/ipv4/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux-kernel/net/ipv4/</guid>
+      <description>一、ipv4收包后如何处理 #  1. ip层包入口 #  1// net/ipv4/ip_input.c 2/* 3* Deliver IP Packets to the higher protocol layers. 4*/ 5int ip_local_deliver(struct sk_buff *skb) { 6	/* 7*	Reassemble IP fragments. 8*/ 9	struct net *net = dev_net(skb-&amp;gt;dev); 10 11 // 判断是否为分片包，分片包就先处理分片 12	if (ip_is_fragment(ip_hdr(skb))) { 13	if (ip_defrag(net, skb, IP_DEFRAG_LOCAL_DELIVER)) 14	return 0; 15	} 16 17 // 分片处理完毕调用ip_local_deliver_finish() 18	return NF_HOOK(NFPROTO_IPV4, NF_INET_LOCAL_IN, 19	net, NULL, skb, skb-&amp;gt;dev, NULL, 20	ip_local_deliver_finish); 21}  根据ip包内的协议处理具体的协议  1// net/ipv4/ip_input.</description>
+    </item>
+    
+    <item>
+      <title>(Hu)go Template Primer</title>
+      <link>/posts/goisforlovers/</link>
+      <pubDate>Wed, 02 Apr 2014 00:00:00 +0000</pubDate>
+      
+      <guid>/posts/goisforlovers/</guid>
+      <description>Hugo uses the excellent Go html/template library for its template engine. It is an extremely lightweight engine that provides a very small amount of logic. In our experience that it is just the right amount of logic to be able to create a good static website. If you have used other template systems from different languages or frameworks you will find a lot of similarities in Go templates.
+This document is a brief primer on using Go templates.</description>
+    </item>
+    
+    <item>
+      <title>Getting Started with Hugo</title>
+      <link>/posts/hugoisforlovers/</link>
+      <pubDate>Wed, 02 Apr 2014 00:00:00 +0000</pubDate>
+      
+      <guid>/posts/hugoisforlovers/</guid>
+      <description>Step 1. Install Hugo #  Go to Hugo releases and download the appropriate version for your OS and architecture.
+Save it somewhere specific as we will be using it in the next step.
+More complete instructions are available at Install Hugo
+Step 2. Build the Docs #  Hugo has its own example site which happens to also be the documentation site you are reading right now.
+Follow the following steps:</description>
+    </item>
+    
+    <item>
+      <title></title>
+      <link>/docs/leetcode/hidden/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/leetcode/hidden/</guid>
+      <description>This page is hidden in menu #  Quondam non pater est dignior ille Eurotas #  Latent te facies #  Lorem markdownum arma ignoscas vocavit quoque ille texit mandata mentis ultimus, frementes, qui in vel. Hippotades Peleus pennas conscia cuiquam Caeneus quas.
+ Pater demittere evincitque reddunt Maxime adhuc pressit huc Danaas quid freta Soror ego Luctus linguam saxa ultroque prior Tatiumque inquit Saepe liquitur subita superata dederat Anius sudor  Cum honorum Latona #  O fallor in sustinui iussorum equidem.</description>
+    </item>
+    
+    <item>
+      <title>rbtree 红黑树</title>
+      <link>/docs/linux-kernel/data-structures/rbtree/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux-kernel/data-structures/rbtree/</guid>
+      <description>1// include/linux/rbtree.h 2struct rb_node { 3	unsigned long __rb_parent_color; 4	struct rb_node *rb_right; 5	struct rb_node *rb_left; 6} __attribute__((aligned(sizeof(long))));  先参考 地址对齐 了解为什么可以使用__rb_parent_color的低两位作为颜色  </description>
+    </item>
+    
+    <item>
+      <title>RCU Read-Copy-Update</title>
+      <link>/docs/linux-kernel/data-structures/rcu/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux-kernel/data-structures/rcu/</guid>
+      <description>1. 原理 #   对一块数据要写入时，先拷贝一份，更新数据完成后，再更新到原数据结构 保证要么读取老数据，要么读取新数据，不会出现读取一半的情况  2. 关键思想 #   复制后更新数据 延迟回收内存，当没有老数据结构引用的读者时，才回收内存  </description>
+    </item>
+    
+  </channel>
+</rss>

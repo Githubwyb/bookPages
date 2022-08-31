@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>/net 网络部分 on 技术的路上奔跑</title>
+    <link>/docs/linux-kernel/net/</link>
+    <description>Recent content in /net 网络部分 on 技术的路上奔跑</description>
+    <generator>Hugo -- gohugo.io</generator><atom:link href="/docs/linux-kernel/net/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title></title>
+      <link>/docs/linux-kernel/net/socket/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux-kernel/net/socket/</guid>
+      <description>一、socket相关系统调用 #  1SYSCALL_DEFINE3(socket, int, family, int, type, int, protocol); 2SYSCALL_DEFINE4(socketpair, int, family, int, type, int, protocol, int __user *, usockvec); 3SYSCALL_DEFINE3(bind, int, fd, struct sockaddr __user *, umyaddr, int, addrlen); 4SYSCALL_DEFINE2(listen, int, fd, int, backlog); 5SYSCALL_DEFINE4(accept4, int, fd, struct sockaddr __user *, upeer_sockaddr, int __user *, upeer_addrlen, int, flags); 6SYSCALL_DEFINE3(accept, int, fd, struct sockaddr __user *, upeer_sockaddr, int __user *, upeer_addrlen); 7SYSCALL_DEFINE3(connect, int, fd, struct sockaddr __user *, uservaddr, int, addrlen); 8SYSCALL_DEFINE3(getsockname, int, fd, struct sockaddr __user *, usockaddr, int __user *, usockaddr_len); 9SYSCALL_DEFINE3(getpeername, int, fd, struct sockaddr __user *, usockaddr, int __user *, usockaddr_len); 10SYSCALL_DEFINE6(sendto, int, fd, void __user *, buff, size_t, len, unsigned int, flags, struct sockaddr __user *, addr, int, addr_len); 11SYSCALL_DEFINE4(send, int, fd, void __user *, buff, size_t, len, unsigned int, flags); 12SYSCALL_DEFINE6(recvfrom, int, fd, void __user *, ubuf, size_t, size, unsigned int, flags, struct sockaddr __user *, addr, int __user *, addr_len); 13SYSCALL_DEFINE4(recv, int, fd, void __user *, ubuf, size_t, size, unsigned int, flags); 14SYSCALL_DEFINE5(setsockopt, int, fd, int, level, int, optname, char __user *, optval, int, optlen); 15SYSCALL_DEFINE5(getsockopt, int, fd, int, level, int, optname, char __user *, optval, int __user *, optlen); 16SYSCALL_DEFINE2(shutdown, int, fd, int, how); 17SYSCALL_DEFINE3(sendmsg, int, fd, struct user_msghdr __user *, msg, unsigned int, flags); 18SYSCALL_DEFINE4(sendmmsg, int, fd, struct mmsghdr __user *, mmsg, unsigned int, vlen, unsigned int, flags); 19SYSCALL_DEFINE3(recvmsg, int, fd, struct user_msghdr __user *, msg, unsigned int, flags); 20SYSCALL_DEFINE5(recvmmsg, int, fd, struct mmsghdr __user *, mmsg, unsigned int, vlen, unsigned int, flags, struct __kernel_timespec __user *, timeout); 21SYSCALL_DEFINE5(recvmmsg_time32, int, fd, struct mmsghdr __user *, mmsg, unsigned int, vlen, unsigned int, flags, struct old_timespec32 __user *, timeout); 22SYSCALL_DEFINE2(socketcall, int, call, unsigned long __user *, args); 二、socket创建过程 #   socket创建需要使用family、type和protocol 在底层socket可以说相当于一个基类，将底层不同类型封装成统一的接口  @startuml class net_families { net_proto_family[NPROTO] } class net_proto_family { int	family; int	(*create)(struct net *net, struct socket *sock, int protocol, int kern); struct module	*owner; } class socket() {} class inet_init() {} class inet6_init() {} class af_unix_init() {} &amp;quot;inet_init()&amp;quot; -up-&amp;gt; net_families : sock_register注册AF_INET &amp;quot;inet6_init()&amp;quot; -up-&amp;gt; net_families : sock_register注册AF_INET6 &amp;quot;af_unix_init()&amp;quot; -up-&amp;gt; net_families : sock_register注册AF_UNIX &amp;quot;socket()&amp;quot; -down-&amp;gt; net_proto_family : 调用create &amp;quot;socket()&amp;quot; -down-&amp;gt; net_families : 根据不同的family获取对应的net_proto_family net_proto_family &amp;lt;-left- net_families @enduml 1.</description>
+    </item>
+    
+    <item>
+      <title></title>
+      <link>/docs/linux-kernel/net/epoll/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux-kernel/net/epoll/</guid>
+      <description> 参考 从linux5.9看网络层的设计  1.1. epoll #   epoll对于fd的储存使用的是红黑树 使用链表保存处于就绪状态的fd  1) 接口定义 #  1// fs/eventpoll.c 2SYSCALL_DEFINE1(epoll_create, int, size) 3{ 4	if (size &amp;lt;= 0) 5	return -EINVAL; 6 7	return do_epoll_create(0); 8} 9 10/* 11* The following function implements the controller interface for 12* the eventpoll file that enables the insertion/removal/change of 13* file descriptors inside the interest set. 14*/ 15SYSCALL_DEFINE4(epoll_ctl, int, epfd, int, op, int, fd, 16	struct epoll_event __user *, event) 17{ 18	struct epoll_event epds; 19 20	if (ep_op_has_event(op) &amp;amp;&amp;amp; 21	copy_from_user(&amp;amp;epds, event, sizeof(struct epoll_event))) 22	return -EFAULT; 23 24	return do_epoll_ctl(epfd, op, fd, &amp;amp;epds, false); 25} 26 27SYSCALL_DEFINE4(epoll_wait, int, epfd, struct epoll_event __user *, events, 28	int, maxevents, int, timeout) 29{ 30	struct timespec64 to; 31 32	return do_epoll_wait(epfd, events, maxevents, 33	ep_timeout_to_timespec(&amp;amp;to, timeout)); 34} 2) 数据结构 #  1 </description>
+    </item>
+    
+    <item>
+      <title></title>
+      <link>/docs/linux-kernel/net/ipv4/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux-kernel/net/ipv4/</guid>
+      <description>一、ipv4收包后如何处理 #  1. ip层包入口 #  1// net/ipv4/ip_input.c 2/* 3* Deliver IP Packets to the higher protocol layers. 4*/ 5int ip_local_deliver(struct sk_buff *skb) { 6	/* 7*	Reassemble IP fragments. 8*/ 9	struct net *net = dev_net(skb-&amp;gt;dev); 10 11 // 判断是否为分片包，分片包就先处理分片 12	if (ip_is_fragment(ip_hdr(skb))) { 13	if (ip_defrag(net, skb, IP_DEFRAG_LOCAL_DELIVER)) 14	return 0; 15	} 16 17 // 分片处理完毕调用ip_local_deliver_finish() 18	return NF_HOOK(NFPROTO_IPV4, NF_INET_LOCAL_IN, 19	net, NULL, skb, skb-&amp;gt;dev, NULL, 20	ip_local_deliver_finish); 21}  根据ip包内的协议处理具体的协议  1// net/ipv4/ip_input.</description>
+    </item>
+    
+  </channel>
+</rss>

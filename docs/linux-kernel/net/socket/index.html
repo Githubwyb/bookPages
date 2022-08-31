@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="一、socket相关系统调用 #  1SYSCALL_DEFINE3(socket, int, family, int, type, int, protocol); 2SYSCALL_DEFINE4(socketpair, int, family, int, type, int, protocol, int __user *, usockvec); 3SYSCALL_DEFINE3(bind, int, fd, struct sockaddr __user *, umyaddr, int, addrlen); 4SYSCALL_DEFINE2(listen, int, fd, int, backlog); 5SYSCALL_DEFINE4(accept4, int, fd, struct sockaddr __user *, upeer_sockaddr, int __user *, upeer_addrlen, int, flags); 6SYSCALL_DEFINE3(accept, int, fd, struct sockaddr __user *, upeer_sockaddr, int __user *, upeer_addrlen); 7SYSCALL_DEFINE3(connect, int, fd, struct sockaddr __user *, uservaddr, int, addrlen); 8SYSCALL_DEFINE3(getsockname, int, fd, struct sockaddr __user *, usockaddr, int __user *, usockaddr_len); 9SYSCALL_DEFINE3(getpeername, int, fd, struct sockaddr __user *, usockaddr, int __user *, usockaddr_len); 10SYSCALL_DEFINE6(sendto, int, fd, void __user *, buff, size_t, len, unsigned int, flags, struct sockaddr __user *, addr, int, addr_len); 11SYSCALL_DEFINE4(send, int, fd, void __user *, buff, size_t, len, unsigned int, flags); 12SYSCALL_DEFINE6(recvfrom, int, fd, void __user *, ubuf, size_t, size, unsigned int, flags, struct sockaddr __user *, addr, int __user *, addr_len); 13SYSCALL_DEFINE4(recv, int, fd, void __user *, ubuf, size_t, size, unsigned int, flags); 14SYSCALL_DEFINE5(setsockopt, int, fd, int, level, int, optname, char __user *, optval, int, optlen); 15SYSCALL_DEFINE5(getsockopt, int, fd, int, level, int, optname, char __user *, optval, int __user *, optlen); 16SYSCALL_DEFINE2(shutdown, int, fd, int, how); 17SYSCALL_DEFINE3(sendmsg, int, fd, struct user_msghdr __user *, msg, unsigned int, flags); 18SYSCALL_DEFINE4(sendmmsg, int, fd, struct mmsghdr __user *, mmsg, unsigned int, vlen, unsigned int, flags); 19SYSCALL_DEFINE3(recvmsg, int, fd, struct user_msghdr __user *, msg, unsigned int, flags); 20SYSCALL_DEFINE5(recvmmsg, int, fd, struct mmsghdr __user *, mmsg, unsigned int, vlen, unsigned int, flags, struct __kernel_timespec __user *, timeout); 21SYSCALL_DEFINE5(recvmmsg_time32, int, fd, struct mmsghdr __user *, mmsg, unsigned int, vlen, unsigned int, flags, struct old_timespec32 __user *, timeout); 22SYSCALL_DEFINE2(socketcall, int, call, unsigned long __user *, args); 二、socket创建过程 #   socket创建需要使用family、type和protocol 在底层socket可以说相当于一个基类，将底层不同类型封装成统一的接口  @startuml class net_families { net_proto_family[NPROTO] } class net_proto_family { int	family; int	(*create)(struct net *net, struct socket *sock, int protocol, int kern); struct module	*owner; } class socket() {} class inet_init() {} class inet6_init() {} class af_unix_init() {} &quot;inet_init()&quot; -up-&gt; net_families : sock_register注册AF_INET &quot;inet6_init()&quot; -up-&gt; net_families : sock_register注册AF_INET6 &quot;af_unix_init()&quot; -up-&gt; net_families : sock_register注册AF_UNIX &quot;socket()&quot; -down-&gt; net_proto_family : 调用create &quot;socket()&quot; -down-&gt; net_families : 根据不同的family获取对应的net_proto_family net_proto_family &lt;-left- net_families @enduml 1.">
+<meta name="theme-color" content="#FFFFFF"><meta property="og:title" content="" />
+<meta property="og:description" content="一、socket相关系统调用 #  1SYSCALL_DEFINE3(socket, int, family, int, type, int, protocol); 2SYSCALL_DEFINE4(socketpair, int, family, int, type, int, protocol, int __user *, usockvec); 3SYSCALL_DEFINE3(bind, int, fd, struct sockaddr __user *, umyaddr, int, addrlen); 4SYSCALL_DEFINE2(listen, int, fd, int, backlog); 5SYSCALL_DEFINE4(accept4, int, fd, struct sockaddr __user *, upeer_sockaddr, int __user *, upeer_addrlen, int, flags); 6SYSCALL_DEFINE3(accept, int, fd, struct sockaddr __user *, upeer_sockaddr, int __user *, upeer_addrlen); 7SYSCALL_DEFINE3(connect, int, fd, struct sockaddr __user *, uservaddr, int, addrlen); 8SYSCALL_DEFINE3(getsockname, int, fd, struct sockaddr __user *, usockaddr, int __user *, usockaddr_len); 9SYSCALL_DEFINE3(getpeername, int, fd, struct sockaddr __user *, usockaddr, int __user *, usockaddr_len); 10SYSCALL_DEFINE6(sendto, int, fd, void __user *, buff, size_t, len, unsigned int, flags, struct sockaddr __user *, addr, int, addr_len); 11SYSCALL_DEFINE4(send, int, fd, void __user *, buff, size_t, len, unsigned int, flags); 12SYSCALL_DEFINE6(recvfrom, int, fd, void __user *, ubuf, size_t, size, unsigned int, flags, struct sockaddr __user *, addr, int __user *, addr_len); 13SYSCALL_DEFINE4(recv, int, fd, void __user *, ubuf, size_t, size, unsigned int, flags); 14SYSCALL_DEFINE5(setsockopt, int, fd, int, level, int, optname, char __user *, optval, int, optlen); 15SYSCALL_DEFINE5(getsockopt, int, fd, int, level, int, optname, char __user *, optval, int __user *, optlen); 16SYSCALL_DEFINE2(shutdown, int, fd, int, how); 17SYSCALL_DEFINE3(sendmsg, int, fd, struct user_msghdr __user *, msg, unsigned int, flags); 18SYSCALL_DEFINE4(sendmmsg, int, fd, struct mmsghdr __user *, mmsg, unsigned int, vlen, unsigned int, flags); 19SYSCALL_DEFINE3(recvmsg, int, fd, struct user_msghdr __user *, msg, unsigned int, flags); 20SYSCALL_DEFINE5(recvmmsg, int, fd, struct mmsghdr __user *, mmsg, unsigned int, vlen, unsigned int, flags, struct __kernel_timespec __user *, timeout); 21SYSCALL_DEFINE5(recvmmsg_time32, int, fd, struct mmsghdr __user *, mmsg, unsigned int, vlen, unsigned int, flags, struct old_timespec32 __user *, timeout); 22SYSCALL_DEFINE2(socketcall, int, call, unsigned long __user *, args); 二、socket创建过程 #   socket创建需要使用family、type和protocol 在底层socket可以说相当于一个基类，将底层不同类型封装成统一的接口  @startuml class net_families { net_proto_family[NPROTO] } class net_proto_family { int	family; int	(*create)(struct net *net, struct socket *sock, int protocol, int kern); struct module	*owner; } class socket() {} class inet_init() {} class inet6_init() {} class af_unix_init() {} &quot;inet_init()&quot; -up-&gt; net_families : sock_register注册AF_INET &quot;inet6_init()&quot; -up-&gt; net_families : sock_register注册AF_INET6 &quot;af_unix_init()&quot; -up-&gt; net_families : sock_register注册AF_UNIX &quot;socket()&quot; -down-&gt; net_proto_family : 调用create &quot;socket()&quot; -down-&gt; net_families : 根据不同的family获取对应的net_proto_family net_proto_family &lt;-left- net_families @enduml 1." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="/docs/linux-kernel/net/socket/" /><meta property="article:section" content="docs" />
+
+<meta property="article:modified_time" content="2022-08-31T17:12:00+08:00" />
+
+<title>Socket | 技术的路上奔跑</title>
+<link rel="manifest" href="../../../../manifest.json">
+<link rel="icon" href="../../../../favicon.png" type="image/x-icon">
+<link rel="stylesheet" href="../../../../book.min.46181bc93375ba932026e753b37c40e6ff8bb16a9ef770c78bcc663e4577b1ba.css" integrity="sha256-RhgbyTN1upMgJudTs3xA5v&#43;LsWqe93DHi8xmPkV3sbo=">
+<script defer src="../../../../en.search.min.4d7abc19a465e7d1ac18eabfc4e1a6d67c1a8c5de5308160e889f9275991d652.js" integrity="sha256-TXq8GaRl59GsGOq/xOGm1nwajF3lMIFg6In5J1mR1lI="></script>
+
+<script defer src="../../../../sw.min.6f6f90fcb8eb1c49ec389838e6b801d0de19430b8e516902f8d75c3c8bd98739.js" integrity="sha256-b2&#43;Q/LjrHEnsOJg45rgB0N4ZQwuOUWkC&#43;NdcPIvZhzk="></script>
+<!--
+Made with Book Theme
+https://github.com/alex-shpak/hugo-book
+-->
+
+<link rel="stylesheet" href="../../../../lib/katex/katex.min.css">
+<script src="../../../../katex/katex.min.js"></script>
+<script src="../../../../katex/contrib/auto-render.min.js"></script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    renderMathInElement(document.body, {
+      delimiters: [
+        { left: "$$", right: "$$", display: true },
+        { left: "$", right: "$", display: false }
+      ]
+    });
+  });
+</script>
+
+
+
+<script src="../../../../lib/plantuml-encoder.min.js" integrity="sha256-Qsk2KRBCN5qVZX7B+8+2IvQl1Aqc723qV1tBCQaVoqo=" crossorigin="anonymous"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+  let plantumlPrefix = "language-plantuml";
+  Array.prototype.forEach.call(document.querySelectorAll("[class^=" + plantumlPrefix + "]"), function(code){
+    let image = document.createElement("IMG");
+    image.loading = 'lazy'; 
+    image.src = 'http://www.plantuml.com/plantuml/svg/~1' + plantumlEncoder.encode(code.innerText);
+    code.style.display = 'none';
+    code.parentNode.style = 'text-align: center; margin: 0; padding: 0; background-color: transparent;';
+
+    
+    
+    let div = document.createElement("DIV");
+    div.className = "post-img-view";
+    let a = document.createElement("A");
+    a.setAttribute("data-fancybox", "gallery");
+    a.setAttribute("href", image.src);
+    a.appendChild(image);
+    div.appendChild(a);
+    code.parentNode.insertBefore(div, code);
+    
+  });
+});
+</script>
+
+
+
+<script src="../../../../lib/fancybox/jquery.min.js"></script>
+<link rel="stylesheet" href="../../../../lib/fancybox/jquery.fancybox.min.css" />
+<script src="../../../../lib/fancybox/jquery.fancybox.min.js"></script>
+
+
+  
+</head>
+<body dir="ltr">
+  <input type="checkbox" class="hidden toggle" id="menu-control" />
+  <input type="checkbox" class="hidden toggle" id="toc-control" />
+  <main class="container flex">
+    <aside class="book-menu">
+      <div class="book-menu-content">
+        
+  <nav>
+<h2 class="book-brand">
+  <a class="flex align-center" href="../../../../"><span>技术的路上奔跑</span>
+  </a>
+</h2>
+
+
+<div class="book-search">
+  <input type="text" id="book-search-input" placeholder="Search" aria-label="Search" maxlength="64" data-hotkeys="s/" />
+  <div class="book-search-spinner hidden"></div>
+  <ul id="book-search-results"></ul>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <ul>
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-8ac7917980aedb3eee374e96f4352309" class="toggle" checked />
+    <label for="section-8ac7917980aedb3eee374e96f4352309" class="flex justify-between">
+      <a href="../../../../docs/linux-kernel/" class="">linux内核源码分析记录</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-9303fec21cc4fc7ad047d15e6eb3190c" class="toggle"  />
+    <label for="section-9303fec21cc4fc7ad047d15e6eb3190c" class="flex justify-between">
+      <a role="button" class="">数据结构</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/linux-kernel/data-structures/container_of/" class="">container_of() 根据成员地址找其所在结构体</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/linux-kernel/data-structures/rbtree/" class="">rbtree 红黑树</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/linux-kernel/data-structures/rcu/" class="">RCU Read-Copy-Update</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-29c56fa5f9066aaae4370fc352fcd084" class="toggle" checked />
+    <label for="section-29c56fa5f9066aaae4370fc352fcd084" class="flex justify-between">
+      <a role="button" class="">/net 网络部分</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/linux-kernel/net/socket/" class="active">Socket</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/linux-kernel/net/epoll/" class="">Epoll</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/linux-kernel/net/ipv4/" class="">Ipv4</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-20038bcc21ca3d914920842c4a32533d" class="toggle"  />
+    <label for="section-20038bcc21ca3d914920842c4a32533d" class="flex justify-between">
+      <a href="../../../../docs/leetcode/" class="">LeetCode刷题思路总结</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/leetcode1/" class="">1. Two Sum</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/leetcode3/" class="">- 3. Longest Substring Without Repeating Characters</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/leetcode4/" class="">* 4. Median of Two Sorted Arrays</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/leetcode5/" class="">- 5. Longest Palindromic Substring</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/leetcode6/" class="">- 6. ZigZag Conversion</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/leetcode7/" class="">- 7. Reverse Integer</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/leetcode8/" class="">- 8. String to Integer (atoi)</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/leetcode9/" class="">9. Palindrome Number</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/leetcode10/" class="">* 10. Regular Expression Matching</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/leetcode11/" class="">- 11. Container With Most Water</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/leetcode12/" class="">- 12. Integer to Roman</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/leetcode13/" class="">13. Roman to Integer</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/leetcode101/" class="">101. Symmetric Tree</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/leetcode706/" class="">706. Design HashMap</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/leetcode736/" class="">* 736. Parse Lisp Expression</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/leetcode948/" class="">- 948. Bag of Tokens</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/leetcode1352/" class="">- 1352. Product of the Last K Numbers</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/leetcode1694/" class="">1694. Reformat Phone Number</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+
+
+
+
+
+
+
+
+
+
+  
+<ul>
+  
+  <li>
+    <a href="../../../../posts/" >
+        Blog
+      </a>
+  </li>
+  
+  <li>
+    <a href="https://github.com/githubwyb" target="_blank" rel="noopener">
+        Github
+      </a>
+  </li>
+  
+</ul>
+
+
+
+
+
+
+</nav>
+
+
+
+
+  <script>(function(){var e=document.querySelector("aside .book-menu-content");addEventListener("beforeunload",function(){localStorage.setItem("menu.scrollTop",e.scrollTop)}),e.scrollTop=localStorage.getItem("menu.scrollTop")})()</script>
+
+
+ 
+      </div>
+    </aside>
+
+    <div class="book-page">
+      <header class="book-header">
+        
+  <div class="flex align-center justify-between">
+  <label for="menu-control">
+    <img src="../../../../svg/menu.svg" class="book-icon" alt="Menu" />
+  </label>
+
+  <strong>Socket</strong>
+
+  <label for="toc-control">
+    
+    <img src="../../../../svg/toc.svg" class="book-icon" alt="Table of Contents" />
+    
+  </label>
+</div>
+
+
+  
+  <aside class="hidden clearfix">
+    
+  
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#一socket相关系统调用">一、socket相关系统调用</a></li>
+    <li><a href="#二socket创建过程">二、socket创建过程</a>
+      <ul>
+        <li><a href="#1-根据family找到对应的socket家族">1. 根据family找到对应的socket家族</a></li>
+        <li><a href="#2-创建socket后创建fd并将socket和fd绑定">2. 创建socket后，创建fd，并将socket和fd绑定</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+
+
+  </aside>
+  
+ 
+      </header>
+
+      
+      
+  <article class="markdown"><h1 id="一socket相关系统调用">
+  一、socket相关系统调用
+  <a class="anchor" href="#%e4%b8%80socket%e7%9b%b8%e5%85%b3%e7%b3%bb%e7%bb%9f%e8%b0%83%e7%94%a8">#</a>
+</h1>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span>SYSCALL_DEFINE3(socket, <span style="color:#8be9fd">int</span>, family, <span style="color:#8be9fd">int</span>, type, <span style="color:#8be9fd">int</span>, protocol);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span><span>SYSCALL_DEFINE4(socketpair, <span style="color:#8be9fd">int</span>, family, <span style="color:#8be9fd">int</span>, type, <span style="color:#8be9fd">int</span>, protocol, <span style="color:#8be9fd">int</span> __user <span style="color:#ff79c6">*</span>, usockvec);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span>SYSCALL_DEFINE3(bind, <span style="color:#8be9fd">int</span>, fd, <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">sockaddr</span> __user <span style="color:#ff79c6">*</span>, umyaddr, <span style="color:#8be9fd">int</span>, addrlen);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span><span>SYSCALL_DEFINE2(listen, <span style="color:#8be9fd">int</span>, fd, <span style="color:#8be9fd">int</span>, backlog);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span><span>SYSCALL_DEFINE4(accept4, <span style="color:#8be9fd">int</span>, fd, <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">sockaddr</span> __user <span style="color:#ff79c6">*</span>, upeer_sockaddr, <span style="color:#8be9fd">int</span> __user <span style="color:#ff79c6">*</span>, upeer_addrlen, <span style="color:#8be9fd">int</span>, flags);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span><span>SYSCALL_DEFINE3(accept, <span style="color:#8be9fd">int</span>, fd, <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">sockaddr</span> __user <span style="color:#ff79c6">*</span>, upeer_sockaddr, <span style="color:#8be9fd">int</span> __user <span style="color:#ff79c6">*</span>, upeer_addrlen);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span><span>SYSCALL_DEFINE3(connect, <span style="color:#8be9fd">int</span>, fd, <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">sockaddr</span> __user <span style="color:#ff79c6">*</span>, uservaddr, <span style="color:#8be9fd">int</span>, addrlen);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span>SYSCALL_DEFINE3(getsockname, <span style="color:#8be9fd">int</span>, fd, <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">sockaddr</span> __user <span style="color:#ff79c6">*</span>, usockaddr, <span style="color:#8be9fd">int</span> __user <span style="color:#ff79c6">*</span>, usockaddr_len);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span><span>SYSCALL_DEFINE3(getpeername, <span style="color:#8be9fd">int</span>, fd, <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">sockaddr</span> __user <span style="color:#ff79c6">*</span>, usockaddr, <span style="color:#8be9fd">int</span> __user <span style="color:#ff79c6">*</span>, usockaddr_len);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span><span>SYSCALL_DEFINE6(sendto, <span style="color:#8be9fd">int</span>, fd, <span style="color:#8be9fd">void</span> __user <span style="color:#ff79c6">*</span>, buff, size_t, len, <span style="color:#8be9fd">unsigned</span> <span style="color:#8be9fd">int</span>, flags, <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">sockaddr</span> __user <span style="color:#ff79c6">*</span>, addr, <span style="color:#8be9fd">int</span>, addr_len);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span><span>SYSCALL_DEFINE4(send, <span style="color:#8be9fd">int</span>, fd, <span style="color:#8be9fd">void</span> __user <span style="color:#ff79c6">*</span>, buff, size_t, len, <span style="color:#8be9fd">unsigned</span> <span style="color:#8be9fd">int</span>, flags);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span>SYSCALL_DEFINE6(recvfrom, <span style="color:#8be9fd">int</span>, fd, <span style="color:#8be9fd">void</span> __user <span style="color:#ff79c6">*</span>, ubuf, size_t, size, <span style="color:#8be9fd">unsigned</span> <span style="color:#8be9fd">int</span>, flags, <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">sockaddr</span> __user <span style="color:#ff79c6">*</span>, addr, <span style="color:#8be9fd">int</span> __user <span style="color:#ff79c6">*</span>, addr_len);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span>SYSCALL_DEFINE4(recv, <span style="color:#8be9fd">int</span>, fd, <span style="color:#8be9fd">void</span> __user <span style="color:#ff79c6">*</span>, ubuf, size_t, size, <span style="color:#8be9fd">unsigned</span> <span style="color:#8be9fd">int</span>, flags);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span>SYSCALL_DEFINE5(setsockopt, <span style="color:#8be9fd">int</span>, fd, <span style="color:#8be9fd">int</span>, level, <span style="color:#8be9fd">int</span>, optname, <span style="color:#8be9fd">char</span> __user <span style="color:#ff79c6">*</span>, optval, <span style="color:#8be9fd">int</span>, optlen);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span><span>SYSCALL_DEFINE5(getsockopt, <span style="color:#8be9fd">int</span>, fd, <span style="color:#8be9fd">int</span>, level, <span style="color:#8be9fd">int</span>, optname, <span style="color:#8be9fd">char</span> __user <span style="color:#ff79c6">*</span>, optval, <span style="color:#8be9fd">int</span> __user <span style="color:#ff79c6">*</span>, optlen);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span><span>SYSCALL_DEFINE2(shutdown, <span style="color:#8be9fd">int</span>, fd, <span style="color:#8be9fd">int</span>, how);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span><span>SYSCALL_DEFINE3(sendmsg, <span style="color:#8be9fd">int</span>, fd, <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">user_msghdr</span> __user <span style="color:#ff79c6">*</span>, msg, <span style="color:#8be9fd">unsigned</span> <span style="color:#8be9fd">int</span>, flags);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span><span>SYSCALL_DEFINE4(sendmmsg, <span style="color:#8be9fd">int</span>, fd, <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">mmsghdr</span> __user <span style="color:#ff79c6">*</span>, mmsg, <span style="color:#8be9fd">unsigned</span> <span style="color:#8be9fd">int</span>, vlen, <span style="color:#8be9fd">unsigned</span> <span style="color:#8be9fd">int</span>, flags);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span><span>SYSCALL_DEFINE3(recvmsg, <span style="color:#8be9fd">int</span>, fd, <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">user_msghdr</span> __user <span style="color:#ff79c6">*</span>, msg, <span style="color:#8be9fd">unsigned</span> <span style="color:#8be9fd">int</span>, flags);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span><span>SYSCALL_DEFINE5(recvmmsg, <span style="color:#8be9fd">int</span>, fd, <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">mmsghdr</span> __user <span style="color:#ff79c6">*</span>, mmsg, <span style="color:#8be9fd">unsigned</span> <span style="color:#8be9fd">int</span>, vlen, <span style="color:#8be9fd">unsigned</span> <span style="color:#8be9fd">int</span>, flags, <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">__kernel_timespec</span> __user <span style="color:#ff79c6">*</span>, timeout);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21</span><span>SYSCALL_DEFINE5(recvmmsg_time32, <span style="color:#8be9fd">int</span>, fd, <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">mmsghdr</span> __user <span style="color:#ff79c6">*</span>, mmsg, <span style="color:#8be9fd">unsigned</span> <span style="color:#8be9fd">int</span>, vlen, <span style="color:#8be9fd">unsigned</span> <span style="color:#8be9fd">int</span>, flags, <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">old_timespec32</span> __user <span style="color:#ff79c6">*</span>, timeout);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22</span><span>SYSCALL_DEFINE2(socketcall, <span style="color:#8be9fd">int</span>, call, <span style="color:#8be9fd">unsigned</span> <span style="color:#8be9fd">long</span> __user <span style="color:#ff79c6">*</span>, args);
+</span></span></code></pre></div><h1 id="二socket创建过程">
+  二、socket创建过程
+  <a class="anchor" href="#%e4%ba%8csocket%e5%88%9b%e5%bb%ba%e8%bf%87%e7%a8%8b">#</a>
+</h1>
+<ul>
+<li>socket创建需要使用family、type和protocol</li>
+<li>在底层socket可以说相当于一个基类，将底层不同类型封装成统一的接口</li>
+</ul>
+<pre tabindex="0"><code class="language-plantuml" data-lang="plantuml">@startuml
+class net_families {
+    net_proto_family[NPROTO]
+}
+
+class net_proto_family {
+    int		family;
+    int		(*create)(struct net *net, struct socket *sock,
+                  int protocol, int kern);
+    struct module	*owner;
+}
+
+class socket() {}
+class inet_init() {}
+class inet6_init() {}
+class af_unix_init() {}
+
+&quot;inet_init()&quot; -up-&gt; net_families : sock_register注册AF_INET
+&quot;inet6_init()&quot; -up-&gt; net_families : sock_register注册AF_INET6
+&quot;af_unix_init()&quot; -up-&gt; net_families : sock_register注册AF_UNIX
+
+&quot;socket()&quot; -down-&gt; net_proto_family : 调用create
+&quot;socket()&quot; -down-&gt; net_families : 根据不同的family获取对应的net_proto_family
+net_proto_family &lt;-left- net_families
+
+@enduml
+</code></pre><h2 id="1-根据family找到对应的socket家族">
+  1. 根据family找到对应的socket家族
+  <a class="anchor" href="#1-%e6%a0%b9%e6%8d%aefamily%e6%89%be%e5%88%b0%e5%af%b9%e5%ba%94%e7%9a%84socket%e5%ae%b6%e6%97%8f">#</a>
+</h2>
+<ul>
+<li>内部使用rcu维护一个<code>net_families</code>的指针数组，每个元素是一个<code>net_proto_family</code>结构体</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1</span><span><span style="color:#6272a4">// net/socket.c
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2</span><span><span style="color:#6272a4"></span><span style="color:#ff79c6">static</span> <span style="color:#ff79c6">const</span> <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">net_proto_family</span> __rcu <span style="color:#ff79c6">*</span>net_families[NPROTO] __read_mostly;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3</span><span><span style="color:#6272a4">// include/linux/net.h
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">4</span><span><span style="color:#6272a4"></span><span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">net_proto_family</span> {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">5</span><span>    <span style="color:#8be9fd">int</span>		family;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">6</span><span>    <span style="color:#8be9fd">int</span>		(<span style="color:#ff79c6">*</span>create)(<span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">net</span> <span style="color:#ff79c6">*</span>net, <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">socket</span> <span style="color:#ff79c6">*</span>sock,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">7</span><span>                  <span style="color:#8be9fd">int</span> protocol, <span style="color:#8be9fd">int</span> kern);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">8</span><span>    <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">module</span>	<span style="color:#ff79c6">*</span>owner;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">9</span><span>};
+</span></span></code></pre></div><ul>
+<li><code>NPROTO</code>暂时最大为45，后续还会拓展新的家族</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1</span><span><span style="color:#6272a4">// include/uapi/linux/net.h
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2</span><span><span style="color:#6272a4"></span><span style="color:#ff79c6">#define NPROTO		AF_MAX
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3</span><span><span style="color:#ff79c6"></span><span style="color:#6272a4">// include/linux/socket.h
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">4</span><span><span style="color:#6272a4"></span><span style="color:#ff79c6">#define AF_MAX		46	</span><span style="color:#6272a4">/* For now.. */</span><span style="color:#ff79c6">
+</span></span></span></code></pre></div><ul>
+<li><code>net_families</code>由下面两个函数进行维护</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span><span style="color:#6272a4">// net/socket.c
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span><span><span style="color:#6272a4"></span><span style="color:#6272a4">/**
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span><span style="color:#6272a4"> *	sock_register - add a socket protocol handler
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span><span><span style="color:#6272a4"> *	@ops: description of protocol
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span><span><span style="color:#6272a4"> *
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span><span><span style="color:#6272a4"> *	This function is called by a protocol handler that wants to
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span><span><span style="color:#6272a4"> *	advertise its address family, and have it linked into the
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span><span style="color:#6272a4"> *	socket interface. The value ops-&gt;family corresponds to the
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span><span><span style="color:#6272a4"> *	socket system call protocol family.
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span><span><span style="color:#6272a4"> */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span><span><span style="color:#8be9fd">int</span> <span style="color:#50fa7b">sock_register</span>(<span style="color:#ff79c6">const</span> <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">net_proto_family</span> <span style="color:#ff79c6">*</span>ops) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span>    ...
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span>}
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span>EXPORT_SYMBOL(sock_register);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span><span><span style="color:#6272a4">/**
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span><span><span style="color:#6272a4"> *	sock_unregister - remove a protocol handler
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span><span><span style="color:#6272a4"> *	@family: protocol family to remove
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span><span><span style="color:#6272a4"> *
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span><span><span style="color:#6272a4"> *	This function is called by a protocol handler that wants to
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21</span><span><span style="color:#6272a4"> *	remove its address family, and have it unlinked from the
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22</span><span><span style="color:#6272a4"> *	new socket creation.
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23</span><span><span style="color:#6272a4"> *
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24</span><span><span style="color:#6272a4"> *	If protocol handler is a module, then it can use module reference
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25</span><span><span style="color:#6272a4"> *	counts to protect against new references. If protocol handler is not
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26</span><span><span style="color:#6272a4"> *	a module then it needs to provide its own protection in
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27</span><span><span style="color:#6272a4"> *	the ops-&gt;create routine.
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28</span><span><span style="color:#6272a4"> */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29</span><span><span style="color:#8be9fd">void</span> <span style="color:#50fa7b">sock_unregister</span>(<span style="color:#8be9fd">int</span> family) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">30</span><span>    ...
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">31</span><span>}
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">32</span><span>EXPORT_SYMBOL(sock_unregister);
+</span></span></code></pre></div><ul>
+<li>不同的socket家族自己进行注册，比如<code>AF_INET</code>、<code>AF_INET6</code>、<code>AF_UNIX</code>等</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span><span style="color:#6272a4">// net/ipv4/af_inet.c
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span><span><span style="color:#6272a4"></span><span style="color:#ff79c6">static</span> <span style="color:#8be9fd">int</span> __init <span style="color:#50fa7b">inet_init</span>(<span style="color:#8be9fd">void</span>) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span>    ...
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span><span>    (<span style="color:#8be9fd">void</span>)sock_register(<span style="color:#ff79c6">&amp;</span>inet_family_ops);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span><span>    ...
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span><span>}
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span><span style="color:#6272a4">// net/ipv6/af_inet6.c
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span><span><span style="color:#6272a4"></span><span style="color:#ff79c6">static</span> <span style="color:#8be9fd">int</span> __init <span style="color:#50fa7b">inet6_init</span>(<span style="color:#8be9fd">void</span>) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span><span>    ...
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span><span>    err <span style="color:#ff79c6">=</span> sock_register(<span style="color:#ff79c6">&amp;</span>inet6_family_ops);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span>    ...
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span>}
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span><span><span style="color:#6272a4">// net/unix/af_unix.c
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span><span><span style="color:#6272a4"></span><span style="color:#ff79c6">static</span> <span style="color:#8be9fd">int</span> __init <span style="color:#50fa7b">af_unix_init</span>(<span style="color:#8be9fd">void</span>) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span><span>    ...
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span><span>    sock_register(<span style="color:#ff79c6">&amp;</span>unix_family_ops);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span><span>    ...
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span><span>}
+</span></span></code></pre></div><ul>
+<li>找到自己的家族后，就调用对应的create函数进行创建socket</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span><span style="color:#6272a4">// net/socket.c
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span><span><span style="color:#6272a4">// socket() -call-&gt; __sys_socket() -call-&gt; sock_create() -call-&gt; __sock_create()
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span><span style="color:#6272a4"></span><span style="color:#8be9fd">int</span> <span style="color:#50fa7b">__sock_create</span>(<span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">net</span> <span style="color:#ff79c6">*</span>net, <span style="color:#8be9fd">int</span> family, <span style="color:#8be9fd">int</span> type, <span style="color:#8be9fd">int</span> protocol,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span><span>             <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">socket</span> <span style="color:#ff79c6">**</span>res, <span style="color:#8be9fd">int</span> kern) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span><span>    ...
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span><span>    err <span style="color:#ff79c6">=</span> pf<span style="color:#ff79c6">-&gt;</span>create(net, sock, protocol, kern);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span><span>    <span style="color:#ff79c6">if</span> (err <span style="color:#ff79c6">&lt;</span> <span style="color:#bd93f9">0</span>)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span>        <span style="color:#ff79c6">goto</span> out_module_put;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span><span>    ...
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span><span>}
+</span></span></code></pre></div><h2 id="2-创建socket后创建fd并将socket和fd绑定">
+  2. 创建socket后，创建fd，并将socket和fd绑定
+  <a class="anchor" href="#2-%e5%88%9b%e5%bb%basocket%e5%90%8e%e5%88%9b%e5%bb%bafd%e5%b9%b6%e5%b0%86socket%e5%92%8cfd%e7%bb%91%e5%ae%9a">#</a>
+</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span><span style="color:#6272a4">// net/socket.c
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span><span><span style="color:#6272a4"></span><span style="color:#8be9fd">int</span> <span style="color:#50fa7b">__sys_socket</span>(<span style="color:#8be9fd">int</span> family, <span style="color:#8be9fd">int</span> type, <span style="color:#8be9fd">int</span> protocol) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span>    ...
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span><span>    <span style="color:#ff79c6">return</span> sock_map_fd(sock, flags <span style="color:#ff79c6">&amp;</span> (O_CLOEXEC <span style="color:#ff79c6">|</span> O_NONBLOCK));
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span><span>}
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span><span><span style="color:#6272a4">// sock_map_fd() -call-&gt; sock_alloc_file()
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span><span><span style="color:#6272a4"></span><span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">file</span> <span style="color:#ff79c6">*</span><span style="color:#50fa7b">sock_alloc_file</span>(<span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">socket</span> <span style="color:#ff79c6">*</span>sock, <span style="color:#8be9fd">int</span> flags, <span style="color:#ff79c6">const</span> <span style="color:#8be9fd">char</span> <span style="color:#ff79c6">*</span>dname) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span>    ...
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span><span>    sock<span style="color:#ff79c6">-&gt;</span>file <span style="color:#ff79c6">=</span> file;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span><span>    file<span style="color:#ff79c6">-&gt;</span>private_data <span style="color:#ff79c6">=</span> sock;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span><span>    stream_open(SOCK_INODE(sock), file);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span>    <span style="color:#ff79c6">return</span> file;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span>}
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span>EXPORT_SYMBOL(sock_alloc_file);
+</span></span></code></pre></div></article>
+ 
+      
+
+      <footer class="book-footer">
+        
+  <div class="flex flex-wrap justify-between">
+
+
+
+
+
+</div>
+
+
+
+  <script>(function(){function e(n){const e=window.getSelection(),t=document.createRange();t.selectNodeContents(n),e.removeAllRanges(),e.addRange(t)}document.querySelectorAll("pre code").forEach(t=>{t.addEventListener("click",function(){if(window.getSelection().toString())return;e(t.parentElement),navigator.clipboard&&navigator.clipboard.writeText(t.parentElement.textContent)})})})()</script>
+
+
+ 
+        
+      </footer>
+
+      
+  
+  <div class="book-comments">
+
+</div>
+  
+ 
+
+      <label for="menu-control" class="hidden book-menu-overlay"></label>
+    </div>
+
+    
+    <aside class="book-toc">
+      <div class="book-toc-content">
+        
+  
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#一socket相关系统调用">一、socket相关系统调用</a></li>
+    <li><a href="#二socket创建过程">二、socket创建过程</a>
+      <ul>
+        <li><a href="#1-根据family找到对应的socket家族">1. 根据family找到对应的socket家族</a></li>
+        <li><a href="#2-创建socket后创建fd并将socket和fd绑定">2. 创建socket后，创建fd，并将socket和fd绑定</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+
+ 
+      </div>
+    </aside>
+    
+  </main>
+
+  
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+

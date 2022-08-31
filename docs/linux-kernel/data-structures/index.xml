@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>数据结构 on 技术的路上奔跑</title>
+    <link>/docs/linux-kernel/data-structures/</link>
+    <description>Recent content in 数据结构 on 技术的路上奔跑</description>
+    <generator>Hugo -- gohugo.io</generator><atom:link href="/docs/linux-kernel/data-structures/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>container_of() 根据成员地址找其所在结构体</title>
+      <link>/docs/linux-kernel/data-structures/container_of/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux-kernel/data-structures/container_of/</guid>
+      <description>一、源码 #  1// include/linux/kernel.h 2 3/** 4* container_of - cast a member of a structure out to the containing structure 5* @ptr:	the pointer to the member. 6* @type:	the type of the container struct this is embedded in. 7* @member:	the name of the member within the struct. 8* 9*/ 10#define container_of(ptr, type, member) ({	\ 11void *__mptr = (void *)(ptr);	\ 12BUILD_BUG_ON_MSG(!__same_type(*(ptr), ((type *)0)-&amp;gt;member) &amp;amp;&amp;amp;	\ 13!__same_type(*(ptr), void),	\ 14&amp;#34;pointer type mismatch in container_of()&amp;#34;);	\ 15((type *)(__mptr - offsetof(type, member))); }) 二、分析 #   这个东西看了好久才看懂，不过真的很强大 考虑一个场景，我们定义树需要怎么写，类似下面这样  1struct treeNode { 2 treeNode *left; 3 treeNode *right; 4 void *value; 5};  这时发现这个value每次都要定义，并且每个treeNode都需要新建地址 linux的这群大佬就开始搞事情，如果treeNode的地址和value的地址结合一下，不用每次创建两个地址，一个地址搞定 这时候就出现一种定义方式  1struct treeNode { 2 treeNode *left; 3 treeNode *right; 4}; 5 6struct valueTemplate { 7 treeNode node; 8 int value; 9}  这样写，对树操作时不用关心value是啥，只需要关心自己的数据结构实现就好了 但是怎么找到value呢，container_of就出现了  1#define container_of(ptr, type, member) \ 2(type *)((char *)(ptr) - (char *) &amp;amp;((type *)0)-&amp;gt;member) 3 4// 示例用法 5void func(treeNode *node) { 6 valueTemplate *value = container_of(node, struct valueTemplate, node) 7}  展开一下  1valueTemplate *value = (valueTemplate *)((char *)node - (char *)&amp;amp;((valueTemplate *)0)-&amp;gt;node)  加地址是向后偏移，减地址是向前偏移，所以这句话意思是通过成员变量找到结构体指针 使用0地址的成员变量的地址偏移来计算结构体指针到成员变量的偏移量，然后用成员变量地址向前偏移去查找value 这个想法是真的强大  </description>
+    </item>
+    
+    <item>
+      <title>rbtree 红黑树</title>
+      <link>/docs/linux-kernel/data-structures/rbtree/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux-kernel/data-structures/rbtree/</guid>
+      <description>1// include/linux/rbtree.h 2struct rb_node { 3	unsigned long __rb_parent_color; 4	struct rb_node *rb_right; 5	struct rb_node *rb_left; 6} __attribute__((aligned(sizeof(long))));  先参考 地址对齐 了解为什么可以使用__rb_parent_color的低两位作为颜色  </description>
+    </item>
+    
+    <item>
+      <title>RCU Read-Copy-Update</title>
+      <link>/docs/linux-kernel/data-structures/rcu/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux-kernel/data-structures/rcu/</guid>
+      <description>1. 原理 #   对一块数据要写入时，先拷贝一份，更新数据完成后，再更新到原数据结构 保证要么读取老数据，要么读取新数据，不会出现读取一半的情况  2. 关键思想 #   复制后更新数据 延迟回收内存，当没有老数据结构引用的读者时，才回收内存  </description>
+    </item>
+    
+  </channel>
+</rss>
