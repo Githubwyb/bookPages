@@ -5,7 +5,9 @@
   <meta name="generator" content="Hugo 0.92.2" />
   <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="题目 #  Given two sorted arrays nums1 and nums2 of size m and n respectively, return the median of the two sorted arrays. The overall run time complexity should be O(log (m&#43;n)). 思路1 #   合并到同一个数组，找到第(m&#43;n)/2和(m&#43;n&#43;1)/2个 时间复杂度 $O(m&#43;n)$ 空间复杂度 $O(m&#43;n)$  思路2 #   用i和j分别代表两个数组移动的索引，不用合并，直接找 时间复杂度 $O(m&#43;n)$ 空间复杂度 $O(1)$  思路3 #   时间复杂度 $O(log(min(m, n)))$ 空间复杂度 $O(1)$  数学模型
+<meta name="description" content="题目 #  Given two sorted arrays nums1 and nums2 of size m and n respectively, return the median of the two sorted arrays.
+The overall run time complexity should be O(log (m&#43;n)).
+思路1 #   合并到同一个数组，找到第(m&#43;n)/2和(m&#43;n&#43;1)/2个 时间复杂度 $O(m&#43;n)$ 空间复杂度 $O(m&#43;n)$  思路2 #   用i和j分别代表两个数组移动的索引，不用合并，直接找 时间复杂度 $O(m&#43;n)$ 空间复杂度 $O(1)$  思路3 #   时间复杂度 $O(log(min(m, n)))$ 空间复杂度 $O(1)$  数学模型
 中位数的含义是将两个数组分成两个部分，两个数组的左半部分数量和与右半部分数量和相等 那么假设i和j分别将两个数组分割成左半部分和右半部分，可以得到
 $$ j = \frac{(m &#43; n)}{2} - i $$">
 <meta name="theme-color" content="#FFFFFF"><meta property="og:title" content="* 4. Median of Two Sorted Arrays" />
@@ -17,7 +19,7 @@ $$ j = \frac{(m &#43; n)}{2} - i $$">
 <link rel="manifest" href="../../../manifest.json">
 <link rel="icon" href="../../../favicon.png" type="image/x-icon">
 <link rel="stylesheet" href="../../../book.min.46181bc93375ba932026e753b37c40e6ff8bb16a9ef770c78bcc663e4577b1ba.css" integrity="sha256-RhgbyTN1upMgJudTs3xA5v&#43;LsWqe93DHi8xmPkV3sbo=">
-<script defer src="../../../en.search.min.3305cef8dd141a435194660efe87ae569753f46c31d369f94eb893f1fe8e5a34.js" integrity="sha256-MwXO&#43;N0UGkNRlGYO/oeuVpdT9Gwx02n5TriT8f6OWjQ="></script>
+<script defer src="../../../en.search.min.c52748e945e01048f0671fb0816c135f22af813162f8e56b7926b6e898b7fc6b.js" integrity="sha256-xSdI6UXgEEjwZx&#43;wgWwTXyKvgTFi&#43;OVreSa26Ji3/Gs="></script>
 
 <script defer src="../../../sw.min.6f6f90fcb8eb1c49ec389838e6b801d0de19430b8e516902f8d75c3c8bd98739.js" integrity="sha256-b2&#43;Q/LjrHEnsOJg45rgB0N4ZQwuOUWkC&#43;NdcPIvZhzk="></script>
 <link rel="alternate" type="application/rss+xml" href="../../../docs/leetcode/leetcode4/index.xml" title="技术的路上奔跑" />
@@ -693,10 +695,9 @@ document.addEventListener("DOMContentLoaded", function(){
   题目
   <a class="anchor" href="#%e9%a2%98%e7%9b%ae">#</a>
 </h1>
-<pre tabindex="0"><code>Given two sorted arrays nums1 and nums2 of size m and n respectively, return the median of the two sorted arrays.
-
-The overall run time complexity should be O(log (m+n)).
-</code></pre><h1 id="思路1">
+<p>Given two sorted arrays nums1 and nums2 of size m and n respectively, return the median of the two sorted arrays.</p>
+<p>The overall run time complexity should be O(log (m+n)).</p>
+<h1 id="思路1">
   思路1
   <a class="anchor" href="#%e6%80%9d%e8%b7%af1">#</a>
 </h1>

@@ -5,7 +5,10 @@
   <meta name="generator" content="Hugo 0.92.2" />
   <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="题目 #  Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target. You may assume that each input would have exactly one solution, and you may not use the same element twice. You can return the answer in any order. 思路1 #   暴力遍历，每个数字都向后找自己的另一半  思路2 #   每个数字向前找自己的另一半，比上一种遍历少一点  思路3 #   在思路2的基础上，找另一半的算法加上优化，使用hashmap进行查找  1func TwoSum(nums []int, target int) []int { 2	hashMap := make(map[int]int) 3	for i, v := range nums { 4	expect := target - v 5	index1, ok := hashMap[expect] 6	if ok { 7	return []int{index1, i} 8	} 9	hashMap[v] = i 10	} 11	return nil 12} ">
+<meta name="description" content="题目 #  Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.
+You may assume that each input would have exactly one solution, and you may not use the same element twice.
+You can return the answer in any order.
+思路1 #   暴力遍历，每个数字都向后找自己的另一半  思路2 #   每个数字向前找自己的另一半，比上一种遍历少一点  思路3 #   在思路2的基础上，找另一半的算法加上优化，使用hashmap进行查找  1func TwoSum(nums []int, target int) []int { 2	hashMap := make(map[int]int) 3	for i, v := range nums { 4	expect := target - v 5	index1, ok := hashMap[expect] 6	if ok { 7	return []int{index1, i} 8	} 9	hashMap[v] = i 10	} 11	return nil 12} ">
 <meta name="theme-color" content="#FFFFFF"><meta property="og:title" content="1. Two Sum" />
 <meta property="og:description" content="" />
 <meta property="og:type" content="website" />
@@ -15,7 +18,7 @@
 <link rel="manifest" href="../../../manifest.json">
 <link rel="icon" href="../../../favicon.png" type="image/x-icon">
 <link rel="stylesheet" href="../../../book.min.46181bc93375ba932026e753b37c40e6ff8bb16a9ef770c78bcc663e4577b1ba.css" integrity="sha256-RhgbyTN1upMgJudTs3xA5v&#43;LsWqe93DHi8xmPkV3sbo=">
-<script defer src="../../../en.search.min.3305cef8dd141a435194660efe87ae569753f46c31d369f94eb893f1fe8e5a34.js" integrity="sha256-MwXO&#43;N0UGkNRlGYO/oeuVpdT9Gwx02n5TriT8f6OWjQ="></script>
+<script defer src="../../../en.search.min.c52748e945e01048f0671fb0816c135f22af813162f8e56b7926b6e898b7fc6b.js" integrity="sha256-xSdI6UXgEEjwZx&#43;wgWwTXyKvgTFi&#43;OVreSa26Ji3/Gs="></script>
 
 <script defer src="../../../sw.min.6f6f90fcb8eb1c49ec389838e6b801d0de19430b8e516902f8d75c3c8bd98739.js" integrity="sha256-b2&#43;Q/LjrHEnsOJg45rgB0N4ZQwuOUWkC&#43;NdcPIvZhzk="></script>
 <link rel="alternate" type="application/rss+xml" href="../../../docs/leetcode/leetcode1/index.xml" title="技术的路上奔跑" />
@@ -690,12 +693,10 @@ document.addEventListener("DOMContentLoaded", function(){
   题目
   <a class="anchor" href="#%e9%a2%98%e7%9b%ae">#</a>
 </h1>
-<pre tabindex="0"><code>Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.
-
-You may assume that each input would have exactly one solution, and you may not use the same element twice.
-
-You can return the answer in any order.
-</code></pre><h1 id="思路1">
+<p>Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.</p>
+<p>You may assume that each input would have exactly one solution, and you may not use the same element twice.</p>
+<p>You can return the answer in any order.</p>
+<h1 id="思路1">
   思路1
   <a class="anchor" href="#%e6%80%9d%e8%b7%af1">#</a>
 </h1>
