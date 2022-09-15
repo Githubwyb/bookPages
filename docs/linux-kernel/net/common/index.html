@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+  <meta name="generator" content="Hugo 0.92.2" />
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="一、从驱动来的包处理流程 #  @startuml @enduml ">
+<meta name="theme-color" content="#FFFFFF"><meta property="og:title" content="网络数据包处理" />
+<meta property="og:description" content="一、从驱动来的包处理流程 #  @startuml @enduml " />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="/docs/linux-kernel/net/common/" /><meta property="article:section" content="docs" />
+
+
+
+<title>网络数据包处理 | 技术的路上奔跑</title>
+<link rel="manifest" href="../../../../manifest.json">
+<link rel="icon" href="../../../../favicon.png" type="image/x-icon">
+<link rel="stylesheet" href="../../../../book.min.46181bc93375ba932026e753b37c40e6ff8bb16a9ef770c78bcc663e4577b1ba.css" integrity="sha256-RhgbyTN1upMgJudTs3xA5v&#43;LsWqe93DHi8xmPkV3sbo=">
+<script defer src="../../../../en.search.min.13ff90c0e855f085928ce42ed3f287530f4b5d5bac9f3d9a21a142643aa8b331.js" integrity="sha256-E/&#43;QwOhV8IWSjOQu0/KHUw9LXVusnz2aIaFCZDqoszE="></script>
+
+<script defer src="../../../../sw.min.6f6f90fcb8eb1c49ec389838e6b801d0de19430b8e516902f8d75c3c8bd98739.js" integrity="sha256-b2&#43;Q/LjrHEnsOJg45rgB0N4ZQwuOUWkC&#43;NdcPIvZhzk="></script>
+<!--
+Made with Book Theme
+https://github.com/alex-shpak/hugo-book
+-->
+
+<link rel="stylesheet" href="../../../../katex/katex.min.css">
+<script src="../../../../katex/katex.min.js"></script>
+<script src="../../../../katex/auto-render.min.js"></script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    renderMathInElement(document.body, {
+      delimiters: [
+        { left: "$$", right: "$$", display: true },
+        { left: "$", right: "$", display: false }
+      ]
+    });
+  });
+</script>
+
+
+
+<script src="../../../../lib/plantuml-encoder.min.js" integrity="sha256-Qsk2KRBCN5qVZX7B+8+2IvQl1Aqc723qV1tBCQaVoqo=" crossorigin="anonymous"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+  let plantumlPrefix = "language-plantuml";
+  Array.prototype.forEach.call(document.querySelectorAll("[class^=" + plantumlPrefix + "]"), function(code){
+    let image = document.createElement("IMG");
+    image.loading = 'lazy'; 
+    image.src = 'http://www.plantuml.com/plantuml/svg/~1' + plantumlEncoder.encode(code.innerText);
+    code.style.display = 'none';
+    code.parentNode.style = 'text-align: center; margin: 0; padding: 0; background-color: transparent;';
+
+    
+    
+    let div = document.createElement("DIV");
+    div.className = "post-img-view";
+    let a = document.createElement("A");
+    a.setAttribute("data-fancybox", "gallery");
+    a.setAttribute("href", image.src);
+    a.appendChild(image);
+    div.appendChild(a);
+    code.parentNode.insertBefore(div, code);
+    
+  });
+});
+</script>
+
+
+
+<script src="../../../../lib/fancybox/jquery.min.js"></script>
+<link rel="stylesheet" href="../../../../lib/fancybox/jquery.fancybox.min.css" />
+<script src="../../../../lib/fancybox/jquery.fancybox.min.js"></script>
+
+
+  
+</head>
+
+<body dir="ltr">
+  <input type="checkbox" class="hidden toggle" id="menu-control" />
+  <input type="checkbox" class="hidden toggle" id="toc-control" />
+  <main class="container flex">
+    <aside class="book-menu">
+      <div class="book-menu-content">
+        
+  <nav>
+<h2 class="book-brand">
+  <a href="../../../../"><span>技术的路上奔跑</span>
+  </a>
+</h2>
+
+
+<div class="book-search">
+  <input type="text" id="book-search-input" placeholder="Search" aria-label="Search" maxlength="64" data-hotkeys="s/" />
+  <div class="book-search-spinner hidden"></div>
+  <ul id="book-search-results"></ul>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <ul>
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-076945525d27fc883dc64d169725123d" class="toggle"  />
+    <label for="section-076945525d27fc883dc64d169725123d" class="flex justify-between">
+      <a href="../../../../docs/c&#43;&#43;/" class="">C&#43;&#43;源码分析记录</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/c&#43;&#43;/shared_ptr/" class="">Shared Ptr</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-8ac7917980aedb3eee374e96f4352309" class="toggle" checked />
+    <label for="section-8ac7917980aedb3eee374e96f4352309" class="flex justify-between">
+      <a href="../../../../docs/linux-kernel/" class="">linux内核源码分析记录</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-9303fec21cc4fc7ad047d15e6eb3190c" class="toggle"  />
+    <label for="section-9303fec21cc4fc7ad047d15e6eb3190c" class="flex justify-between">
+      <a  class="">数据结构</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/linux-kernel/data-structures/container_of/" class="">container_of() 根据成员地址找其所在结构体</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/linux-kernel/data-structures/rbtree/" class="">rbtree 红黑树</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/linux-kernel/data-structures/rcu/" class="">RCU Read-Copy-Update</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-db00978f5ef311f1bdd522d2c7531cff" class="toggle"  />
+    <label for="section-db00978f5ef311f1bdd522d2c7531cff" class="flex justify-between">
+      <a  class="">/drivers 驱动部分</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-ff61754b45daafe9c0255f580a204780" class="toggle"  />
+    <label for="section-ff61754b45daafe9c0255f580a204780" class="flex justify-between">
+      <a  class="">/drivers/net 网卡驱动部分</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/linux-kernel/drivers/net/common/" class="">通用网络驱动开发知识</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/linux-kernel/drivers/net/igb/" class="">Igb</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-29c56fa5f9066aaae4370fc352fcd084" class="toggle" checked />
+    <label for="section-29c56fa5f9066aaae4370fc352fcd084" class="flex justify-between">
+      <a  class="">/net 网络部分</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/linux-kernel/net/socket/" class="">Socket</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/linux-kernel/net/common/" class=" active">网络数据包处理</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/linux-kernel/net/epoll/" class="">Epoll</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/linux-kernel/net/iptables/" class="">Iptables</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/linux-kernel/net/ipv4/" class="">Ipv4</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-4f2d8fd7ae8f1cd0d55c165a863d638c" class="toggle"  />
+    <label for="section-4f2d8fd7ae8f1cd0d55c165a863d638c" class="flex justify-between">
+      <a  class="">/fs 文件部分</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/linux-kernel/fs/inotify/" class="">Inotify</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-20038bcc21ca3d914920842c4a32533d" class="toggle"  />
+    <label for="section-20038bcc21ca3d914920842c4a32533d" class="flex justify-between">
+      <a href="../../../../docs/leetcode/" class="">LeetCode刷题思路总结</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/leetcode1/" class="">1. Two Sum</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/leetcode3/" class="">- 3. Longest Substring Without Repeating Characters</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/leetcode4/" class="">* 4. Median of Two Sorted Arrays</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/leetcode5/" class="">- 5. Longest Palindromic Substring</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/leetcode6/" class="">- 6. ZigZag Conversion</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/leetcode7/" class="">- 7. Reverse Integer</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/leetcode8/" class="">- 8. String to Integer (atoi)</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/leetcode9/" class="">9. Palindrome Number</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/leetcode10/" class="">* 10. Regular Expression Matching</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/leetcode11/" class="">- 11. Container With Most Water</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/leetcode12/" class="">- 12. Integer to Roman</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/leetcode13/" class="">13. Roman to Integer</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/leetcode101/" class="">101. Symmetric Tree</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/leetcode322/" class="">- 322. Coin Change</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/leetcode658/" class="">- 658. Find K Closest Elements</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/leetcode706/" class="">706. Design HashMap</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/leetcode736/" class="">* 736. Parse Lisp Expression</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/leetcode864/" class="">* 736. Parse Lisp Expression</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/leetcode948/" class="">- 948. Bag of Tokens</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/leetcode1169/" class="">- 1169. Invalid Transactions</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/leetcode1352/" class="">- 1352. Product of the Last K Numbers</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/leetcode1694/" class="">1694. Reformat Phone Number</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/leetcode2399/" class="">2399. Check Distances Between Same Letters</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/leetcode2401/" class="">- 2400. Number of Ways to Reach a Position After Exactly k Steps</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/leetcode2400/" class="">- 2401. Longest Nice Subarray</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+
+
+
+
+
+
+
+
+
+
+  
+<ul>
+  
+  <li>
+    <a href="../../../../posts/" >
+        Blog
+      </a>
+  </li>
+  
+  <li>
+    <a href="https://github.com/githubwyb" target="_blank" rel="noopener">
+        Github
+      </a>
+  </li>
+  
+</ul>
+
+
+
+
+
+
+</nav>
+
+
+
+
+  <script>(function(){var e=document.querySelector("aside.book-menu nav");addEventListener("beforeunload",function(){localStorage.setItem("menu.scrollTop",e.scrollTop)}),e.scrollTop=localStorage.getItem("menu.scrollTop")})()</script>
+
+
+ 
+      </div>
+    </aside>
+
+    <div class="book-page">
+      <header class="book-header">
+        
+  <div class="flex align-center justify-between">
+  <label for="menu-control">
+    <img src="../../../../svg/menu.svg" class="book-icon" alt="Menu" />
+  </label>
+
+  <strong>网络数据包处理</strong>
+
+  <label for="toc-control">
+    
+    <img src="../../../../svg/toc.svg" class="book-icon" alt="Table of Contents" />
+    
+  </label>
+</div>
+
+
+  
+  <aside class="hidden clearfix">
+    
+  
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#一从驱动来的包处理流程">一、从驱动来的包处理流程</a></li>
+  </ul>
+</nav>
+
+
+
+  </aside>
+  
+ 
+      </header>
+
+      
+      
+  <article class="markdown"><h1 id="一从驱动来的包处理流程">
+  一、从驱动来的包处理流程
+  <a class="anchor" href="#%e4%b8%80%e4%bb%8e%e9%a9%b1%e5%8a%a8%e6%9d%a5%e7%9a%84%e5%8c%85%e5%a4%84%e7%90%86%e6%b5%81%e7%a8%8b">#</a>
+</h1>
+<pre tabindex="0"><code class="language-plantuml" data-lang="plantuml">@startuml
+
+@enduml
+</code></pre></article>
+ 
+      
+
+      <footer class="book-footer">
+        
+  <div class="flex flex-wrap justify-between">
+
+
+
+
+
+</div>
+
+ 
+        
+      </footer>
+
+      
+  
+  <div class="book-comments">
+
+</div>
+  
+ 
+
+      <label for="menu-control" class="hidden book-menu-overlay"></label>
+    </div>
+
+    
+    <aside class="book-toc">
+      <div class="book-toc-content">
+        
+  
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#一从驱动来的包处理流程">一、从驱动来的包处理流程</a></li>
+  </ul>
+</nav>
+
+
+ 
+      </div>
+    </aside>
+    
+  </main>
+
+  
+</body>
+
+</html>
+
+
+
+
+
+
+
+
+
+
+
+

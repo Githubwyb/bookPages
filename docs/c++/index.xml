@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>C&#43;&#43;源码分析记录 on 技术的路上奔跑</title>
+    <link>/docs/c&#43;&#43;/</link>
+    <description>Recent content in C&#43;&#43;源码分析记录 on 技术的路上奔跑</description>
+    <generator>Hugo -- gohugo.io</generator><atom:link href="/docs/c++/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title></title>
+      <link>/docs/c&#43;&#43;/shared_ptr/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/c&#43;&#43;/shared_ptr/</guid>
+      <description>一、shared_ptr(_Yp* __p)分析 #  1. 初始化 #  1// /usr/include/c++/12.2.0/bits/shared_ptr.h 2 3 template&amp;lt;typename _Tp&amp;gt; 4 class shared_ptr : public __shared_ptr&amp;lt;_Tp&amp;gt; 5 { 6 ... 7 public: 8 ... 9 /** 10* @brief Construct a %shared_ptr that owns the pointer @a __p. 11* @param __p A pointer that is convertible to element_type*. 12* @post use_count() == 1 &amp;amp;&amp;amp; get() == __p 13* @throw std::bad_alloc, in which case @c delete @a __p is called.</description>
+    </item>
+    
+  </channel>
+</rss>
