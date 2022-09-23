@@ -5,21 +5,20 @@
   <meta name="generator" content="Hugo 0.92.2" />
   <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="一、ipv4收包后如何处理 #  1. ip层包入口 #  1// net/ipv4/ip_input.c 2/* 3* Deliver IP Packets to the higher protocol layers. 4*/ 5int ip_local_deliver(struct sk_buff *skb) { 6	/* 7*	Reassemble IP fragments. 8*/ 9	struct net *net = dev_net(skb-&gt;dev); 10 11 // 判断是否为分片包，分片包就先处理分片 12	if (ip_is_fragment(ip_hdr(skb))) { 13	if (ip_defrag(net, skb, IP_DEFRAG_LOCAL_DELIVER)) 14	return 0; 15	} 16 17 // 分片处理完毕调用ip_local_deliver_finish() 18	return NF_HOOK(NFPROTO_IPV4, NF_INET_LOCAL_IN, 19	net, NULL, skb, skb-&gt;dev, NULL, 20	ip_local_deliver_finish); 21}  根据ip包内的协议处理具体的协议  1// net/ipv4/ip_input.">
-<meta name="theme-color" content="#FFFFFF"><meta property="og:title" content="" />
-<meta property="og:description" content="一、ipv4收包后如何处理 #  1. ip层包入口 #  1// net/ipv4/ip_input.c 2/* 3* Deliver IP Packets to the higher protocol layers. 4*/ 5int ip_local_deliver(struct sk_buff *skb) { 6	/* 7*	Reassemble IP fragments. 8*/ 9	struct net *net = dev_net(skb-&gt;dev); 10 11 // 判断是否为分片包，分片包就先处理分片 12	if (ip_is_fragment(ip_hdr(skb))) { 13	if (ip_defrag(net, skb, IP_DEFRAG_LOCAL_DELIVER)) 14	return 0; 15	} 16 17 // 分片处理完毕调用ip_local_deliver_finish() 18	return NF_HOOK(NFPROTO_IPV4, NF_INET_LOCAL_IN, 19	net, NULL, skb, skb-&gt;dev, NULL, 20	ip_local_deliver_finish); 21}  根据ip包内的协议处理具体的协议  1// net/ipv4/ip_input." />
-<meta property="og:type" content="article" />
-<meta property="og:url" content="/docs/linux-kernel/net/ipv4/" /><meta property="article:section" content="docs" />
+<meta name="description" content="">
+<meta name="theme-color" content="#FFFFFF"><meta property="og:title" content="/net/ipv4 ipv4的处理部分" />
+<meta property="og:description" content="" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="/docs/linux-kernel/net/ipv4/" />
 
-<meta property="article:modified_time" content="2022-09-09T16:04:38+00:00" />
-
-<title>Ipv4 | 技术的路上奔跑</title>
+<title>/net/ipv4 ipv4的处理部分 | 技术的路上奔跑</title>
 <link rel="manifest" href="../../../../manifest.json">
 <link rel="icon" href="../../../../favicon.png" type="image/x-icon">
 <link rel="stylesheet" href="../../../../book.min.46181bc93375ba932026e753b37c40e6ff8bb16a9ef770c78bcc663e4577b1ba.css" integrity="sha256-RhgbyTN1upMgJudTs3xA5v&#43;LsWqe93DHi8xmPkV3sbo=">
-<script defer src="../../../../en.search.min.13ff90c0e855f085928ce42ed3f287530f4b5d5bac9f3d9a21a142643aa8b331.js" integrity="sha256-E/&#43;QwOhV8IWSjOQu0/KHUw9LXVusnz2aIaFCZDqoszE="></script>
+<script defer src="../../../../en.search.min.d86efef30b6b26d1f3f8e1ea19ab5d0c647baf49ca5d7d9161ded7dccc3e35a2.js" integrity="sha256-2G7&#43;8wtrJtHz&#43;OHqGatdDGR7r0nKXX2RYd7X3Mw&#43;NaI="></script>
 
 <script defer src="../../../../sw.min.6f6f90fcb8eb1c49ec389838e6b801d0de19430b8e516902f8d75c3c8bd98739.js" integrity="sha256-b2&#43;Q/LjrHEnsOJg45rgB0N4ZQwuOUWkC&#43;NdcPIvZhzk="></script>
+<link rel="alternate" type="application/rss+xml" href="../../../../docs/linux-kernel/net/ipv4/index.xml" title="技术的路上奔跑" />
 <!--
 Made with Book Theme
 https://github.com/alex-shpak/hugo-book
@@ -355,8 +354,29 @@ document.addEventListener("DOMContentLoaded", function(){
   
 
   
-    <a href="../../../../docs/linux-kernel/net/iptables/" class="">Iptables</a>
+    <input type="checkbox" id="section-b6a41843e876ff4c7561d97248ef46af" class="toggle" checked />
+    <label for="section-b6a41843e876ff4c7561d97248ef46af" class="flex justify-between">
+      <a  class="active">/net/ipv4 ipv4的处理部分</a>
+    </label>
   
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/linux-kernel/net/ipv4/ipv4/" class="">Ipv4</a>
+  
+
+        </li>
+      
+    
+  </ul>
 
         </li>
       
@@ -368,7 +388,7 @@ document.addEventListener("DOMContentLoaded", function(){
   
 
   
-    <a href="../../../../docs/linux-kernel/net/ipv4/" class=" active">Ipv4</a>
+    <a href="../../../../docs/linux-kernel/net/iptables/" class="">Iptables</a>
   
 
         </li>
@@ -943,7 +963,7 @@ document.addEventListener("DOMContentLoaded", function(){
     <img src="../../../../svg/menu.svg" class="book-icon" alt="Menu" />
   </label>
 
-  <strong>Ipv4</strong>
+  <strong>/net/ipv4 ipv4的处理部分</strong>
 
   <label for="toc-control">
     
@@ -957,15 +977,7 @@ document.addEventListener("DOMContentLoaded", function(){
   <aside class="hidden clearfix">
     
   
-<nav id="TableOfContents">
-  <ul>
-    <li><a href="#一ipv4收包后如何处理">一、ipv4收包后如何处理</a>
-      <ul>
-        <li><a href="#1-ip层包入口">1. ip层包入口</a></li>
-      </ul>
-    </li>
-  </ul>
-</nav>
+<nav id="TableOfContents"></nav>
 
 
 
@@ -976,91 +988,7 @@ document.addEventListener("DOMContentLoaded", function(){
 
       
       
-  <article class="markdown"><h1 id="一ipv4收包后如何处理">
-  一、ipv4收包后如何处理
-  <a class="anchor" href="#%e4%b8%80ipv4%e6%94%b6%e5%8c%85%e5%90%8e%e5%a6%82%e4%bd%95%e5%a4%84%e7%90%86">#</a>
-</h1>
-<h2 id="1-ip层包入口">
-  1. ip层包入口
-  <a class="anchor" href="#1-ip%e5%b1%82%e5%8c%85%e5%85%a5%e5%8f%a3">#</a>
-</h2>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span><span style="color:#6272a4">// net/ipv4/ip_input.c
-</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span><span><span style="color:#6272a4"></span><span style="color:#6272a4">/*
-</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span><span style="color:#6272a4"> * 	Deliver IP Packets to the higher protocol layers.
-</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span><span><span style="color:#6272a4"> */</span>
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span><span><span style="color:#8be9fd">int</span> <span style="color:#50fa7b">ip_local_deliver</span>(<span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">sk_buff</span> <span style="color:#ff79c6">*</span>skb) {
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span><span>	<span style="color:#6272a4">/*
-</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span><span><span style="color:#6272a4">	 *	Reassemble IP fragments.
-</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span><span style="color:#6272a4">	 */</span>
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span><span>	<span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">net</span> <span style="color:#ff79c6">*</span>net <span style="color:#ff79c6">=</span> dev_net(skb<span style="color:#ff79c6">-&gt;</span>dev);
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span><span>
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span><span>    <span style="color:#6272a4">// 判断是否为分片包，分片包就先处理分片
-</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span><span style="color:#6272a4"></span>	<span style="color:#ff79c6">if</span> (ip_is_fragment(ip_hdr(skb))) {
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span>		<span style="color:#ff79c6">if</span> (ip_defrag(net, skb, IP_DEFRAG_LOCAL_DELIVER))
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span>			<span style="color:#ff79c6">return</span> <span style="color:#bd93f9">0</span>;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span><span>	}
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span><span>
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span><span>    <span style="color:#6272a4">// 分片处理完毕调用ip_local_deliver_finish()
-</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span><span><span style="color:#6272a4"></span>	<span style="color:#ff79c6">return</span> NF_HOOK(NFPROTO_IPV4, NF_INET_LOCAL_IN,
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span><span>		       net, <span style="color:#8be9fd;font-style:italic">NULL</span>, skb, skb<span style="color:#ff79c6">-&gt;</span>dev, <span style="color:#8be9fd;font-style:italic">NULL</span>,
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span><span>		       ip_local_deliver_finish);
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21</span><span>}
-</span></span></code></pre></div><ul>
-<li>根据ip包内的协议处理具体的协议</li>
-</ul>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span><span style="color:#6272a4">// net/ipv4/ip_input.c
-</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span><span><span style="color:#6272a4">// ip_local_deliver_finish() -call-&gt; ip_local_deliver_finish()
-</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span><span style="color:#6272a4"></span><span style="color:#8be9fd">void</span> <span style="color:#50fa7b">ip_local_deliver_finish</span>(<span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">net</span> <span style="color:#ff79c6">*</span>net, <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">sk_buff</span> <span style="color:#ff79c6">*</span>skb, <span style="color:#8be9fd">int</span> protocol) {
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span><span>	<span style="color:#ff79c6">const</span> <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">net_protocol</span> <span style="color:#ff79c6">*</span>ipprot;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span><span>	<span style="color:#8be9fd">int</span> raw, ret;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span><span>
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span><span><span style="color:#8be9fd;font-style:italic">resubmit</span>:
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span>	raw <span style="color:#ff79c6">=</span> raw_local_deliver(skb, protocol);
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span><span>
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span><span>    <span style="color:#6272a4">// 这里找到具体的协议的处理函数，然后调用具体的协议处理函数
-</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span><span><span style="color:#6272a4"></span>	ipprot <span style="color:#ff79c6">=</span> rcu_dereference(inet_protos[protocol]);
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span>	<span style="color:#ff79c6">if</span> (ipprot) {
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span>		<span style="color:#ff79c6">if</span> (<span style="color:#ff79c6">!</span>ipprot<span style="color:#ff79c6">-&gt;</span>no_policy) {
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span>			<span style="color:#ff79c6">if</span> (<span style="color:#ff79c6">!</span>xfrm4_policy_check(<span style="color:#8be9fd;font-style:italic">NULL</span>, XFRM_POLICY_IN, skb)) {
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span><span>				kfree_skb(skb);
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span><span>				<span style="color:#ff79c6">return</span>;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span><span>			}
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span><span>			nf_reset_ct(skb);
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span><span>		}
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span><span>        <span style="color:#6272a4">// 相当于调用ipprot-&gt;handler(skb)
-</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21</span><span><span style="color:#6272a4"></span>		ret <span style="color:#ff79c6">=</span> INDIRECT_CALL_2(ipprot<span style="color:#ff79c6">-&gt;</span>handler, tcp_v4_rcv, udp_rcv,
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22</span><span>				      skb);
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23</span><span>		<span style="color:#ff79c6">if</span> (ret <span style="color:#ff79c6">&lt;</span> <span style="color:#bd93f9">0</span>) {
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24</span><span>			protocol <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">-</span>ret;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25</span><span>			<span style="color:#ff79c6">goto</span> resubmit;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26</span><span>		}
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27</span><span>		__IP_INC_STATS(net, IPSTATS_MIB_INDELIVERS);
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28</span><span>	} <span style="color:#ff79c6">else</span> {
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29</span><span>		<span style="color:#ff79c6">if</span> (<span style="color:#ff79c6">!</span>raw) {
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">30</span><span>			<span style="color:#ff79c6">if</span> (xfrm4_policy_check(<span style="color:#8be9fd;font-style:italic">NULL</span>, XFRM_POLICY_IN, skb)) {
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">31</span><span>				__IP_INC_STATS(net, IPSTATS_MIB_INUNKNOWNPROTOS);
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">32</span><span>                <span style="color:#6272a4">// 这里是服务端会回复一个icmp包，内容就是端口不可达
-</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">33</span><span><span style="color:#6272a4"></span>				icmp_send(skb, ICMP_DEST_UNREACH,
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">34</span><span>					  ICMP_PROT_UNREACH, <span style="color:#bd93f9">0</span>);
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">35</span><span>			}
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">36</span><span>			kfree_skb(skb);
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">37</span><span>		} <span style="color:#ff79c6">else</span> {
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">38</span><span>			__IP_INC_STATS(net, IPSTATS_MIB_INDELIVERS);
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">39</span><span>			consume_skb(skb);
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">40</span><span>		}
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">41</span><span>	}
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">42</span><span>}
-</span></span></code></pre></div><ul>
-<li><code>inet_protos[protocol]</code>是一个指向net_protocol结构的指针，net_protocol结构中包含了协议的处理函数</li>
-<li>使用下面两个函数进行注册特定的协议</li>
-</ul>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1</span><span><span style="color:#6272a4">// net/ipv4/protocol.c
-</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2</span><span><span style="color:#6272a4"></span><span style="color:#8be9fd">int</span> <span style="color:#50fa7b">inet_add_protocol</span>(<span style="color:#ff79c6">const</span> <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">net_protocol</span> <span style="color:#ff79c6">*</span>prot, <span style="color:#8be9fd">unsigned</span> <span style="color:#8be9fd">char</span> protocol);
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3</span><span>EXPORT_SYMBOL(inet_add_protocol);
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">4</span><span>
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">5</span><span><span style="color:#8be9fd">int</span> <span style="color:#50fa7b">inet_del_protocol</span>(<span style="color:#ff79c6">const</span> <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">net_protocol</span> <span style="color:#ff79c6">*</span>prot, <span style="color:#8be9fd">unsigned</span> <span style="color:#8be9fd">char</span> protocol);
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">6</span><span>EXPORT_SYMBOL(inet_del_protocol);
-</span></span></code></pre></div></article>
+  <article class="markdown"></article>
  
       
 
@@ -1080,10 +1008,6 @@ document.addEventListener("DOMContentLoaded", function(){
 
       
   
-  <div class="book-comments">
-
-</div>
-  
  
 
       <label for="menu-control" class="hidden book-menu-overlay"></label>
@@ -1094,15 +1018,7 @@ document.addEventListener("DOMContentLoaded", function(){
       <div class="book-toc-content">
         
   
-<nav id="TableOfContents">
-  <ul>
-    <li><a href="#一ipv4收包后如何处理">一、ipv4收包后如何处理</a>
-      <ul>
-        <li><a href="#1-ip层包入口">1. ip层包入口</a></li>
-      </ul>
-    </li>
-  </ul>
-</nav>
+<nav id="TableOfContents"></nav>
 
 
  

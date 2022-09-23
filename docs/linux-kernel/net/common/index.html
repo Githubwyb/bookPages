@@ -5,19 +5,19 @@
   <meta name="generator" content="Hugo 0.92.2" />
   <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="一、从驱动来的包处理流程 #  @startuml @enduml ">
+<meta name="description" content="一、从驱动来的包处理流程 #  图取自 linux内核协议栈 UDP之数据报接收过程">
 <meta name="theme-color" content="#FFFFFF"><meta property="og:title" content="网络数据包处理" />
-<meta property="og:description" content="一、从驱动来的包处理流程 #  @startuml @enduml " />
+<meta property="og:description" content="一、从驱动来的包处理流程 #  图取自 linux内核协议栈 UDP之数据报接收过程" />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="/docs/linux-kernel/net/common/" /><meta property="article:section" content="docs" />
 
-
+<meta property="article:modified_time" content="2022-09-15T20:58:00+08:00" />
 
 <title>网络数据包处理 | 技术的路上奔跑</title>
 <link rel="manifest" href="../../../../manifest.json">
 <link rel="icon" href="../../../../favicon.png" type="image/x-icon">
 <link rel="stylesheet" href="../../../../book.min.46181bc93375ba932026e753b37c40e6ff8bb16a9ef770c78bcc663e4577b1ba.css" integrity="sha256-RhgbyTN1upMgJudTs3xA5v&#43;LsWqe93DHi8xmPkV3sbo=">
-<script defer src="../../../../en.search.min.13ff90c0e855f085928ce42ed3f287530f4b5d5bac9f3d9a21a142643aa8b331.js" integrity="sha256-E/&#43;QwOhV8IWSjOQu0/KHUw9LXVusnz2aIaFCZDqoszE="></script>
+<script defer src="../../../../en.search.min.d86efef30b6b26d1f3f8e1ea19ab5d0c647baf49ca5d7d9161ded7dccc3e35a2.js" integrity="sha256-2G7&#43;8wtrJtHz&#43;OHqGatdDGR7r0nKXX2RYd7X3Mw&#43;NaI="></script>
 
 <script defer src="../../../../sw.min.6f6f90fcb8eb1c49ec389838e6b801d0de19430b8e516902f8d75c3c8bd98739.js" integrity="sha256-b2&#43;Q/LjrHEnsOJg45rgB0N4ZQwuOUWkC&#43;NdcPIvZhzk="></script>
 <!--
@@ -355,8 +355,29 @@ document.addEventListener("DOMContentLoaded", function(){
   
 
   
-    <a href="../../../../docs/linux-kernel/net/iptables/" class="">Iptables</a>
+    <input type="checkbox" id="section-b6a41843e876ff4c7561d97248ef46af" class="toggle"  />
+    <label for="section-b6a41843e876ff4c7561d97248ef46af" class="flex justify-between">
+      <a  class="">/net/ipv4 ipv4的处理部分</a>
+    </label>
   
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/linux-kernel/net/ipv4/ipv4/" class="">Ipv4</a>
+  
+
+        </li>
+      
+    
+  </ul>
 
         </li>
       
@@ -368,7 +389,7 @@ document.addEventListener("DOMContentLoaded", function(){
   
 
   
-    <a href="../../../../docs/linux-kernel/net/ipv4/" class="">Ipv4</a>
+    <a href="../../../../docs/linux-kernel/net/iptables/" class="">Iptables</a>
   
 
         </li>
@@ -976,10 +997,10 @@ document.addEventListener("DOMContentLoaded", function(){
   一、从驱动来的包处理流程
   <a class="anchor" href="#%e4%b8%80%e4%bb%8e%e9%a9%b1%e5%8a%a8%e6%9d%a5%e7%9a%84%e5%8c%85%e5%a4%84%e7%90%86%e6%b5%81%e7%a8%8b">#</a>
 </h1>
-<pre tabindex="0"><code class="language-plantuml" data-lang="plantuml">@startuml
-
-@enduml
-</code></pre></article>
+<p>图取自 
+  <a href="https://blog.csdn.net/daocaokafei/article/details/117968065">linux内核协议栈 UDP之数据报接收过程</a></p>
+<img src="../imgs/2022-09-23-02.png" />
+</article>
  
       
 

@@ -20,7 +20,7 @@
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>/docs/linux-kernel/net/common/</guid>
-      <description>一、从驱动来的包处理流程 #  @startuml @enduml </description>
+      <description>一、从驱动来的包处理流程 #  图取自 linux内核协议栈 UDP之数据报接收过程</description>
     </item>
     
     <item>
@@ -40,15 +40,6 @@
       <guid>/docs/linux-kernel/net/iptables/</guid>
       <description>一、iptables的规则链 #  参考 Linux-iptables 防火墙、四表五链及SNAT与DNAT的原理与应用
 1. 规则链图 #  @startuml title 规则链生效时机 node &amp;quot;用户空间&amp;quot; { [Application] #Yellow } node &amp;quot;内核空间&amp;quot; { [INPUT] [OUTPUT] [POSTROUTING] [PREROUTING] [FORWARD] [入站路由] #Yellow note left of &amp;quot;入站路由&amp;quot; 判断是否在本地有监听地址 end note [出站路由] #Yellow note right of &amp;quot;出站路由&amp;quot; 出站路由会选择下一跳 也就是会选择网卡 end note } node &amp;quot;网络&amp;quot; { [网卡1] [网卡2] [网卡3] } [网卡1] -up-&amp;gt; [PREROUTING] [PREROUTING] -up-&amp;gt; [入站路由] [入站路由] -right-&amp;gt; [FORWARD]: 非本机流量 [入站路由] -up-&amp;gt; [INPUT]: 本机流量 [INPUT] -up-&amp;gt; [Application] [Application] -down-&amp;gt; [OUTPUT] [OUTPUT] -down-&amp;gt; [出站路由] [FORWARD] -right-&amp;gt; [出站路由] [出站路由] -down-&amp;gt; [POSTROUTING] [POSTROUTING] -down-&amp;gt; [网卡2] @enduml 2.</description>
-    </item>
-    
-    <item>
-      <title></title>
-      <link>/docs/linux-kernel/net/ipv4/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>/docs/linux-kernel/net/ipv4/</guid>
-      <description>一、ipv4收包后如何处理 #  1. ip层包入口 #  1// net/ipv4/ip_input.c 2/* 3* Deliver IP Packets to the higher protocol layers. 4*/ 5int ip_local_deliver(struct sk_buff *skb) { 6	/* 7*	Reassemble IP fragments. 8*/ 9	struct net *net = dev_net(skb-&amp;gt;dev); 10 11 // 判断是否为分片包，分片包就先处理分片 12	if (ip_is_fragment(ip_hdr(skb))) { 13	if (ip_defrag(net, skb, IP_DEFRAG_LOCAL_DELIVER)) 14	return 0; 15	} 16 17 // 分片处理完毕调用ip_local_deliver_finish() 18	return NF_HOOK(NFPROTO_IPV4, NF_INET_LOCAL_IN, 19	net, NULL, skb, skb-&amp;gt;dev, NULL, 20	ip_local_deliver_finish); 21}  根据ip包内的协议处理具体的协议  1// net/ipv4/ip_input.</description>
     </item>
     
   </channel>

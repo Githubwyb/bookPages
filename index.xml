@@ -29,7 +29,7 @@
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>/docs/linux-kernel/net/common/</guid>
-      <description>一、从驱动来的包处理流程 #  @startuml @enduml </description>
+      <description>一、从驱动来的包处理流程 #  图取自 linux内核协议栈 UDP之数据报接收过程</description>
     </item>
     
     <item>
@@ -83,10 +83,10 @@ We&amp;rsquo;ll start with creating a new site with a very basic template.</desc
     
     <item>
       <title></title>
-      <link>/docs/linux-kernel/net/ipv4/</link>
+      <link>/docs/linux-kernel/net/ipv4/ipv4/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
-      <guid>/docs/linux-kernel/net/ipv4/</guid>
+      <guid>/docs/linux-kernel/net/ipv4/ipv4/</guid>
       <description>一、ipv4收包后如何处理 #  1. ip层包入口 #  1// net/ipv4/ip_input.c 2/* 3* Deliver IP Packets to the higher protocol layers. 4*/ 5int ip_local_deliver(struct sk_buff *skb) { 6	/* 7*	Reassemble IP fragments. 8*/ 9	struct net *net = dev_net(skb-&amp;gt;dev); 10 11 // 判断是否为分片包，分片包就先处理分片 12	if (ip_is_fragment(ip_hdr(skb))) { 13	if (ip_defrag(net, skb, IP_DEFRAG_LOCAL_DELIVER)) 14	return 0; 15	} 16 17 // 分片处理完毕调用ip_local_deliver_finish() 18	return NF_HOOK(NFPROTO_IPV4, NF_INET_LOCAL_IN, 19	net, NULL, skb, skb-&amp;gt;dev, NULL, 20	ip_local_deliver_finish); 21}  根据ip包内的协议处理具体的协议  1// net/ipv4/ip_input.</description>
     </item>
     
