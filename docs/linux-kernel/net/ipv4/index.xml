@@ -14,5 +14,14 @@
       <description>一、ipv4收包后如何处理 #  1. ip层包入口 #  1// net/ipv4/ip_input.c 2/* 3* Deliver IP Packets to the higher protocol layers. 4*/ 5int ip_local_deliver(struct sk_buff *skb) { 6	/* 7*	Reassemble IP fragments. 8*/ 9	struct net *net = dev_net(skb-&amp;gt;dev); 10 11 // 判断是否为分片包，分片包就先处理分片 12	if (ip_is_fragment(ip_hdr(skb))) { 13	if (ip_defrag(net, skb, IP_DEFRAG_LOCAL_DELIVER)) 14	return 0; 15	} 16 17 // 分片处理完毕调用ip_local_deliver_finish() 18	return NF_HOOK(NFPROTO_IPV4, NF_INET_LOCAL_IN, 19	net, NULL, skb, skb-&amp;gt;dev, NULL, 20	ip_local_deliver_finish); 21}  根据ip包内的协议处理具体的协议  1// net/ipv4/ip_input.</description>
     </item>
     
+    <item>
+      <title></title>
+      <link>/docs/linux-kernel/net/ipv4/udp/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux-kernel/net/ipv4/udp/</guid>
+      <description>一、udp socket如何进行收包 #   udp会注册udp_protocol到inet_protos里面  1// net/ipv4/af_inet.c 2static const struct net_protocol udp_protocol = { 3	.handler =	udp_rcv, 4	.err_handler =	udp_err, 5	.no_policy =	1, 6}; 7... 8static int __init inet_init(void) 9{ 10... 11	if (inet_add_protocol(&amp;amp;udp_protocol, IPPROTO_UDP) &amp;lt; 0) 12	pr_crit(&amp;#34;%s: Cannot add UDP protocol\n&amp;#34;, __func__); 13... 14}  ipv4里面分析了，当ip层收到驱动的包之后，根据IPPROTO_UDP找到udp_protocol，然后调用handler函数对应udp_rcv  1// net/ipv4/udp.c 2/* 3*	All we need to do is get the socket, and then do a checksum.</description>
+    </item>
+    
   </channel>
 </rss>

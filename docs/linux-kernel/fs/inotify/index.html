@@ -5,9 +5,9 @@
   <meta name="generator" content="Hugo 0.92.2" />
   <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="一、介绍 #  1. 提供的系统调用 #  1SYSCALL_DEFINE1(inotify_init1, int, flags) 2SYSCALL_DEFINE0(inotify_init) 3SYSCALL_DEFINE3(inotify_add_watch, int, fd, const char __user *, pathname, u32, mask) 4SYSCALL_DEFINE2(inotify_rm_watch, int, fd, __s32, wd) 2. 示例用法 #  1 二、源码分析 #  1. inotify_init #   都是调用do_inotify_init  1// fs/notify/inotify/inotify_user.c 2SYSCALL_DEFINE1(inotify_init1, int, flags) 3{ 4 return do_inotify_init(flags); 5} 6 7SYSCALL_DEFINE0(inotify_init) 8{ 9 return do_inotify_init(0); 10}  do_inotify_init就是创建了一个fd，提供了一系列操作inotify_fops  1// fs/notify/inotify/inotify_user.c 2/* inotify syscalls */ 3static int do_inotify_init(int flags) 4{ 5 struct fsnotify_group *group; 6 int ret; 7 8 /* Check the IN_* constants for consistency.">
+<meta name="description" content="一、介绍 #  1. 提供的系统调用 #  1SYSCALL_DEFINE1(inotify_init1, int, flags) 2SYSCALL_DEFINE0(inotify_init) 3SYSCALL_DEFINE3(inotify_add_watch, int, fd, const char __user *, pathname, u32, mask) 4SYSCALL_DEFINE2(inotify_rm_watch, int, fd, __s32, wd) 2. 示例用法 #  1class FileMonitor final { 2public: 3 explicit FileMonitor(std::string path) : m_filePath(std::move(path)) {} 4 5 ~FileMonitor() { stop(); } 6 7 void start() { 8 stop(); 9 std::promise&lt;void&gt; p; 10 m_monitorFuture = std::make_shared&lt;std::future&lt;void&gt;&gt;(std::async(std::launch::async, [&amp;p, this]() { 11 p.set_value(); 12 std::string tag = &#34;file(&#34; &#43; m_filePath &#43; &#34;) monitor loop&#34;; 13 LOGI(WHAT(&#34;{} begin&#34;, tag)); 14 15 { 16 std::lock_guard&lt;std::mutex&gt; lock(m_fdMutex); 17 // 设置为非阻塞方式 18 m_monitorFD = inotify_init1(IN_NONBLOCK); 19 if (m_monitorFD &lt; 0) { 20 LOGE(WHAT(&#34;{} failed&#34;, tag), 21 REASON(&#34;inotify_init failed, ec: {}&#34;, 22 std::to_string(std::error_code(errno, std::system_category()))), 23 WILL(&#34;exit thread and won&#39;t watch file&#34;)); 24 return; 25 } 26 } 27 28 // 添加文件监听的函数，返回false说明总的文件描述符被关闭 29 if (!">
 <meta name="theme-color" content="#FFFFFF"><meta property="og:title" content="" />
-<meta property="og:description" content="一、介绍 #  1. 提供的系统调用 #  1SYSCALL_DEFINE1(inotify_init1, int, flags) 2SYSCALL_DEFINE0(inotify_init) 3SYSCALL_DEFINE3(inotify_add_watch, int, fd, const char __user *, pathname, u32, mask) 4SYSCALL_DEFINE2(inotify_rm_watch, int, fd, __s32, wd) 2. 示例用法 #  1 二、源码分析 #  1. inotify_init #   都是调用do_inotify_init  1// fs/notify/inotify/inotify_user.c 2SYSCALL_DEFINE1(inotify_init1, int, flags) 3{ 4 return do_inotify_init(flags); 5} 6 7SYSCALL_DEFINE0(inotify_init) 8{ 9 return do_inotify_init(0); 10}  do_inotify_init就是创建了一个fd，提供了一系列操作inotify_fops  1// fs/notify/inotify/inotify_user.c 2/* inotify syscalls */ 3static int do_inotify_init(int flags) 4{ 5 struct fsnotify_group *group; 6 int ret; 7 8 /* Check the IN_* constants for consistency." />
+<meta property="og:description" content="一、介绍 #  1. 提供的系统调用 #  1SYSCALL_DEFINE1(inotify_init1, int, flags) 2SYSCALL_DEFINE0(inotify_init) 3SYSCALL_DEFINE3(inotify_add_watch, int, fd, const char __user *, pathname, u32, mask) 4SYSCALL_DEFINE2(inotify_rm_watch, int, fd, __s32, wd) 2. 示例用法 #  1class FileMonitor final { 2public: 3 explicit FileMonitor(std::string path) : m_filePath(std::move(path)) {} 4 5 ~FileMonitor() { stop(); } 6 7 void start() { 8 stop(); 9 std::promise&lt;void&gt; p; 10 m_monitorFuture = std::make_shared&lt;std::future&lt;void&gt;&gt;(std::async(std::launch::async, [&amp;p, this]() { 11 p.set_value(); 12 std::string tag = &#34;file(&#34; &#43; m_filePath &#43; &#34;) monitor loop&#34;; 13 LOGI(WHAT(&#34;{} begin&#34;, tag)); 14 15 { 16 std::lock_guard&lt;std::mutex&gt; lock(m_fdMutex); 17 // 设置为非阻塞方式 18 m_monitorFD = inotify_init1(IN_NONBLOCK); 19 if (m_monitorFD &lt; 0) { 20 LOGE(WHAT(&#34;{} failed&#34;, tag), 21 REASON(&#34;inotify_init failed, ec: {}&#34;, 22 std::to_string(std::error_code(errno, std::system_category()))), 23 WILL(&#34;exit thread and won&#39;t watch file&#34;)); 24 return; 25 } 26 } 27 28 // 添加文件监听的函数，返回false说明总的文件描述符被关闭 29 if (!" />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="/docs/linux-kernel/fs/inotify/" /><meta property="article:section" content="docs" />
 
@@ -17,7 +17,7 @@
 <link rel="manifest" href="../../../../manifest.json">
 <link rel="icon" href="../../../../favicon.png" type="image/x-icon">
 <link rel="stylesheet" href="../../../../book.min.46181bc93375ba932026e753b37c40e6ff8bb16a9ef770c78bcc663e4577b1ba.css" integrity="sha256-RhgbyTN1upMgJudTs3xA5v&#43;LsWqe93DHi8xmPkV3sbo=">
-<script defer src="../../../../en.search.min.d86efef30b6b26d1f3f8e1ea19ab5d0c647baf49ca5d7d9161ded7dccc3e35a2.js" integrity="sha256-2G7&#43;8wtrJtHz&#43;OHqGatdDGR7r0nKXX2RYd7X3Mw&#43;NaI="></script>
+<script defer src="../../../../en.search.min.4fc3554654e38b30da0185df663f57179f3bfb15db82b198fd172835e4c1aa73.js" integrity="sha256-T8NVRlTjizDaAYXfZj9XF587&#43;xXbgrGY/RcoNeTBqnM="></script>
 
 <script defer src="../../../../sw.min.6f6f90fcb8eb1c49ec389838e6b801d0de19430b8e516902f8d75c3c8bd98739.js" integrity="sha256-b2&#43;Q/LjrHEnsOJg45rgB0N4ZQwuOUWkC&#43;NdcPIvZhzk="></script>
 <!--
@@ -377,6 +377,19 @@ document.addEventListener("DOMContentLoaded", function(){
         </li>
       
     
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/linux-kernel/net/ipv4/udp/" class="">UDP</a>
+  
+
+        </li>
+      
+    
   </ul>
 
         </li>
@@ -462,7 +475,23 @@ document.addEventListener("DOMContentLoaded", function(){
   
 
   
-    <a href="../../../../docs/leetcode/leetcode1/" class="">1. Two Sum</a>
+    <input type="checkbox" id="section-e557ddd3240c9349f7b073a0a626b78b" class="toggle"  />
+    <label for="section-e557ddd3240c9349f7b073a0a626b78b" class="flex justify-between">
+      <a  class="">简单</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/simple/leetcode1/" class="">1. Two Sum</a>
   
 
           
@@ -480,7 +509,7 @@ document.addEventListener("DOMContentLoaded", function(){
   
 
   
-    <a href="../../../../docs/leetcode/leetcode3/" class="">- 3. Longest Substring Without Repeating Characters</a>
+    <a href="../../../../docs/leetcode/simple/leetcode9/" class="">9. Palindrome Number</a>
   
 
           
@@ -498,7 +527,7 @@ document.addEventListener("DOMContentLoaded", function(){
   
 
   
-    <a href="../../../../docs/leetcode/leetcode4/" class="">* 4. Median of Two Sorted Arrays</a>
+    <a href="../../../../docs/leetcode/simple/leetcode13/" class="">13. Roman to Integer</a>
   
 
           
@@ -516,7 +545,7 @@ document.addEventListener("DOMContentLoaded", function(){
   
 
   
-    <a href="../../../../docs/leetcode/leetcode5/" class="">- 5. Longest Palindromic Substring</a>
+    <a href="../../../../docs/leetcode/simple/leetcode101/" class="">101. Symmetric Tree</a>
   
 
           
@@ -534,7 +563,7 @@ document.addEventListener("DOMContentLoaded", function(){
   
 
   
-    <a href="../../../../docs/leetcode/leetcode6/" class="">- 6. ZigZag Conversion</a>
+    <a href="../../../../docs/leetcode/simple/leetcode706/" class="">706. Design HashMap</a>
   
 
           
@@ -552,7 +581,7 @@ document.addEventListener("DOMContentLoaded", function(){
   
 
   
-    <a href="../../../../docs/leetcode/leetcode7/" class="">- 7. Reverse Integer</a>
+    <a href="../../../../docs/leetcode/simple/leetcode1694/" class="">1694. Reformat Phone Number</a>
   
 
           
@@ -570,7 +599,46 @@ document.addEventListener("DOMContentLoaded", function(){
   
 
   
-    <a href="../../../../docs/leetcode/leetcode8/" class="">- 8. String to Integer (atoi)</a>
+    <a href="../../../../docs/leetcode/simple/leetcode2399/" class="">2399. Check Distances Between Same Letters</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-4866e8369da1eb6122f802a13b19fe46" class="toggle"  />
+    <label for="section-4866e8369da1eb6122f802a13b19fe46" class="flex justify-between">
+      <a  class="">中等</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/middle/leetcode3/" class="">- 3. Longest Substring Without Repeating Characters</a>
   
 
           
@@ -588,7 +656,7 @@ document.addEventListener("DOMContentLoaded", function(){
   
 
   
-    <a href="../../../../docs/leetcode/leetcode9/" class="">9. Palindrome Number</a>
+    <a href="../../../../docs/leetcode/middle/leetcode5/" class="">- 5. Longest Palindromic Substring</a>
   
 
           
@@ -606,7 +674,7 @@ document.addEventListener("DOMContentLoaded", function(){
   
 
   
-    <a href="../../../../docs/leetcode/leetcode10/" class="">* 10. Regular Expression Matching</a>
+    <a href="../../../../docs/leetcode/middle/leetcode6/" class="">- 6. ZigZag Conversion</a>
   
 
           
@@ -624,7 +692,7 @@ document.addEventListener("DOMContentLoaded", function(){
   
 
   
-    <a href="../../../../docs/leetcode/leetcode11/" class="">- 11. Container With Most Water</a>
+    <a href="../../../../docs/leetcode/middle/leetcode7/" class="">- 7. Reverse Integer</a>
   
 
           
@@ -642,7 +710,7 @@ document.addEventListener("DOMContentLoaded", function(){
   
 
   
-    <a href="../../../../docs/leetcode/leetcode12/" class="">- 12. Integer to Roman</a>
+    <a href="../../../../docs/leetcode/middle/leetcode8/" class="">- 8. String to Integer (atoi)</a>
   
 
           
@@ -660,7 +728,7 @@ document.addEventListener("DOMContentLoaded", function(){
   
 
   
-    <a href="../../../../docs/leetcode/leetcode13/" class="">13. Roman to Integer</a>
+    <a href="../../../../docs/leetcode/middle/leetcode11/" class="">- 11. Container With Most Water</a>
   
 
           
@@ -678,7 +746,7 @@ document.addEventListener("DOMContentLoaded", function(){
   
 
   
-    <a href="../../../../docs/leetcode/leetcode101/" class="">101. Symmetric Tree</a>
+    <a href="../../../../docs/leetcode/middle/leetcode12/" class="">- 12. Integer to Roman</a>
   
 
           
@@ -696,7 +764,7 @@ document.addEventListener("DOMContentLoaded", function(){
   
 
   
-    <a href="../../../../docs/leetcode/leetcode322/" class="">- 322. Coin Change</a>
+    <a href="../../../../docs/leetcode/middle/leetcode322/" class="">- 322. Coin Change</a>
   
 
           
@@ -714,7 +782,7 @@ document.addEventListener("DOMContentLoaded", function(){
   
 
   
-    <a href="../../../../docs/leetcode/leetcode658/" class="">- 658. Find K Closest Elements</a>
+    <a href="../../../../docs/leetcode/middle/leetcode658/" class="">- 658. Find K Closest Elements</a>
   
 
           
@@ -732,7 +800,7 @@ document.addEventListener("DOMContentLoaded", function(){
   
 
   
-    <a href="../../../../docs/leetcode/leetcode706/" class="">706. Design HashMap</a>
+    <a href="../../../../docs/leetcode/middle/leetcode948/" class="">- 948. Bag of Tokens</a>
   
 
           
@@ -750,7 +818,7 @@ document.addEventListener("DOMContentLoaded", function(){
   
 
   
-    <a href="../../../../docs/leetcode/leetcode736/" class="">* 736. Parse Lisp Expression</a>
+    <a href="../../../../docs/leetcode/middle/leetcode1169/" class="">- 1169. Invalid Transactions</a>
   
 
           
@@ -768,7 +836,7 @@ document.addEventListener("DOMContentLoaded", function(){
   
 
   
-    <a href="../../../../docs/leetcode/leetcode864/" class="">* 736. Parse Lisp Expression</a>
+    <a href="../../../../docs/leetcode/middle/leetcode1352/" class="">- 1352. Product of the Last K Numbers</a>
   
 
           
@@ -786,7 +854,7 @@ document.addEventListener("DOMContentLoaded", function(){
   
 
   
-    <a href="../../../../docs/leetcode/leetcode948/" class="">- 948. Bag of Tokens</a>
+    <a href="../../../../docs/leetcode/middle/leetcode2401/" class="">- 2400. Number of Ways to Reach a Position After Exactly k Steps</a>
   
 
           
@@ -804,7 +872,46 @@ document.addEventListener("DOMContentLoaded", function(){
   
 
   
-    <a href="../../../../docs/leetcode/leetcode1169/" class="">- 1169. Invalid Transactions</a>
+    <a href="../../../../docs/leetcode/middle/leetcode2400/" class="">- 2401. Longest Nice Subarray</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-42eecace07f2c55adbf8c2fda3b6b016" class="toggle"  />
+    <label for="section-42eecace07f2c55adbf8c2fda3b6b016" class="flex justify-between">
+      <a  class="">困难</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/hard/leetcode4/" class="">* 4. Median of Two Sorted Arrays</a>
   
 
           
@@ -822,7 +929,7 @@ document.addEventListener("DOMContentLoaded", function(){
   
 
   
-    <a href="../../../../docs/leetcode/leetcode1352/" class="">- 1352. Product of the Last K Numbers</a>
+    <a href="../../../../docs/leetcode/hard/leetcode10/" class="">* 10. Regular Expression Matching</a>
   
 
           
@@ -840,7 +947,7 @@ document.addEventListener("DOMContentLoaded", function(){
   
 
   
-    <a href="../../../../docs/leetcode/leetcode1694/" class="">1694. Reformat Phone Number</a>
+    <a href="../../../../docs/leetcode/hard/leetcode736/" class="">* 736. Parse Lisp Expression</a>
   
 
           
@@ -858,7 +965,7 @@ document.addEventListener("DOMContentLoaded", function(){
   
 
   
-    <a href="../../../../docs/leetcode/leetcode2399/" class="">2399. Check Distances Between Same Letters</a>
+    <a href="../../../../docs/leetcode/hard/leetcode864/" class="">* 864. Shortest Path to Get All Keys</a>
   
 
           
@@ -868,37 +975,6 @@ document.addEventListener("DOMContentLoaded", function(){
 
         </li>
       
-    
-      
-        <li>
-          
-  
-  
-
-  
-    <a href="../../../../docs/leetcode/leetcode2401/" class="">- 2400. Number of Ways to Reach a Position After Exactly k Steps</a>
-  
-
-          
-  <ul>
-    
-  </ul>
-
-        </li>
-      
-    
-      
-        <li>
-          
-  
-  
-
-  
-    <a href="../../../../docs/leetcode/leetcode2400/" class="">- 2401. Longest Nice Subarray</a>
-  
-
-          
-  <ul>
     
   </ul>
 
@@ -1020,7 +1096,252 @@ document.addEventListener("DOMContentLoaded", function(){
   2. 示例用法
   <a class="anchor" href="#2-%e7%a4%ba%e4%be%8b%e7%94%a8%e6%b3%95">#</a>
 </h2>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1</span><span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  1</span><span><span style="color:#ff79c6">class</span> <span style="color:#50fa7b">FileMonitor</span> <span style="color:#ff79c6">final</span> {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  2</span><span><span style="color:#ff79c6">public</span><span style="color:#ff79c6">:</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  3</span><span>    <span style="color:#ff79c6">explicit</span> FileMonitor(std<span style="color:#ff79c6">::</span>string path) <span style="color:#ff79c6">:</span> m_filePath(std<span style="color:#ff79c6">::</span>move(path)) {}
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  4</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  5</span><span>    <span style="color:#ff79c6">~</span>FileMonitor() { stop(); }
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  6</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  7</span><span>    <span style="color:#8be9fd">void</span> <span style="color:#50fa7b">start</span>() {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  8</span><span>        stop();
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  9</span><span>        std<span style="color:#ff79c6">::</span>promise<span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd">void</span><span style="color:#ff79c6">&gt;</span> p;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 10</span><span>        m_monitorFuture <span style="color:#ff79c6">=</span> std<span style="color:#ff79c6">::</span>make_shared<span style="color:#ff79c6">&lt;</span>std<span style="color:#ff79c6">::</span>future<span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd">void</span><span style="color:#ff79c6">&gt;&gt;</span>(std<span style="color:#ff79c6">::</span>async(std<span style="color:#ff79c6">::</span>launch<span style="color:#ff79c6">::</span>async, [<span style="color:#ff79c6">&amp;</span>p, <span style="color:#ff79c6">this</span>]() {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 11</span><span>            p.set_value();
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 12</span><span>            std<span style="color:#ff79c6">::</span>string tag <span style="color:#ff79c6">=</span> <span style="color:#f1fa8c">&#34;file(&#34;</span> <span style="color:#ff79c6">+</span> m_filePath <span style="color:#ff79c6">+</span> <span style="color:#f1fa8c">&#34;) monitor loop&#34;</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 13</span><span>            LOGI(WHAT(<span style="color:#f1fa8c">&#34;{} begin&#34;</span>, tag));
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 14</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 15</span><span>            {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 16</span><span>                std<span style="color:#ff79c6">::</span>lock_guard<span style="color:#ff79c6">&lt;</span>std<span style="color:#ff79c6">::</span>mutex<span style="color:#ff79c6">&gt;</span> lock(m_fdMutex);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 17</span><span>                <span style="color:#6272a4">// 设置为非阻塞方式
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 18</span><span><span style="color:#6272a4"></span>                m_monitorFD <span style="color:#ff79c6">=</span> inotify_init1(IN_NONBLOCK);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 19</span><span>                <span style="color:#ff79c6">if</span> (m_monitorFD <span style="color:#ff79c6">&lt;</span> <span style="color:#bd93f9">0</span>) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 20</span><span>                    LOGE(WHAT(<span style="color:#f1fa8c">&#34;{} failed&#34;</span>, tag),
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 21</span><span>                         REASON(<span style="color:#f1fa8c">&#34;inotify_init failed, ec: {}&#34;</span>,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 22</span><span>                                std<span style="color:#ff79c6">::</span>to_string(std<span style="color:#ff79c6">::</span>error_code(errno, std<span style="color:#ff79c6">::</span>system_category()))),
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 23</span><span>                         WILL(<span style="color:#f1fa8c">&#34;exit thread and won&#39;t watch file&#34;</span>));
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 24</span><span>                    <span style="color:#ff79c6">return</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 25</span><span>                }
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 26</span><span>            }
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 27</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 28</span><span>            <span style="color:#6272a4">// 添加文件监听的函数，返回false说明总的文件描述符被关闭
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 29</span><span><span style="color:#6272a4"></span>            <span style="color:#ff79c6">if</span> (<span style="color:#ff79c6">!</span>addFileWatch()) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 30</span><span>                LOGI(WHAT(<span style="color:#f1fa8c">&#34;{}, stop monitor&#34;</span>, tag));
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 31</span><span>                <span style="color:#ff79c6">return</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 32</span><span>            }
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 33</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 34</span><span>            <span style="color:#6272a4">// 开始监听文件
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 35</span><span><span style="color:#6272a4"></span>            <span style="color:#ff79c6">while</span> (<span style="color:#8be9fd;font-style:italic">true</span>) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 36</span><span>                <span style="color:#8be9fd">char</span> buf[<span style="color:#ff79c6">sizeof</span>(<span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">inotify_event</span>) <span style="color:#ff79c6">+</span> m_filePath.size() <span style="color:#ff79c6">+</span> <span style="color:#bd93f9">1</span>] <span style="color:#ff79c6">=</span> {<span style="color:#bd93f9">0</span>};
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 37</span><span>                ssize_t len;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 38</span><span>                {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 39</span><span>                    std<span style="color:#ff79c6">::</span>lock_guard<span style="color:#ff79c6">&lt;</span>std<span style="color:#ff79c6">::</span>mutex<span style="color:#ff79c6">&gt;</span> lock(m_fdMutex);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 40</span><span>                    <span style="color:#ff79c6">if</span> (m_monitorFD <span style="color:#ff79c6">&lt;</span> <span style="color:#bd93f9">0</span> <span style="color:#ff79c6">||</span> m_watchFD <span style="color:#ff79c6">&lt;</span> <span style="color:#bd93f9">0</span>) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 41</span><span>                        <span style="color:#6272a4">// 这里说明外部关闭了监听fd，也就是析构了，退出就好
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 42</span><span><span style="color:#6272a4"></span>                        <span style="color:#ff79c6">break</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 43</span><span>                    }
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 44</span><span>                    <span style="color:#6272a4">// 非阻塞读取event事件
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 45</span><span><span style="color:#6272a4"></span>                    len <span style="color:#ff79c6">=</span> read(m_monitorFD, buf, <span style="color:#ff79c6">sizeof</span>(buf));
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 46</span><span>                }
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 47</span><span>                <span style="color:#ff79c6">if</span> (len <span style="color:#ff79c6">&lt;</span> <span style="color:#bd93f9">0</span>) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 48</span><span>                    <span style="color:#ff79c6">auto</span> err <span style="color:#ff79c6">=</span> errno;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 49</span><span>                    <span style="color:#6272a4">// 非阻塞的读不到事件返回EAGAIN，直接continue，其他的报错continue
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 50</span><span><span style="color:#6272a4"></span>                    <span style="color:#ff79c6">if</span> (err <span style="color:#ff79c6">!=</span> EAGAIN) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 51</span><span>                        LOGW(WHAT(<span style="color:#f1fa8c">&#34;{}, read get err&#34;</span>, tag),
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 52</span><span>                             REASON(<span style="color:#f1fa8c">&#34;get error {}&#34;</span>, std<span style="color:#ff79c6">::</span>to_string(std<span style="color:#ff79c6">::</span>error_code(err, std<span style="color:#ff79c6">::</span>system_category()))),
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 53</span><span>                             WILL(<span style="color:#f1fa8c">&#34;retry after 10 ms&#34;</span>));
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 54</span><span>                    }
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 55</span><span>                    std<span style="color:#ff79c6">::</span>this_thread<span style="color:#ff79c6">::</span>sleep_for(std<span style="color:#ff79c6">::</span>chrono<span style="color:#ff79c6">::</span>milliseconds(<span style="color:#bd93f9">10</span>));
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 56</span><span>                    <span style="color:#ff79c6">continue</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 57</span><span>                }
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 58</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 59</span><span>                <span style="color:#ff79c6">if</span> (len <span style="color:#ff79c6">&lt;</span> <span style="color:#ff79c6">sizeof</span>(<span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">inotify_event</span>)) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 60</span><span>                    LOGW(WHAT(<span style="color:#f1fa8c">&#34;{}, read len error&#34;</span>, tag), REASON(<span style="color:#f1fa8c">&#34;len {}, need {}&#34;</span>, len, <span style="color:#ff79c6">sizeof</span>(<span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">inotify_event</span>)),
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 61</span><span>                         WILL(<span style="color:#f1fa8c">&#34;retry after 10 ms&#34;</span>));
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 62</span><span>                    std<span style="color:#ff79c6">::</span>this_thread<span style="color:#ff79c6">::</span>sleep_for(std<span style="color:#ff79c6">::</span>chrono<span style="color:#ff79c6">::</span>milliseconds(<span style="color:#bd93f9">10</span>));
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 63</span><span>                    <span style="color:#ff79c6">continue</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 64</span><span>                }
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 65</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 66</span><span>                <span style="color:#8be9fd">int</span> index <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 67</span><span>                <span style="color:#8be9fd">bool</span> isChanged <span style="color:#ff79c6">=</span> <span style="color:#8be9fd;font-style:italic">false</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 68</span><span>                <span style="color:#6272a4">// 这里怕读到多个事件，使用while处理
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 69</span><span><span style="color:#6272a4"></span>                <span style="color:#ff79c6">do</span> {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 70</span><span>                    <span style="color:#ff79c6">auto</span> event <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">reinterpret_cast</span><span style="color:#ff79c6">&lt;</span><span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">inotify_event</span> <span style="color:#ff79c6">*&gt;</span>(buf <span style="color:#ff79c6">+</span> index);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 71</span><span>                    <span style="color:#6272a4">// index向后移动evnet和name的长度
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 72</span><span><span style="color:#6272a4"></span>                    index <span style="color:#ff79c6">+=</span> <span style="color:#ff79c6">sizeof</span>(<span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">inotify_event</span>) <span style="color:#ff79c6">+</span> event<span style="color:#ff79c6">-&gt;</span>len;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 73</span><span>                    LOGD(WHAT(<span style="color:#f1fa8c">&#34;event wd {}, mask {}, cookie {}, len {}, name {}&#34;</span>, event<span style="color:#ff79c6">-&gt;</span>wd, event<span style="color:#ff79c6">-&gt;</span>mask, event<span style="color:#ff79c6">-&gt;</span>cookie,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 74</span><span>                              event<span style="color:#ff79c6">-&gt;</span>len, event<span style="color:#ff79c6">-&gt;</span>name));
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 75</span><span>                    {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 76</span><span>                        std<span style="color:#ff79c6">::</span>lock_guard<span style="color:#ff79c6">&lt;</span>std<span style="color:#ff79c6">::</span>mutex<span style="color:#ff79c6">&gt;</span> lock(m_fdMutex);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 77</span><span>                        <span style="color:#ff79c6">if</span> (event<span style="color:#ff79c6">-&gt;</span>wd <span style="color:#ff79c6">!=</span> m_watchFD) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 78</span><span>                            <span style="color:#ff79c6">continue</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 79</span><span>                        }
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 80</span><span>                    }
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 81</span><span>                    <span style="color:#6272a4">// 老的句柄被移除后，这里read会有一次ignore
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 82</span><span><span style="color:#6272a4"></span>                    <span style="color:#ff79c6">if</span> (event<span style="color:#ff79c6">-&gt;</span>mask <span style="color:#ff79c6">&amp;</span> (IN_IGNORED)) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 83</span><span>                        <span style="color:#ff79c6">continue</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 84</span><span>                    }
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 85</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 86</span><span>                    <span style="color:#6272a4">// 到这里说明文件存在改动
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 87</span><span><span style="color:#6272a4"></span>                    isChanged <span style="color:#ff79c6">=</span> <span style="color:#8be9fd;font-style:italic">true</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 88</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 89</span><span>                    <span style="color:#6272a4">// 这个文件被删除或重命名，需要重新进行添加
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 90</span><span><span style="color:#6272a4"></span>                    <span style="color:#ff79c6">if</span> (event<span style="color:#ff79c6">-&gt;</span>mask <span style="color:#ff79c6">&amp;</span> (IN_DELETE_SELF <span style="color:#ff79c6">|</span> IN_MOVE_SELF)) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 91</span><span>                        LOGI(WHAT(<span style="color:#f1fa8c">&#34;{}, file {} was renamed or deleted, retry open&#34;</span>, tag, m_filePath));
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 92</span><span>                        <span style="color:#ff79c6">if</span> (<span style="color:#ff79c6">!</span>addFileWatch()) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 93</span><span>                            LOGI(WHAT(<span style="color:#f1fa8c">&#34;{}, stop monitor&#34;</span>, tag));
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 94</span><span>                            <span style="color:#ff79c6">return</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 95</span><span>                        }
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 96</span><span>                    }
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 97</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 98</span><span>                } <span style="color:#ff79c6">while</span> (index <span style="color:#ff79c6">&lt;</span> len);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 99</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">100</span><span>                <span style="color:#ff79c6">if</span> (isChanged) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">101</span><span>                    <span style="color:#6272a4">// 文件发生变化
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">102</span><span><span style="color:#6272a4"></span>                    LOGI(WHAT(<span style="color:#f1fa8c">&#34;{}, file change&#34;</span>, tag));
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">103</span><span>                    notifyChangeCallback();
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">104</span><span>                }
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">105</span><span>            }
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">106</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">107</span><span>            LOGI(WHAT(<span style="color:#f1fa8c">&#34;{} end&#34;</span>, tag));
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">108</span><span>            {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">109</span><span>                std<span style="color:#ff79c6">::</span>lock_guard<span style="color:#ff79c6">&lt;</span>std<span style="color:#ff79c6">::</span>mutex<span style="color:#ff79c6">&gt;</span> lock(m_fdMutex);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">110</span><span>                <span style="color:#ff79c6">if</span> (m_monitorFD <span style="color:#ff79c6">&gt;=</span> <span style="color:#bd93f9">0</span>) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">111</span><span>                    <span style="color:#ff79c6">if</span> (m_watchFD <span style="color:#ff79c6">&gt;=</span> <span style="color:#bd93f9">0</span>) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">112</span><span>                        inotify_rm_watch(m_monitorFD, m_watchFD);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">113</span><span>                        m_watchFD <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">-</span><span style="color:#bd93f9">1</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">114</span><span>                    }
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">115</span><span>                    close(m_monitorFD);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">116</span><span>                    m_monitorFD <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">-</span><span style="color:#bd93f9">1</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">117</span><span>                }
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">118</span><span>            }
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">119</span><span>        }));
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">120</span><span>        p.get_future().wait();
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">121</span><span>    }
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">122</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">123</span><span>    <span style="color:#8be9fd">void</span> <span style="color:#50fa7b">stop</span>() {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">124</span><span>        <span style="color:#ff79c6">if</span> (m_monitorFuture <span style="color:#ff79c6">==</span> <span style="color:#ff79c6">nullptr</span> <span style="color:#ff79c6">||</span> <span style="color:#ff79c6">!</span>m_monitorFuture<span style="color:#ff79c6">-&gt;</span>valid()) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">125</span><span>            <span style="color:#ff79c6">return</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">126</span><span>        }
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">127</span><span>        <span style="color:#ff79c6">do</span> {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">128</span><span>            <span style="color:#6272a4">// 这里将总的fd关闭，将线程从read阻塞释放出来，然后将watch移除
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">129</span><span><span style="color:#6272a4"></span>            std<span style="color:#ff79c6">::</span>lock_guard<span style="color:#ff79c6">&lt;</span>std<span style="color:#ff79c6">::</span>mutex<span style="color:#ff79c6">&gt;</span> lock(m_fdMutex);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">130</span><span>            <span style="color:#ff79c6">if</span> (m_monitorFD <span style="color:#ff79c6">&gt;=</span> <span style="color:#bd93f9">0</span>) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">131</span><span>                <span style="color:#ff79c6">if</span> (m_watchFD <span style="color:#ff79c6">&gt;=</span> <span style="color:#bd93f9">0</span>) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">132</span><span>                    inotify_rm_watch(m_monitorFD, m_watchFD);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">133</span><span>                    m_watchFD <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">-</span><span style="color:#bd93f9">1</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">134</span><span>                }
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">135</span><span>                close(m_monitorFD);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">136</span><span>                m_monitorFD <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">-</span><span style="color:#bd93f9">1</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">137</span><span>            }
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">138</span><span>            <span style="color:#6272a4">// 可能还没打开就关闭了，这里确保一下future是正常的，防止死锁
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">139</span><span><span style="color:#6272a4"></span>        } <span style="color:#ff79c6">while</span> (m_monitorFuture<span style="color:#ff79c6">-&gt;</span>wait_for(std<span style="color:#ff79c6">::</span>chrono<span style="color:#ff79c6">::</span>milliseconds(<span style="color:#bd93f9">1</span>)) <span style="color:#ff79c6">!=</span> std<span style="color:#ff79c6">::</span>future_status<span style="color:#ff79c6">::</span>ready);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">140</span><span>        m_monitorFuture <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">nullptr</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">141</span><span>    }
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">142</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">143</span><span>    <span style="color:#6272a4">/**
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">144</span><span><span style="color:#6272a4">     * @brief 是否正在监控
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">145</span><span><span style="color:#6272a4">     * @return
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">146</span><span><span style="color:#6272a4">     */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">147</span><span>    <span style="color:#8be9fd">bool</span> <span style="color:#50fa7b">isRunning</span>() { <span style="color:#ff79c6">return</span> m_monitorFuture <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nullptr</span>; }
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">148</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">149</span><span>    <span style="color:#6272a4">/**
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">150</span><span><span style="color:#6272a4">     * @brief 添加文件变化回调
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">151</span><span><span style="color:#6272a4">     * @param callback
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">152</span><span><span style="color:#6272a4">     */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">153</span><span>    <span style="color:#8be9fd">void</span> <span style="color:#50fa7b">registerChangeCallback</span>(<span style="color:#ff79c6">const</span> std<span style="color:#ff79c6">::</span>function<span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd">void</span>()<span style="color:#ff79c6">&gt;</span> <span style="color:#ff79c6">&amp;</span>callback) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">154</span><span>        std<span style="color:#ff79c6">::</span>lock_guard<span style="color:#ff79c6">&lt;</span>std<span style="color:#ff79c6">::</span>mutex<span style="color:#ff79c6">&gt;</span> lock(m_callbackMutex);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">155</span><span>        m_callbacks.emplace_back(callback);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">156</span><span>    }
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">157</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">158</span><span>    <span style="color:#6272a4">/**
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">159</span><span><span style="color:#6272a4">     * @brief 移除文件变化回调
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">160</span><span><span style="color:#6272a4">     * @param callback
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">161</span><span><span style="color:#6272a4">     */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">162</span><span>    <span style="color:#8be9fd">void</span> <span style="color:#50fa7b">unregisterChangeCallback</span>(std<span style="color:#ff79c6">::</span>function<span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd">void</span>()<span style="color:#ff79c6">&gt;</span> callback) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">163</span><span>        std<span style="color:#ff79c6">::</span>lock_guard<span style="color:#ff79c6">&lt;</span>std<span style="color:#ff79c6">::</span>mutex<span style="color:#ff79c6">&gt;</span> lock(m_callbackMutex);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">164</span><span>        <span style="color:#ff79c6">for</span> (<span style="color:#ff79c6">auto</span> it <span style="color:#ff79c6">=</span> m_callbacks.begin(); it <span style="color:#ff79c6">!=</span> m_callbacks.end(); <span style="color:#ff79c6">++</span>it) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">165</span><span>            <span style="color:#ff79c6">if</span> (it<span style="color:#ff79c6">-&gt;</span>target<span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd">void</span> <span style="color:#ff79c6">*&gt;</span>() <span style="color:#ff79c6">==</span> callback.target<span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd">void</span> <span style="color:#ff79c6">*&gt;</span>()) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">166</span><span>                m_callbacks.erase(it);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">167</span><span>                <span style="color:#ff79c6">break</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">168</span><span>            }
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">169</span><span>        }
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">170</span><span>    }
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">171</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">172</span><span><span style="color:#ff79c6">private</span><span style="color:#ff79c6">:</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">173</span><span>    std<span style="color:#ff79c6">::</span>string m_filePath;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">174</span><span>    std<span style="color:#ff79c6">::</span>shared_ptr<span style="color:#ff79c6">&lt;</span>std<span style="color:#ff79c6">::</span>future<span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd">void</span><span style="color:#ff79c6">&gt;&gt;</span> m_monitorFuture;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">175</span><span>    std<span style="color:#ff79c6">::</span>mutex m_fdMutex;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">176</span><span>    <span style="color:#8be9fd">int</span> m_monitorFD <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">-</span><span style="color:#bd93f9">1</span>;                            <span style="color:#6272a4">// inotify的句柄
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">177</span><span><span style="color:#6272a4"></span>    <span style="color:#8be9fd">int</span> m_watchFD <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">-</span><span style="color:#bd93f9">1</span>;                              <span style="color:#6272a4">// 被添加的文件句柄
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">178</span><span><span style="color:#6272a4"></span>    std<span style="color:#ff79c6">::</span>mutex m_callbackMutex;                      <span style="color:#6272a4">// 对回调函数加锁
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">179</span><span><span style="color:#6272a4"></span>    std<span style="color:#ff79c6">::</span>vector<span style="color:#ff79c6">&lt;</span>std<span style="color:#ff79c6">::</span>function<span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd">void</span>()<span style="color:#ff79c6">&gt;&gt;</span> m_callbacks;  <span style="color:#6272a4">// 回调函数
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">180</span><span><span style="color:#6272a4"></span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">181</span><span>    <span style="color:#6272a4">/**
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">182</span><span><span style="color:#6272a4">     * @brief 通知变更的观察者，此文件变更
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">183</span><span><span style="color:#6272a4">     */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">184</span><span>    <span style="color:#8be9fd">void</span> <span style="color:#50fa7b">notifyChangeCallback</span>() {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">185</span><span>        std<span style="color:#ff79c6">::</span>vector<span style="color:#ff79c6">&lt;</span>std<span style="color:#ff79c6">::</span>function<span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd">void</span>()<span style="color:#ff79c6">&gt;&gt;</span> callbacks;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">186</span><span>        {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">187</span><span>            std<span style="color:#ff79c6">::</span>lock_guard<span style="color:#ff79c6">&lt;</span>std<span style="color:#ff79c6">::</span>mutex<span style="color:#ff79c6">&gt;</span> lock(m_callbackMutex);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">188</span><span>            callbacks <span style="color:#ff79c6">=</span> m_callbacks;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">189</span><span>        }
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">190</span><span>        <span style="color:#ff79c6">for</span> (<span style="color:#ff79c6">auto</span> <span style="color:#ff79c6">&amp;</span><span style="color:#8be9fd;font-style:italic">callback</span> : callbacks) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">191</span><span>            callback();
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">192</span><span>        }
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">193</span><span>    }
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">194</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">195</span><span>    <span style="color:#6272a4">/**
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">196</span><span><span style="color:#6272a4">     * @brief 添加一个文件到列表中
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">197</span><span><span style="color:#6272a4">     *
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">198</span><span><span style="color:#6272a4">     * @return 添加成功还是失败
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">199</span><span><span style="color:#6272a4">     */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">200</span><span>    <span style="color:#8be9fd">bool</span> <span style="color:#50fa7b">addFileWatch</span>() {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">201</span><span>        std<span style="color:#ff79c6">::</span>string tag <span style="color:#ff79c6">=</span> <span style="color:#f1fa8c">&#34;add file(&#34;</span> <span style="color:#ff79c6">+</span> m_filePath <span style="color:#ff79c6">+</span> <span style="color:#f1fa8c">&#34;) to watch&#34;</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">202</span><span>        {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">203</span><span>            std<span style="color:#ff79c6">::</span>lock_guard<span style="color:#ff79c6">&lt;</span>std<span style="color:#ff79c6">::</span>mutex<span style="color:#ff79c6">&gt;</span> lock(m_fdMutex);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">204</span><span>            <span style="color:#ff79c6">if</span> (m_monitorFD <span style="color:#ff79c6">&lt;</span> <span style="color:#bd93f9">0</span>) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">205</span><span>                <span style="color:#ff79c6">return</span> <span style="color:#8be9fd;font-style:italic">false</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">206</span><span>            }
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">207</span><span>            <span style="color:#6272a4">// 关闭上一次的句柄
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">208</span><span><span style="color:#6272a4"></span>            <span style="color:#ff79c6">if</span> (m_watchFD <span style="color:#ff79c6">&gt;=</span> <span style="color:#bd93f9">0</span>) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">209</span><span>                LOGI(WHAT(<span style="color:#f1fa8c">&#34;{}, remove watch fd {}&#34;</span>, tag, m_watchFD));
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">210</span><span>                inotify_rm_watch(m_monitorFD, m_watchFD);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">211</span><span>                m_watchFD <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">-</span><span style="color:#bd93f9">1</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">212</span><span>            }
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">213</span><span>        }
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">214</span><span>        <span style="color:#8be9fd">uint32_t</span> failedCount <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">215</span><span>        <span style="color:#6272a4">// 最大重试32位最大值的次数
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">216</span><span><span style="color:#6272a4"></span>        <span style="color:#ff79c6">while</span> (<span style="color:#ff79c6">++</span>failedCount) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">217</span><span>            <span style="color:#6272a4">// 重新加锁判断是否monitor已经被关了
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">218</span><span><span style="color:#6272a4"></span>            {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">219</span><span>                std<span style="color:#ff79c6">::</span>lock_guard<span style="color:#ff79c6">&lt;</span>std<span style="color:#ff79c6">::</span>mutex<span style="color:#ff79c6">&gt;</span> lock(m_fdMutex);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">220</span><span>                <span style="color:#ff79c6">if</span> (m_monitorFD <span style="color:#ff79c6">&lt;</span> <span style="color:#bd93f9">0</span>) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">221</span><span>                    <span style="color:#6272a4">// 这里说明外部关闭了监听fd，也就是析构了，退出就好
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">222</span><span><span style="color:#6272a4"></span>                    <span style="color:#ff79c6">return</span> <span style="color:#8be9fd;font-style:italic">false</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">223</span><span>                }
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">224</span><span>                <span style="color:#6272a4">// 监听所有事件，除了访问，打开和关闭，主要监听修改删除，添加成功直接返回
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">225</span><span><span style="color:#6272a4"></span>                m_watchFD <span style="color:#ff79c6">=</span> inotify_add_watch(m_monitorFD, m_filePath.c_str(),
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">226</span><span>                                              IN_ALL_EVENTS <span style="color:#ff79c6">^</span> (IN_ACCESS <span style="color:#ff79c6">|</span> IN_OPEN <span style="color:#ff79c6">|</span> IN_CLOSE));
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">227</span><span>                <span style="color:#ff79c6">if</span> (m_watchFD <span style="color:#ff79c6">&gt;</span> <span style="color:#bd93f9">0</span>) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">228</span><span>                    LOGI(WHAT(<span style="color:#f1fa8c">&#34;{}, add watch success, fd {}&#34;</span>, tag, m_watchFD));
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">229</span><span>                    <span style="color:#ff79c6">return</span> <span style="color:#8be9fd;font-style:italic">true</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">230</span><span>                }
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">231</span><span>            }
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">232</span><span>            <span style="color:#ff79c6">if</span> ((failedCount <span style="color:#ff79c6">%</span> <span style="color:#bd93f9">100</span>) <span style="color:#ff79c6">==</span> <span style="color:#bd93f9">1</span>) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">233</span><span>                LOGW(WHAT(<span style="color:#f1fa8c">&#34;{}, inotify_add_watch failed&#34;</span>, tag),
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">234</span><span>                     REASON(<span style="color:#f1fa8c">&#34;failed {} times, ec: {}&#34;</span>, failedCount,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">235</span><span>                            std<span style="color:#ff79c6">::</span>to_string(std<span style="color:#ff79c6">::</span>error_code(errno, std<span style="color:#ff79c6">::</span>system_category()))),
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">236</span><span>                     WILL(<span style="color:#f1fa8c">&#34;retry&#34;</span>));
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">237</span><span>            }
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">238</span><span>            std<span style="color:#ff79c6">::</span>this_thread<span style="color:#ff79c6">::</span>sleep_for(std<span style="color:#ff79c6">::</span>chrono<span style="color:#ff79c6">::</span>milliseconds(<span style="color:#bd93f9">10</span>));
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">239</span><span>        }
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">240</span><span>        LOGE(WHAT(<span style="color:#f1fa8c">&#34;{} failed&#34;</span>, tag),
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">241</span><span>             REASON(<span style="color:#f1fa8c">&#34;reach max failed count {}, ec: {}&#34;</span>, failedCount <span style="color:#ff79c6">-</span> <span style="color:#bd93f9">1</span>, m_filePath,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">242</span><span>                    std<span style="color:#ff79c6">::</span>to_string(std<span style="color:#ff79c6">::</span>error_code(errno, std<span style="color:#ff79c6">::</span>system_category()))),
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">243</span><span>             WILL(<span style="color:#f1fa8c">&#34;stop watch file&#34;</span>));
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">244</span><span>        <span style="color:#ff79c6">return</span> <span style="color:#8be9fd;font-style:italic">false</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">245</span><span>    }
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">246</span><span>};
 </span></span></code></pre></div><h1 id="二源码分析">
   二、源码分析
   <a class="anchor" href="#%e4%ba%8c%e6%ba%90%e7%a0%81%e5%88%86%e6%9e%90">#</a>
