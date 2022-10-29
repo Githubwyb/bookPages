@@ -15,6 +15,15 @@
     </item>
     
     <item>
+      <title>kfifo 无锁循环队列</title>
+      <link>/docs/linux-kernel/data-structures/kfifo/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux-kernel/data-structures/kfifo/</guid>
+      <description>一、提供的接口 #  1. 定义相关 #   声明和初始化  1// include/linux/kfifo.h 2/** 3* DECLARE_KFIFO - macro to declare a fifo object 4* @fifo: name of the declared fifo 5* @type: type of the fifo elements 6* @size: the number of elements in the fifo, this must be a power of 2 7*/ 8#define DECLARE_KFIFO(fifo, type, size) STRUCT_KFIFO(type, size) fifo 9 10/** 11* INIT_KFIFO - Initialize a fifo declared by DECLARE_KFIFO 12* @fifo: name of the declared fifo datatype 13*/ 14#define INIT_KFIFO(fifo) \ 15(void)({ \ 16typeof(&amp;amp;(fifo)) __tmp = &amp;amp;(fifo); \ 17struct __kfifo *__kfifo = &amp;amp;__tmp-&amp;gt;kfifo; \ 18__kfifo-&amp;gt;in = 0; \ 19__kfifo-&amp;gt;out = 0; \ 20__kfifo-&amp;gt;mask = __is_kfifo_ptr(__tmp) ?</description>
+    </item>
+    
+    <item>
       <title>rbtree 红黑树</title>
       <link>/docs/linux-kernel/data-structures/rbtree/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>

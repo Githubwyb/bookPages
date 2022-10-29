@@ -5,19 +5,19 @@
   <meta name="generator" content="Hugo 0.92.2" />
   <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="一、ipv4收包后如何处理 #  1. ip层包入口 #  1// net/ipv4/ip_input.c 2/* 3* Deliver IP Packets to the higher protocol layers. 4*/ 5int ip_local_deliver(struct sk_buff *skb) { 6	/* 7*	Reassemble IP fragments. 8*/ 9	struct net *net = dev_net(skb-&gt;dev); 10 11 // 判断是否为分片包，分片包就先处理分片 12	if (ip_is_fragment(ip_hdr(skb))) { 13	if (ip_defrag(net, skb, IP_DEFRAG_LOCAL_DELIVER)) 14	return 0; 15	} 16 17 // 分片处理完毕调用ip_local_deliver_finish() 18	return NF_HOOK(NFPROTO_IPV4, NF_INET_LOCAL_IN, 19	net, NULL, skb, skb-&gt;dev, NULL, 20	ip_local_deliver_finish); 21}  根据ip包内的协议处理具体的协议  1// net/ipv4/ip_input.">
+<meta name="description" content="一、ipv4收包后如何处理 #  1. ip层包入口 #  1// net/ipv4/ip_input.c 2/* 3* Deliver IP Packets to the higher protocol layers. 4*/ 5int ip_local_deliver(struct sk_buff *skb) { 6 /* 7*	Reassemble IP fragments. 8*/ 9 struct net *net = dev_net(skb-&gt;dev); 10 11 // 判断是否为分片包，分片包就先处理分片 12 if (ip_is_fragment(ip_hdr(skb))) { 13 if (ip_defrag(net, skb, IP_DEFRAG_LOCAL_DELIVER)) 14 return 0; 15 } 16 17 // 分片处理完毕调用ip_local_deliver_finish() 18 return NF_HOOK(NFPROTO_IPV4, NF_INET_LOCAL_IN, 19 net, NULL, skb, skb-&gt;dev, NULL, 20 ip_local_deliver_finish); 21}  根据ip包内的协议处理具体的协议  1// net/ipv4/ip_input.">
 <meta name="theme-color" content="#FFFFFF"><meta property="og:title" content="" />
-<meta property="og:description" content="一、ipv4收包后如何处理 #  1. ip层包入口 #  1// net/ipv4/ip_input.c 2/* 3* Deliver IP Packets to the higher protocol layers. 4*/ 5int ip_local_deliver(struct sk_buff *skb) { 6	/* 7*	Reassemble IP fragments. 8*/ 9	struct net *net = dev_net(skb-&gt;dev); 10 11 // 判断是否为分片包，分片包就先处理分片 12	if (ip_is_fragment(ip_hdr(skb))) { 13	if (ip_defrag(net, skb, IP_DEFRAG_LOCAL_DELIVER)) 14	return 0; 15	} 16 17 // 分片处理完毕调用ip_local_deliver_finish() 18	return NF_HOOK(NFPROTO_IPV4, NF_INET_LOCAL_IN, 19	net, NULL, skb, skb-&gt;dev, NULL, 20	ip_local_deliver_finish); 21}  根据ip包内的协议处理具体的协议  1// net/ipv4/ip_input." />
+<meta property="og:description" content="一、ipv4收包后如何处理 #  1. ip层包入口 #  1// net/ipv4/ip_input.c 2/* 3* Deliver IP Packets to the higher protocol layers. 4*/ 5int ip_local_deliver(struct sk_buff *skb) { 6 /* 7*	Reassemble IP fragments. 8*/ 9 struct net *net = dev_net(skb-&gt;dev); 10 11 // 判断是否为分片包，分片包就先处理分片 12 if (ip_is_fragment(ip_hdr(skb))) { 13 if (ip_defrag(net, skb, IP_DEFRAG_LOCAL_DELIVER)) 14 return 0; 15 } 16 17 // 分片处理完毕调用ip_local_deliver_finish() 18 return NF_HOOK(NFPROTO_IPV4, NF_INET_LOCAL_IN, 19 net, NULL, skb, skb-&gt;dev, NULL, 20 ip_local_deliver_finish); 21}  根据ip包内的协议处理具体的协议  1// net/ipv4/ip_input." />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="/docs/linux-kernel/net/ipv4/ipv4/" /><meta property="article:section" content="docs" />
 
-<meta property="article:modified_time" content="2022-09-23T18:05:06+08:00" />
+<meta property="article:modified_time" content="2022-10-29T14:42:10+08:00" />
 
 <title>Ipv4 | 技术的路上奔跑</title>
 <link rel="manifest" href="../../../../../manifest.json">
 <link rel="icon" href="../../../../../favicon.png" type="image/x-icon">
 <link rel="stylesheet" href="../../../../../book.min.46181bc93375ba932026e753b37c40e6ff8bb16a9ef770c78bcc663e4577b1ba.css" integrity="sha256-RhgbyTN1upMgJudTs3xA5v&#43;LsWqe93DHi8xmPkV3sbo=">
-<script defer src="../../../../../en.search.min.4fc3554654e38b30da0185df663f57179f3bfb15db82b198fd172835e4c1aa73.js" integrity="sha256-T8NVRlTjizDaAYXfZj9XF587&#43;xXbgrGY/RcoNeTBqnM="></script>
+<script defer src="../../../../../en.search.min.26ff64cfe5cf0f919db92cd933a5a942f837c7186755c5f1ff36b1f5d7b23fde.js" integrity="sha256-Jv9kz&#43;XPD5GduSzZM6WpQvg3xxhnVcXx/zax9deyP94="></script>
 
 <script defer src="../../../../../sw.min.6f6f90fcb8eb1c49ec389838e6b801d0de19430b8e516902f8d75c3c8bd98739.js" integrity="sha256-b2&#43;Q/LjrHEnsOJg45rgB0N4ZQwuOUWkC&#43;NdcPIvZhzk="></script>
 <!--
@@ -49,7 +49,7 @@ document.addEventListener("DOMContentLoaded", function(){
   Array.prototype.forEach.call(document.querySelectorAll("[class^=" + plantumlPrefix + "]"), function(code){
     let image = document.createElement("IMG");
     image.loading = 'lazy'; 
-    image.src = 'http://www.plantuml.com/plantuml/svg/~1' + plantumlEncoder.encode(code.innerText);
+    image.src = 'https://www.plantuml.com/plantuml/svg/~1' + plantumlEncoder.encode(code.innerText);
     code.style.display = 'none';
     code.parentNode.style = 'text-align: center; margin: 0; padding: 0; background-color: transparent;';
 
@@ -138,6 +138,32 @@ document.addEventListener("DOMContentLoaded", function(){
   
 
   
+    <a href="../../../../../docs/c&#43;&#43;/macro/" class="">预定义宏</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/c&#43;&#43;/move/" class="">Move</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
     <a href="../../../../../docs/c&#43;&#43;/shared_ptr/" class="">Shared Ptr</a>
   
 
@@ -172,6 +198,27 @@ document.addEventListener("DOMContentLoaded", function(){
   
 
   
+    <input type="checkbox" id="section-04ff82e96d9e93a5a1119ceb9773cc7c" class="toggle"  />
+    <label for="section-04ff82e96d9e93a5a1119ceb9773cc7c" class="flex justify-between">
+      <a href="../../../../../docs/linux-kernel/compile-thinking/" class="">编译思想</a>
+    </label>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
     <input type="checkbox" id="section-9303fec21cc4fc7ad047d15e6eb3190c" class="toggle"  />
     <label for="section-9303fec21cc4fc7ad047d15e6eb3190c" class="flex justify-between">
       <a  class="">数据结构</a>
@@ -189,6 +236,19 @@ document.addEventListener("DOMContentLoaded", function(){
 
   
     <a href="../../../../../docs/linux-kernel/data-structures/container_of/" class="">container_of() 根据成员地址找其所在结构体</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux-kernel/data-structures/kfifo/" class="">kfifo 无锁循环队列</a>
   
 
         </li>
@@ -234,7 +294,7 @@ document.addEventListener("DOMContentLoaded", function(){
   
     <input type="checkbox" id="section-db00978f5ef311f1bdd522d2c7531cff" class="toggle"  />
     <label for="section-db00978f5ef311f1bdd522d2c7531cff" class="flex justify-between">
-      <a  class="">/drivers 驱动部分</a>
+      <a  class="">/drivers/ 驱动部分</a>
     </label>
   
 
@@ -250,7 +310,7 @@ document.addEventListener("DOMContentLoaded", function(){
   
     <input type="checkbox" id="section-ff61754b45daafe9c0255f580a204780" class="toggle"  />
     <label for="section-ff61754b45daafe9c0255f580a204780" class="flex justify-between">
-      <a  class="">/drivers/net 网卡驱动部分</a>
+      <a  class="">net/ 网卡驱动部分</a>
     </label>
   
 
@@ -302,7 +362,7 @@ document.addEventListener("DOMContentLoaded", function(){
   
     <input type="checkbox" id="section-29c56fa5f9066aaae4370fc352fcd084" class="toggle" checked />
     <label for="section-29c56fa5f9066aaae4370fc352fcd084" class="flex justify-between">
-      <a  class="">/net 网络部分</a>
+      <a  class="">/net/ 网络部分</a>
     </label>
   
 
@@ -316,33 +376,7 @@ document.addEventListener("DOMContentLoaded", function(){
   
 
   
-    <a href="../../../../../docs/linux-kernel/net/socket/" class="">Socket</a>
-  
-
-        </li>
-      
-    
-      
-        <li>
-          
-  
-  
-
-  
-    <a href="../../../../../docs/linux-kernel/net/common/" class="">网络数据包处理</a>
-  
-
-        </li>
-      
-    
-      
-        <li>
-          
-  
-  
-
-  
-    <a href="../../../../../docs/linux-kernel/net/epoll/" class="">Epoll</a>
+    <a href="../../../../../docs/linux-kernel/net/common/" class="">网络数据包处理流程</a>
   
 
         </li>
@@ -357,7 +391,7 @@ document.addEventListener("DOMContentLoaded", function(){
   
     <input type="checkbox" id="section-b6a41843e876ff4c7561d97248ef46af" class="toggle" checked />
     <label for="section-b6a41843e876ff4c7561d97248ef46af" class="flex justify-between">
-      <a  class="">/net/ipv4 ipv4的处理部分</a>
+      <a  class="">ipv4/ ipv4的处理部分</a>
     </label>
   
 
@@ -402,8 +436,115 @@ document.addEventListener("DOMContentLoaded", function(){
   
 
   
+    <a href="../../../../../docs/linux-kernel/net/epoll/" class="">Epoll</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
     <a href="../../../../../docs/linux-kernel/net/iptables/" class="">Iptables</a>
   
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux-kernel/net/socket/" class="">Socket</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-93d8598b825331a794e3bf0286a587e7" class="toggle"  />
+    <label for="section-93d8598b825331a794e3bf0286a587e7" class="flex justify-between">
+      <a  class="">/arch/ cpu体系架构</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-604d624ce1406f7c24c07a8dde4cfa26" class="toggle"  />
+    <label for="section-604d624ce1406f7c24c07a8dde4cfa26" class="flex justify-between">
+      <a  class="">公共处理方式</a>
+    </label>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-267bffd0c5dd41fc2d3ae4cf3b0f9245" class="toggle"  />
+    <label for="section-267bffd0c5dd41fc2d3ae4cf3b0f9245" class="flex justify-between">
+      <a  class="">x86/ x86体系</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux-kernel/arch/x86/gdt-idt-ldt-tss-tgd/" class="">gdt/idt/ldt/tss/tgd</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
 
         </li>
       
@@ -422,7 +563,7 @@ document.addEventListener("DOMContentLoaded", function(){
   
     <input type="checkbox" id="section-4f2d8fd7ae8f1cd0d55c165a863d638c" class="toggle"  />
     <label for="section-4f2d8fd7ae8f1cd0d55c165a863d638c" class="flex justify-between">
-      <a  class="">/fs 文件部分</a>
+      <a  class="">/fs/ 文件部分</a>
     </label>
   
 
@@ -610,6 +751,19 @@ document.addEventListener("DOMContentLoaded", function(){
         </li>
       
     
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2413/" class="">2413. Smallest Even Multiple</a>
+  
+
+          
+  <ul>
+    
   </ul>
 
         </li>
@@ -622,8 +776,31 @@ document.addEventListener("DOMContentLoaded", function(){
   
 
   
-    <input type="checkbox" id="section-4866e8369da1eb6122f802a13b19fe46" class="toggle"  />
-    <label for="section-4866e8369da1eb6122f802a13b19fe46" class="flex justify-between">
+    <a href="../../../../../docs/leetcode/simple/leetcode2418/" class="">2418. Sort the People</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-dbe51e7e4a89495069ffe18bd5d28a03" class="toggle"  />
+    <label for="section-dbe51e7e4a89495069ffe18bd5d28a03" class="flex justify-between">
       <a  class="">中等</a>
     </label>
   
@@ -638,7 +815,7 @@ document.addEventListener("DOMContentLoaded", function(){
   
 
   
-    <a href="../../../../../docs/leetcode/middle/leetcode3/" class="">- 3. Longest Substring Without Repeating Characters</a>
+    <a href="../../../../../docs/leetcode/medium/leetcode3/" class="">- 3. Longest Substring Without Repeating Characters</a>
   
 
           
@@ -656,7 +833,7 @@ document.addEventListener("DOMContentLoaded", function(){
   
 
   
-    <a href="../../../../../docs/leetcode/middle/leetcode5/" class="">- 5. Longest Palindromic Substring</a>
+    <a href="../../../../../docs/leetcode/medium/leetcode5/" class="">- 5. Longest Palindromic Substring</a>
   
 
           
@@ -674,7 +851,7 @@ document.addEventListener("DOMContentLoaded", function(){
   
 
   
-    <a href="../../../../../docs/leetcode/middle/leetcode6/" class="">- 6. ZigZag Conversion</a>
+    <a href="../../../../../docs/leetcode/medium/leetcode6/" class="">- 6. ZigZag Conversion</a>
   
 
           
@@ -692,7 +869,7 @@ document.addEventListener("DOMContentLoaded", function(){
   
 
   
-    <a href="../../../../../docs/leetcode/middle/leetcode7/" class="">- 7. Reverse Integer</a>
+    <a href="../../../../../docs/leetcode/medium/leetcode7/" class="">- 7. Reverse Integer</a>
   
 
           
@@ -710,7 +887,7 @@ document.addEventListener("DOMContentLoaded", function(){
   
 
   
-    <a href="../../../../../docs/leetcode/middle/leetcode8/" class="">- 8. String to Integer (atoi)</a>
+    <a href="../../../../../docs/leetcode/medium/leetcode8/" class="">- 8. String to Integer (atoi)</a>
   
 
           
@@ -728,7 +905,7 @@ document.addEventListener("DOMContentLoaded", function(){
   
 
   
-    <a href="../../../../../docs/leetcode/middle/leetcode11/" class="">- 11. Container With Most Water</a>
+    <a href="../../../../../docs/leetcode/medium/leetcode11/" class="">- 11. Container With Most Water</a>
   
 
           
@@ -746,7 +923,7 @@ document.addEventListener("DOMContentLoaded", function(){
   
 
   
-    <a href="../../../../../docs/leetcode/middle/leetcode12/" class="">- 12. Integer to Roman</a>
+    <a href="../../../../../docs/leetcode/medium/leetcode12/" class="">- 12. Integer to Roman</a>
   
 
           
@@ -764,7 +941,7 @@ document.addEventListener("DOMContentLoaded", function(){
   
 
   
-    <a href="../../../../../docs/leetcode/middle/leetcode322/" class="">- 322. Coin Change</a>
+    <a href="../../../../../docs/leetcode/medium/leetcode322/" class="">- 322. Coin Change</a>
   
 
           
@@ -782,7 +959,7 @@ document.addEventListener("DOMContentLoaded", function(){
   
 
   
-    <a href="../../../../../docs/leetcode/middle/leetcode658/" class="">- 658. Find K Closest Elements</a>
+    <a href="../../../../../docs/leetcode/medium/leetcode658/" class="">- 658. Find K Closest Elements</a>
   
 
           
@@ -800,7 +977,7 @@ document.addEventListener("DOMContentLoaded", function(){
   
 
   
-    <a href="../../../../../docs/leetcode/middle/leetcode948/" class="">- 948. Bag of Tokens</a>
+    <a href="../../../../../docs/leetcode/medium/leetcode948/" class="">- 948. Bag of Tokens</a>
   
 
           
@@ -818,7 +995,7 @@ document.addEventListener("DOMContentLoaded", function(){
   
 
   
-    <a href="../../../../../docs/leetcode/middle/leetcode1169/" class="">- 1169. Invalid Transactions</a>
+    <a href="../../../../../docs/leetcode/medium/leetcode1169/" class="">- 1169. Invalid Transactions</a>
   
 
           
@@ -836,7 +1013,7 @@ document.addEventListener("DOMContentLoaded", function(){
   
 
   
-    <a href="../../../../../docs/leetcode/middle/leetcode1352/" class="">- 1352. Product of the Last K Numbers</a>
+    <a href="../../../../../docs/leetcode/medium/leetcode1352/" class="">- 1352. Product of the Last K Numbers</a>
   
 
           
@@ -854,7 +1031,7 @@ document.addEventListener("DOMContentLoaded", function(){
   
 
   
-    <a href="../../../../../docs/leetcode/middle/leetcode2401/" class="">- 2400. Number of Ways to Reach a Position After Exactly k Steps</a>
+    <a href="../../../../../docs/leetcode/medium/leetcode2401/" class="">- 2400. Number of Ways to Reach a Position After Exactly k Steps</a>
   
 
           
@@ -872,7 +1049,61 @@ document.addEventListener("DOMContentLoaded", function(){
   
 
   
-    <a href="../../../../../docs/leetcode/middle/leetcode2400/" class="">- 2401. Longest Nice Subarray</a>
+    <a href="../../../../../docs/leetcode/medium/leetcode2400/" class="">- 2401. Longest Nice Subarray</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2414/" class="">2414. Length of the Longest Alphabetical Continuous Substring</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2415/" class="">2415. Reverse Odd Levels of Binary Tree</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2419/" class="">2415. Reverse Odd Levels of Binary Tree</a>
   
 
           
@@ -930,6 +1161,24 @@ document.addEventListener("DOMContentLoaded", function(){
 
   
     <a href="../../../../../docs/leetcode/hard/leetcode10/" class="">* 10. Regular Expression Matching</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/hard/leetcode440/" class="">440. K-th Smallest in Lexicographical Order</a>
   
 
           
@@ -1087,21 +1336,21 @@ document.addEventListener("DOMContentLoaded", function(){
 </span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span><span style="color:#6272a4"> * 	Deliver IP Packets to the higher protocol layers.
 </span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span><span><span style="color:#6272a4"> */</span>
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span><span><span style="color:#8be9fd">int</span> <span style="color:#50fa7b">ip_local_deliver</span>(<span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">sk_buff</span> <span style="color:#ff79c6">*</span>skb) {
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span><span>	<span style="color:#6272a4">/*
-</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span><span><span style="color:#6272a4">	 *	Reassemble IP fragments.
-</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span><span style="color:#6272a4">	 */</span>
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span><span>	<span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">net</span> <span style="color:#ff79c6">*</span>net <span style="color:#ff79c6">=</span> dev_net(skb<span style="color:#ff79c6">-&gt;</span>dev);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span><span>    <span style="color:#6272a4">/*
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span><span><span style="color:#6272a4">     *	Reassemble IP fragments.
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span><span style="color:#6272a4">     */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span><span>    <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">net</span> <span style="color:#ff79c6">*</span>net <span style="color:#ff79c6">=</span> dev_net(skb<span style="color:#ff79c6">-&gt;</span>dev);
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span><span>
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span><span>    <span style="color:#6272a4">// 判断是否为分片包，分片包就先处理分片
-</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span><span style="color:#6272a4"></span>	<span style="color:#ff79c6">if</span> (ip_is_fragment(ip_hdr(skb))) {
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span>		<span style="color:#ff79c6">if</span> (ip_defrag(net, skb, IP_DEFRAG_LOCAL_DELIVER))
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span>			<span style="color:#ff79c6">return</span> <span style="color:#bd93f9">0</span>;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span><span>	}
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span><span style="color:#6272a4"></span>    <span style="color:#ff79c6">if</span> (ip_is_fragment(ip_hdr(skb))) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span>        <span style="color:#ff79c6">if</span> (ip_defrag(net, skb, IP_DEFRAG_LOCAL_DELIVER))
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span>            <span style="color:#ff79c6">return</span> <span style="color:#bd93f9">0</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span><span>    }
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span><span>
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span><span>    <span style="color:#6272a4">// 分片处理完毕调用ip_local_deliver_finish()
-</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span><span><span style="color:#6272a4"></span>	<span style="color:#ff79c6">return</span> NF_HOOK(NFPROTO_IPV4, NF_INET_LOCAL_IN,
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span><span>		       net, <span style="color:#8be9fd;font-style:italic">NULL</span>, skb, skb<span style="color:#ff79c6">-&gt;</span>dev, <span style="color:#8be9fd;font-style:italic">NULL</span>,
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span><span>		       ip_local_deliver_finish);
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span><span><span style="color:#6272a4"></span>    <span style="color:#ff79c6">return</span> NF_HOOK(NFPROTO_IPV4, NF_INET_LOCAL_IN,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span><span>               net, <span style="color:#8be9fd;font-style:italic">NULL</span>, skb, skb<span style="color:#ff79c6">-&gt;</span>dev, <span style="color:#8be9fd;font-style:italic">NULL</span>,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span><span>               ip_local_deliver_finish);
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21</span><span>}
 </span></span></code></pre></div><ul>
 <li>根据ip包内的协议处理具体的协议</li>
@@ -1109,44 +1358,44 @@ document.addEventListener("DOMContentLoaded", function(){
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span><span style="color:#6272a4">// net/ipv4/ip_input.c
 </span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span><span><span style="color:#6272a4">// ip_local_deliver_finish() -call-&gt; ip_local_deliver_finish()
 </span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span><span style="color:#6272a4"></span><span style="color:#8be9fd">void</span> <span style="color:#50fa7b">ip_local_deliver_finish</span>(<span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">net</span> <span style="color:#ff79c6">*</span>net, <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">sk_buff</span> <span style="color:#ff79c6">*</span>skb, <span style="color:#8be9fd">int</span> protocol) {
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span><span>	<span style="color:#ff79c6">const</span> <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">net_protocol</span> <span style="color:#ff79c6">*</span>ipprot;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span><span>	<span style="color:#8be9fd">int</span> raw, ret;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span><span>    <span style="color:#ff79c6">const</span> <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">net_protocol</span> <span style="color:#ff79c6">*</span>ipprot;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span><span>    <span style="color:#8be9fd">int</span> raw, ret;
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span><span>
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span><span><span style="color:#8be9fd;font-style:italic">resubmit</span>:
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span>	raw <span style="color:#ff79c6">=</span> raw_local_deliver(skb, protocol);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span>    raw <span style="color:#ff79c6">=</span> raw_local_deliver(skb, protocol);
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span><span>
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span><span>    <span style="color:#6272a4">// 这里找到具体的协议的处理函数，然后调用具体的协议处理函数
-</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span><span><span style="color:#6272a4"></span>	ipprot <span style="color:#ff79c6">=</span> rcu_dereference(inet_protos[protocol]);
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span>	<span style="color:#ff79c6">if</span> (ipprot) {
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span>		<span style="color:#ff79c6">if</span> (<span style="color:#ff79c6">!</span>ipprot<span style="color:#ff79c6">-&gt;</span>no_policy) {
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span>			<span style="color:#ff79c6">if</span> (<span style="color:#ff79c6">!</span>xfrm4_policy_check(<span style="color:#8be9fd;font-style:italic">NULL</span>, XFRM_POLICY_IN, skb)) {
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span><span>				kfree_skb(skb);
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span><span>				<span style="color:#ff79c6">return</span>;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span><span>			}
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span><span>			nf_reset_ct(skb);
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span><span>		}
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span><span><span style="color:#6272a4"></span>    ipprot <span style="color:#ff79c6">=</span> rcu_dereference(inet_protos[protocol]);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span>    <span style="color:#ff79c6">if</span> (ipprot) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span>        <span style="color:#ff79c6">if</span> (<span style="color:#ff79c6">!</span>ipprot<span style="color:#ff79c6">-&gt;</span>no_policy) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span>            <span style="color:#ff79c6">if</span> (<span style="color:#ff79c6">!</span>xfrm4_policy_check(<span style="color:#8be9fd;font-style:italic">NULL</span>, XFRM_POLICY_IN, skb)) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span><span>                kfree_skb(skb);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span><span>                <span style="color:#ff79c6">return</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span><span>            }
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span><span>            nf_reset_ct(skb);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span><span>        }
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span><span>        <span style="color:#6272a4">// 相当于调用ipprot-&gt;handler(skb)
-</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21</span><span><span style="color:#6272a4"></span>		ret <span style="color:#ff79c6">=</span> INDIRECT_CALL_2(ipprot<span style="color:#ff79c6">-&gt;</span>handler, tcp_v4_rcv, udp_rcv,
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22</span><span>				      skb);
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23</span><span>		<span style="color:#ff79c6">if</span> (ret <span style="color:#ff79c6">&lt;</span> <span style="color:#bd93f9">0</span>) {
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24</span><span>			protocol <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">-</span>ret;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25</span><span>			<span style="color:#ff79c6">goto</span> resubmit;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26</span><span>		}
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27</span><span>		__IP_INC_STATS(net, IPSTATS_MIB_INDELIVERS);
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28</span><span>	} <span style="color:#ff79c6">else</span> {
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29</span><span>		<span style="color:#ff79c6">if</span> (<span style="color:#ff79c6">!</span>raw) {
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">30</span><span>			<span style="color:#ff79c6">if</span> (xfrm4_policy_check(<span style="color:#8be9fd;font-style:italic">NULL</span>, XFRM_POLICY_IN, skb)) {
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">31</span><span>				__IP_INC_STATS(net, IPSTATS_MIB_INUNKNOWNPROTOS);
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21</span><span><span style="color:#6272a4"></span>        ret <span style="color:#ff79c6">=</span> INDIRECT_CALL_2(ipprot<span style="color:#ff79c6">-&gt;</span>handler, tcp_v4_rcv, udp_rcv,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22</span><span>                      skb);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23</span><span>        <span style="color:#ff79c6">if</span> (ret <span style="color:#ff79c6">&lt;</span> <span style="color:#bd93f9">0</span>) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24</span><span>            protocol <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">-</span>ret;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25</span><span>            <span style="color:#ff79c6">goto</span> resubmit;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26</span><span>        }
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27</span><span>        __IP_INC_STATS(net, IPSTATS_MIB_INDELIVERS);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28</span><span>    } <span style="color:#ff79c6">else</span> {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29</span><span>        <span style="color:#ff79c6">if</span> (<span style="color:#ff79c6">!</span>raw) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">30</span><span>            <span style="color:#ff79c6">if</span> (xfrm4_policy_check(<span style="color:#8be9fd;font-style:italic">NULL</span>, XFRM_POLICY_IN, skb)) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">31</span><span>                __IP_INC_STATS(net, IPSTATS_MIB_INUNKNOWNPROTOS);
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">32</span><span>                <span style="color:#6272a4">// 这里是服务端会回复一个icmp包，内容就是端口不可达
-</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">33</span><span><span style="color:#6272a4"></span>				icmp_send(skb, ICMP_DEST_UNREACH,
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">34</span><span>					  ICMP_PROT_UNREACH, <span style="color:#bd93f9">0</span>);
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">35</span><span>			}
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">36</span><span>			kfree_skb(skb);
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">37</span><span>		} <span style="color:#ff79c6">else</span> {
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">38</span><span>			__IP_INC_STATS(net, IPSTATS_MIB_INDELIVERS);
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">39</span><span>			consume_skb(skb);
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">40</span><span>		}
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">41</span><span>	}
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">33</span><span><span style="color:#6272a4"></span>                icmp_send(skb, ICMP_DEST_UNREACH,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">34</span><span>                      ICMP_PROT_UNREACH, <span style="color:#bd93f9">0</span>);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">35</span><span>            }
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">36</span><span>            kfree_skb(skb);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">37</span><span>        } <span style="color:#ff79c6">else</span> {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">38</span><span>            __IP_INC_STATS(net, IPSTATS_MIB_INDELIVERS);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">39</span><span>            consume_skb(skb);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">40</span><span>        }
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">41</span><span>    }
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">42</span><span>}
 </span></span></code></pre></div><ul>
 <li><code>inet_protos[protocol]</code>是一个指向net_protocol结构的指针，net_protocol结构中包含了协议的处理函数</li>
@@ -1171,159 +1420,159 @@ document.addEventListener("DOMContentLoaded", function(){
 </span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  4</span><span><span style="color:#6272a4"> */</span>
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  5</span><span>
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  6</span><span><span style="color:#ff79c6">static</span> <span style="color:#8be9fd">int</span> <span style="color:#50fa7b">inet_create</span>(<span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">net</span> <span style="color:#ff79c6">*</span>net, <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">socket</span> <span style="color:#ff79c6">*</span>sock, <span style="color:#8be9fd">int</span> protocol,
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  7</span><span>		       <span style="color:#8be9fd">int</span> kern)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  7</span><span>               <span style="color:#8be9fd">int</span> kern)
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  8</span><span>{
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  9</span><span>	<span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">sock</span> <span style="color:#ff79c6">*</span>sk;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 10</span><span>	<span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">inet_protosw</span> <span style="color:#ff79c6">*</span>answer;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 11</span><span>	<span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">inet_sock</span> <span style="color:#ff79c6">*</span>inet;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 12</span><span>	<span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">proto</span> <span style="color:#ff79c6">*</span>answer_prot;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 13</span><span>	<span style="color:#8be9fd">unsigned</span> <span style="color:#8be9fd">char</span> answer_flags;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 14</span><span>	<span style="color:#8be9fd">int</span> try_loading_module <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0</span>;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 15</span><span>	<span style="color:#8be9fd">int</span> err;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  9</span><span>    <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">sock</span> <span style="color:#ff79c6">*</span>sk;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 10</span><span>    <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">inet_protosw</span> <span style="color:#ff79c6">*</span>answer;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 11</span><span>    <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">inet_sock</span> <span style="color:#ff79c6">*</span>inet;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 12</span><span>    <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">proto</span> <span style="color:#ff79c6">*</span>answer_prot;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 13</span><span>    <span style="color:#8be9fd">unsigned</span> <span style="color:#8be9fd">char</span> answer_flags;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 14</span><span>    <span style="color:#8be9fd">int</span> try_loading_module <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 15</span><span>    <span style="color:#8be9fd">int</span> err;
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 16</span><span>
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 17</span><span>	<span style="color:#ff79c6">if</span> (protocol <span style="color:#ff79c6">&lt;</span> <span style="color:#bd93f9">0</span> <span style="color:#ff79c6">||</span> protocol <span style="color:#ff79c6">&gt;=</span> IPPROTO_MAX)
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 18</span><span>		<span style="color:#ff79c6">return</span> <span style="color:#ff79c6">-</span>EINVAL;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 17</span><span>    <span style="color:#ff79c6">if</span> (protocol <span style="color:#ff79c6">&lt;</span> <span style="color:#bd93f9">0</span> <span style="color:#ff79c6">||</span> protocol <span style="color:#ff79c6">&gt;=</span> IPPROTO_MAX)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 18</span><span>        <span style="color:#ff79c6">return</span> <span style="color:#ff79c6">-</span>EINVAL;
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 19</span><span>
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 20</span><span>	<span style="color:#6272a4">// 初始化状态为SS_UNCONNETED
-</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 21</span><span><span style="color:#6272a4"></span>	sock<span style="color:#ff79c6">-&gt;</span>state <span style="color:#ff79c6">=</span> SS_UNCONNECTED;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 20</span><span>    <span style="color:#6272a4">// 初始化状态为SS_UNCONNETED
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 21</span><span><span style="color:#6272a4"></span>    sock<span style="color:#ff79c6">-&gt;</span>state <span style="color:#ff79c6">=</span> SS_UNCONNECTED;
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 22</span><span>
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 23</span><span>	<span style="color:#6272a4">/* Look for the requested type/protocol pair. */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 23</span><span>    <span style="color:#6272a4">/* Look for the requested type/protocol pair. */</span>
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 24</span><span><span style="color:#8be9fd;font-style:italic">lookup_protocol</span>:
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 25</span><span>	err <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">-</span>ESOCKTNOSUPPORT;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 26</span><span>	rcu_read_lock();
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 27</span><span>	<span style="color:#6272a4">// 从inetsw中找到对应协议的结构体，赋值给answer变量
-</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 28</span><span><span style="color:#6272a4"></span>	list_for_each_entry_rcu(answer, <span style="color:#ff79c6">&amp;</span>inetsw[sock<span style="color:#ff79c6">-&gt;</span>type], list) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 25</span><span>    err <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">-</span>ESOCKTNOSUPPORT;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 26</span><span>    rcu_read_lock();
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 27</span><span>    <span style="color:#6272a4">// 从inetsw中找到对应协议的结构体，赋值给answer变量
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 28</span><span><span style="color:#6272a4"></span>    list_for_each_entry_rcu(answer, <span style="color:#ff79c6">&amp;</span>inetsw[sock<span style="color:#ff79c6">-&gt;</span>type], list) {
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 29</span><span>
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 30</span><span>		err <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0</span>;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 31</span><span>		<span style="color:#6272a4">/* Check the non-wild match. */</span>
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 32</span><span>		<span style="color:#ff79c6">if</span> (protocol <span style="color:#ff79c6">==</span> answer<span style="color:#ff79c6">-&gt;</span>protocol) {
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 33</span><span>			<span style="color:#ff79c6">if</span> (protocol <span style="color:#ff79c6">!=</span> IPPROTO_IP)
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 34</span><span>				<span style="color:#ff79c6">break</span>;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 35</span><span>		} <span style="color:#ff79c6">else</span> {
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 36</span><span>			<span style="color:#6272a4">/* Check for the two wild cases. */</span>
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 37</span><span>			<span style="color:#ff79c6">if</span> (IPPROTO_IP <span style="color:#ff79c6">==</span> protocol) {
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 38</span><span>				protocol <span style="color:#ff79c6">=</span> answer<span style="color:#ff79c6">-&gt;</span>protocol;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 39</span><span>				<span style="color:#ff79c6">break</span>;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 40</span><span>			}
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 41</span><span>			<span style="color:#ff79c6">if</span> (IPPROTO_IP <span style="color:#ff79c6">==</span> answer<span style="color:#ff79c6">-&gt;</span>protocol)
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 42</span><span>				<span style="color:#ff79c6">break</span>;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 43</span><span>		}
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 44</span><span>		err <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">-</span>EPROTONOSUPPORT;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 45</span><span>	}
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 30</span><span>        err <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 31</span><span>        <span style="color:#6272a4">/* Check the non-wild match. */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 32</span><span>        <span style="color:#ff79c6">if</span> (protocol <span style="color:#ff79c6">==</span> answer<span style="color:#ff79c6">-&gt;</span>protocol) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 33</span><span>            <span style="color:#ff79c6">if</span> (protocol <span style="color:#ff79c6">!=</span> IPPROTO_IP)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 34</span><span>                <span style="color:#ff79c6">break</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 35</span><span>        } <span style="color:#ff79c6">else</span> {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 36</span><span>            <span style="color:#6272a4">/* Check for the two wild cases. */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 37</span><span>            <span style="color:#ff79c6">if</span> (IPPROTO_IP <span style="color:#ff79c6">==</span> protocol) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 38</span><span>                protocol <span style="color:#ff79c6">=</span> answer<span style="color:#ff79c6">-&gt;</span>protocol;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 39</span><span>                <span style="color:#ff79c6">break</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 40</span><span>            }
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 41</span><span>            <span style="color:#ff79c6">if</span> (IPPROTO_IP <span style="color:#ff79c6">==</span> answer<span style="color:#ff79c6">-&gt;</span>protocol)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 42</span><span>                <span style="color:#ff79c6">break</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 43</span><span>        }
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 44</span><span>        err <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">-</span>EPROTONOSUPPORT;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 45</span><span>    }
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 46</span><span>
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 47</span><span>	<span style="color:#ff79c6">if</span> (unlikely(err)) {
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 48</span><span>		<span style="color:#ff79c6">if</span> (try_loading_module <span style="color:#ff79c6">&lt;</span> <span style="color:#bd93f9">2</span>) {
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 49</span><span>			rcu_read_unlock();
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 50</span><span>			<span style="color:#6272a4">/*
-</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 51</span><span><span style="color:#6272a4">			 * Be more specific, e.g. net-pf-2-proto-132-type-1
-</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 52</span><span><span style="color:#6272a4">			 * (net-pf-PF_INET-proto-IPPROTO_SCTP-type-SOCK_STREAM)
-</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 53</span><span><span style="color:#6272a4">			 */</span>
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 54</span><span>			<span style="color:#ff79c6">if</span> (<span style="color:#ff79c6">++</span>try_loading_module <span style="color:#ff79c6">==</span> <span style="color:#bd93f9">1</span>)
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 55</span><span>				request_module(<span style="color:#f1fa8c">&#34;net-pf-%d-proto-%d-type-%d&#34;</span>,
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 56</span><span>					       PF_INET, protocol, sock<span style="color:#ff79c6">-&gt;</span>type);
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 57</span><span>			<span style="color:#6272a4">/*
-</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 58</span><span><span style="color:#6272a4">			 * Fall back to generic, e.g. net-pf-2-proto-132
-</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 59</span><span><span style="color:#6272a4">			 * (net-pf-PF_INET-proto-IPPROTO_SCTP)
-</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 60</span><span><span style="color:#6272a4">			 */</span>
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 61</span><span>			<span style="color:#ff79c6">else</span>
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 62</span><span>				request_module(<span style="color:#f1fa8c">&#34;net-pf-%d-proto-%d&#34;</span>,
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 63</span><span>					       PF_INET, protocol);
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 64</span><span>			<span style="color:#ff79c6">goto</span> lookup_protocol;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 65</span><span>		} <span style="color:#ff79c6">else</span>
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 66</span><span>			<span style="color:#ff79c6">goto</span> out_rcu_unlock;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 67</span><span>	}
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 47</span><span>    <span style="color:#ff79c6">if</span> (unlikely(err)) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 48</span><span>        <span style="color:#ff79c6">if</span> (try_loading_module <span style="color:#ff79c6">&lt;</span> <span style="color:#bd93f9">2</span>) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 49</span><span>            rcu_read_unlock();
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 50</span><span>            <span style="color:#6272a4">/*
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 51</span><span><span style="color:#6272a4">             * Be more specific, e.g. net-pf-2-proto-132-type-1
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 52</span><span><span style="color:#6272a4">             * (net-pf-PF_INET-proto-IPPROTO_SCTP-type-SOCK_STREAM)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 53</span><span><span style="color:#6272a4">             */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 54</span><span>            <span style="color:#ff79c6">if</span> (<span style="color:#ff79c6">++</span>try_loading_module <span style="color:#ff79c6">==</span> <span style="color:#bd93f9">1</span>)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 55</span><span>                request_module(<span style="color:#f1fa8c">&#34;net-pf-%d-proto-%d-type-%d&#34;</span>,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 56</span><span>                           PF_INET, protocol, sock<span style="color:#ff79c6">-&gt;</span>type);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 57</span><span>            <span style="color:#6272a4">/*
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 58</span><span><span style="color:#6272a4">             * Fall back to generic, e.g. net-pf-2-proto-132
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 59</span><span><span style="color:#6272a4">             * (net-pf-PF_INET-proto-IPPROTO_SCTP)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 60</span><span><span style="color:#6272a4">             */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 61</span><span>            <span style="color:#ff79c6">else</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 62</span><span>                request_module(<span style="color:#f1fa8c">&#34;net-pf-%d-proto-%d&#34;</span>,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 63</span><span>                           PF_INET, protocol);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 64</span><span>            <span style="color:#ff79c6">goto</span> lookup_protocol;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 65</span><span>        } <span style="color:#ff79c6">else</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 66</span><span>            <span style="color:#ff79c6">goto</span> out_rcu_unlock;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 67</span><span>    }
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 68</span><span>
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 69</span><span>	err <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">-</span>EPERM;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 70</span><span>	<span style="color:#ff79c6">if</span> (sock<span style="color:#ff79c6">-&gt;</span>type <span style="color:#ff79c6">==</span> SOCK_RAW <span style="color:#ff79c6">&amp;&amp;</span> <span style="color:#ff79c6">!</span>kern <span style="color:#ff79c6">&amp;&amp;</span>
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 71</span><span>	    <span style="color:#ff79c6">!</span>ns_capable(net<span style="color:#ff79c6">-&gt;</span>user_ns, CAP_NET_RAW))
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 72</span><span>		<span style="color:#ff79c6">goto</span> out_rcu_unlock;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 69</span><span>    err <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">-</span>EPERM;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 70</span><span>    <span style="color:#ff79c6">if</span> (sock<span style="color:#ff79c6">-&gt;</span>type <span style="color:#ff79c6">==</span> SOCK_RAW <span style="color:#ff79c6">&amp;&amp;</span> <span style="color:#ff79c6">!</span>kern <span style="color:#ff79c6">&amp;&amp;</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 71</span><span>        <span style="color:#ff79c6">!</span>ns_capable(net<span style="color:#ff79c6">-&gt;</span>user_ns, CAP_NET_RAW))
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 72</span><span>        <span style="color:#ff79c6">goto</span> out_rcu_unlock;
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 73</span><span>
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 74</span><span>	<span style="color:#6272a4">// 将对应协议的操作放到sock里面
-</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 75</span><span><span style="color:#6272a4"></span>	sock<span style="color:#ff79c6">-&gt;</span>ops <span style="color:#ff79c6">=</span> answer<span style="color:#ff79c6">-&gt;</span>ops;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 76</span><span>	answer_prot <span style="color:#ff79c6">=</span> answer<span style="color:#ff79c6">-&gt;</span>prot;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 77</span><span>	answer_flags <span style="color:#ff79c6">=</span> answer<span style="color:#ff79c6">-&gt;</span>flags;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 78</span><span>	rcu_read_unlock();
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 74</span><span>    <span style="color:#6272a4">// 将对应协议的操作放到sock里面
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 75</span><span><span style="color:#6272a4"></span>    sock<span style="color:#ff79c6">-&gt;</span>ops <span style="color:#ff79c6">=</span> answer<span style="color:#ff79c6">-&gt;</span>ops;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 76</span><span>    answer_prot <span style="color:#ff79c6">=</span> answer<span style="color:#ff79c6">-&gt;</span>prot;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 77</span><span>    answer_flags <span style="color:#ff79c6">=</span> answer<span style="color:#ff79c6">-&gt;</span>flags;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 78</span><span>    rcu_read_unlock();
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 79</span><span>
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 80</span><span>	WARN_ON(<span style="color:#ff79c6">!</span>answer_prot<span style="color:#ff79c6">-&gt;</span>slab);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 80</span><span>    WARN_ON(<span style="color:#ff79c6">!</span>answer_prot<span style="color:#ff79c6">-&gt;</span>slab);
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 81</span><span>
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 82</span><span>	err <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">-</span>ENOMEM;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 83</span><span>	sk <span style="color:#ff79c6">=</span> sk_alloc(net, PF_INET, GFP_KERNEL, answer_prot, kern);
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 84</span><span>	<span style="color:#ff79c6">if</span> (<span style="color:#ff79c6">!</span>sk)
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 85</span><span>		<span style="color:#ff79c6">goto</span> out;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 82</span><span>    err <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">-</span>ENOMEM;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 83</span><span>    sk <span style="color:#ff79c6">=</span> sk_alloc(net, PF_INET, GFP_KERNEL, answer_prot, kern);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 84</span><span>    <span style="color:#ff79c6">if</span> (<span style="color:#ff79c6">!</span>sk)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 85</span><span>        <span style="color:#ff79c6">goto</span> out;
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 86</span><span>
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 87</span><span>	err <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0</span>;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 88</span><span>	<span style="color:#ff79c6">if</span> (INET_PROTOSW_REUSE <span style="color:#ff79c6">&amp;</span> answer_flags)
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 89</span><span>		sk<span style="color:#ff79c6">-&gt;</span>sk_reuse <span style="color:#ff79c6">=</span> SK_CAN_REUSE;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 87</span><span>    err <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 88</span><span>    <span style="color:#ff79c6">if</span> (INET_PROTOSW_REUSE <span style="color:#ff79c6">&amp;</span> answer_flags)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 89</span><span>        sk<span style="color:#ff79c6">-&gt;</span>sk_reuse <span style="color:#ff79c6">=</span> SK_CAN_REUSE;
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 90</span><span>
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 91</span><span>	inet <span style="color:#ff79c6">=</span> inet_sk(sk);
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 92</span><span>	inet<span style="color:#ff79c6">-&gt;</span>is_icsk <span style="color:#ff79c6">=</span> (INET_PROTOSW_ICSK <span style="color:#ff79c6">&amp;</span> answer_flags) <span style="color:#ff79c6">!=</span> <span style="color:#bd93f9">0</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 91</span><span>    inet <span style="color:#ff79c6">=</span> inet_sk(sk);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 92</span><span>    inet<span style="color:#ff79c6">-&gt;</span>is_icsk <span style="color:#ff79c6">=</span> (INET_PROTOSW_ICSK <span style="color:#ff79c6">&amp;</span> answer_flags) <span style="color:#ff79c6">!=</span> <span style="color:#bd93f9">0</span>;
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 93</span><span>
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 94</span><span>	inet<span style="color:#ff79c6">-&gt;</span>nodefrag <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 94</span><span>    inet<span style="color:#ff79c6">-&gt;</span>nodefrag <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0</span>;
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 95</span><span>
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 96</span><span>	<span style="color:#ff79c6">if</span> (SOCK_RAW <span style="color:#ff79c6">==</span> sock<span style="color:#ff79c6">-&gt;</span>type) {
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 97</span><span>		inet<span style="color:#ff79c6">-&gt;</span>inet_num <span style="color:#ff79c6">=</span> protocol;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 98</span><span>		<span style="color:#ff79c6">if</span> (IPPROTO_RAW <span style="color:#ff79c6">==</span> protocol)
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 99</span><span>			inet<span style="color:#ff79c6">-&gt;</span>hdrincl <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">1</span>;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">100</span><span>	}
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 96</span><span>    <span style="color:#ff79c6">if</span> (SOCK_RAW <span style="color:#ff79c6">==</span> sock<span style="color:#ff79c6">-&gt;</span>type) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 97</span><span>        inet<span style="color:#ff79c6">-&gt;</span>inet_num <span style="color:#ff79c6">=</span> protocol;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 98</span><span>        <span style="color:#ff79c6">if</span> (IPPROTO_RAW <span style="color:#ff79c6">==</span> protocol)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 99</span><span>            inet<span style="color:#ff79c6">-&gt;</span>hdrincl <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">1</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">100</span><span>    }
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">101</span><span>
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">102</span><span>	<span style="color:#ff79c6">if</span> (READ_ONCE(net<span style="color:#ff79c6">-&gt;</span>ipv4.sysctl_ip_no_pmtu_disc))
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">103</span><span>		inet<span style="color:#ff79c6">-&gt;</span>pmtudisc <span style="color:#ff79c6">=</span> IP_PMTUDISC_DONT;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">104</span><span>	<span style="color:#ff79c6">else</span>
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">105</span><span>		inet<span style="color:#ff79c6">-&gt;</span>pmtudisc <span style="color:#ff79c6">=</span> IP_PMTUDISC_WANT;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">102</span><span>    <span style="color:#ff79c6">if</span> (READ_ONCE(net<span style="color:#ff79c6">-&gt;</span>ipv4.sysctl_ip_no_pmtu_disc))
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">103</span><span>        inet<span style="color:#ff79c6">-&gt;</span>pmtudisc <span style="color:#ff79c6">=</span> IP_PMTUDISC_DONT;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">104</span><span>    <span style="color:#ff79c6">else</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">105</span><span>        inet<span style="color:#ff79c6">-&gt;</span>pmtudisc <span style="color:#ff79c6">=</span> IP_PMTUDISC_WANT;
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">106</span><span>
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">107</span><span>	inet<span style="color:#ff79c6">-&gt;</span>inet_id <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">107</span><span>    inet<span style="color:#ff79c6">-&gt;</span>inet_id <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0</span>;
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">108</span><span>
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">109</span><span>	sock_init_data(sock, sk);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">109</span><span>    sock_init_data(sock, sk);
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">110</span><span>
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">111</span><span>	sk<span style="color:#ff79c6">-&gt;</span>sk_destruct	   <span style="color:#ff79c6">=</span> inet_sock_destruct;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">112</span><span>	sk<span style="color:#ff79c6">-&gt;</span>sk_protocol	   <span style="color:#ff79c6">=</span> protocol;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">113</span><span>	sk<span style="color:#ff79c6">-&gt;</span>sk_backlog_rcv <span style="color:#ff79c6">=</span> sk<span style="color:#ff79c6">-&gt;</span>sk_prot<span style="color:#ff79c6">-&gt;</span>backlog_rcv;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">111</span><span>    sk<span style="color:#ff79c6">-&gt;</span>sk_destruct	   <span style="color:#ff79c6">=</span> inet_sock_destruct;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">112</span><span>    sk<span style="color:#ff79c6">-&gt;</span>sk_protocol	   <span style="color:#ff79c6">=</span> protocol;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">113</span><span>    sk<span style="color:#ff79c6">-&gt;</span>sk_backlog_rcv <span style="color:#ff79c6">=</span> sk<span style="color:#ff79c6">-&gt;</span>sk_prot<span style="color:#ff79c6">-&gt;</span>backlog_rcv;
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">114</span><span>
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">115</span><span>	inet<span style="color:#ff79c6">-&gt;</span>uc_ttl	<span style="color:#ff79c6">=</span> <span style="color:#ff79c6">-</span><span style="color:#bd93f9">1</span>;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">116</span><span>	inet<span style="color:#ff79c6">-&gt;</span>mc_loop	<span style="color:#ff79c6">=</span> <span style="color:#bd93f9">1</span>;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">117</span><span>	inet<span style="color:#ff79c6">-&gt;</span>mc_ttl	<span style="color:#ff79c6">=</span> <span style="color:#bd93f9">1</span>;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">118</span><span>	inet<span style="color:#ff79c6">-&gt;</span>mc_all	<span style="color:#ff79c6">=</span> <span style="color:#bd93f9">1</span>;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">119</span><span>	inet<span style="color:#ff79c6">-&gt;</span>mc_index	<span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0</span>;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">120</span><span>	inet<span style="color:#ff79c6">-&gt;</span>mc_list	<span style="color:#ff79c6">=</span> <span style="color:#8be9fd;font-style:italic">NULL</span>;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">121</span><span>	inet<span style="color:#ff79c6">-&gt;</span>rcv_tos	<span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">115</span><span>    inet<span style="color:#ff79c6">-&gt;</span>uc_ttl	<span style="color:#ff79c6">=</span> <span style="color:#ff79c6">-</span><span style="color:#bd93f9">1</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">116</span><span>    inet<span style="color:#ff79c6">-&gt;</span>mc_loop	<span style="color:#ff79c6">=</span> <span style="color:#bd93f9">1</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">117</span><span>    inet<span style="color:#ff79c6">-&gt;</span>mc_ttl	<span style="color:#ff79c6">=</span> <span style="color:#bd93f9">1</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">118</span><span>    inet<span style="color:#ff79c6">-&gt;</span>mc_all	<span style="color:#ff79c6">=</span> <span style="color:#bd93f9">1</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">119</span><span>    inet<span style="color:#ff79c6">-&gt;</span>mc_index	<span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">120</span><span>    inet<span style="color:#ff79c6">-&gt;</span>mc_list	<span style="color:#ff79c6">=</span> <span style="color:#8be9fd;font-style:italic">NULL</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">121</span><span>    inet<span style="color:#ff79c6">-&gt;</span>rcv_tos	<span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0</span>;
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">122</span><span>
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">123</span><span>	sk_refcnt_debug_inc(sk);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">123</span><span>    sk_refcnt_debug_inc(sk);
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">124</span><span>
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">125</span><span>	<span style="color:#ff79c6">if</span> (inet<span style="color:#ff79c6">-&gt;</span>inet_num) {
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">126</span><span>		<span style="color:#6272a4">/* It assumes that any protocol which allows
-</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">127</span><span><span style="color:#6272a4">		 * the user to assign a number at socket
-</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">128</span><span><span style="color:#6272a4">		 * creation time automatically
-</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">129</span><span><span style="color:#6272a4">		 * shares.
-</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">130</span><span><span style="color:#6272a4">		 */</span>
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">131</span><span>		inet<span style="color:#ff79c6">-&gt;</span>inet_sport <span style="color:#ff79c6">=</span> htons(inet<span style="color:#ff79c6">-&gt;</span>inet_num);
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">132</span><span>		<span style="color:#6272a4">/* Add to protocol hash chains. */</span>
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">133</span><span>		err <span style="color:#ff79c6">=</span> sk<span style="color:#ff79c6">-&gt;</span>sk_prot<span style="color:#ff79c6">-&gt;</span>hash(sk);
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">134</span><span>		<span style="color:#ff79c6">if</span> (err) {
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">135</span><span>			sk_common_release(sk);
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">136</span><span>			<span style="color:#ff79c6">goto</span> out;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">137</span><span>		}
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">138</span><span>	}
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">125</span><span>    <span style="color:#ff79c6">if</span> (inet<span style="color:#ff79c6">-&gt;</span>inet_num) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">126</span><span>        <span style="color:#6272a4">/* It assumes that any protocol which allows
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">127</span><span><span style="color:#6272a4">         * the user to assign a number at socket
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">128</span><span><span style="color:#6272a4">         * creation time automatically
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">129</span><span><span style="color:#6272a4">         * shares.
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">130</span><span><span style="color:#6272a4">         */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">131</span><span>        inet<span style="color:#ff79c6">-&gt;</span>inet_sport <span style="color:#ff79c6">=</span> htons(inet<span style="color:#ff79c6">-&gt;</span>inet_num);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">132</span><span>        <span style="color:#6272a4">/* Add to protocol hash chains. */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">133</span><span>        err <span style="color:#ff79c6">=</span> sk<span style="color:#ff79c6">-&gt;</span>sk_prot<span style="color:#ff79c6">-&gt;</span>hash(sk);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">134</span><span>        <span style="color:#ff79c6">if</span> (err) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">135</span><span>            sk_common_release(sk);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">136</span><span>            <span style="color:#ff79c6">goto</span> out;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">137</span><span>        }
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">138</span><span>    }
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">139</span><span>
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">140</span><span>	<span style="color:#ff79c6">if</span> (sk<span style="color:#ff79c6">-&gt;</span>sk_prot<span style="color:#ff79c6">-&gt;</span>init) {
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">141</span><span>		err <span style="color:#ff79c6">=</span> sk<span style="color:#ff79c6">-&gt;</span>sk_prot<span style="color:#ff79c6">-&gt;</span>init(sk);
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">142</span><span>		<span style="color:#ff79c6">if</span> (err) {
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">143</span><span>			sk_common_release(sk);
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">144</span><span>			<span style="color:#ff79c6">goto</span> out;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">145</span><span>		}
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">146</span><span>	}
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">140</span><span>    <span style="color:#ff79c6">if</span> (sk<span style="color:#ff79c6">-&gt;</span>sk_prot<span style="color:#ff79c6">-&gt;</span>init) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">141</span><span>        err <span style="color:#ff79c6">=</span> sk<span style="color:#ff79c6">-&gt;</span>sk_prot<span style="color:#ff79c6">-&gt;</span>init(sk);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">142</span><span>        <span style="color:#ff79c6">if</span> (err) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">143</span><span>            sk_common_release(sk);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">144</span><span>            <span style="color:#ff79c6">goto</span> out;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">145</span><span>        }
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">146</span><span>    }
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">147</span><span>
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">148</span><span>	<span style="color:#ff79c6">if</span> (<span style="color:#ff79c6">!</span>kern) {
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">149</span><span>		err <span style="color:#ff79c6">=</span> BPF_CGROUP_RUN_PROG_INET_SOCK(sk);
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">150</span><span>		<span style="color:#ff79c6">if</span> (err) {
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">151</span><span>			sk_common_release(sk);
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">152</span><span>			<span style="color:#ff79c6">goto</span> out;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">153</span><span>		}
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">154</span><span>	}
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">148</span><span>    <span style="color:#ff79c6">if</span> (<span style="color:#ff79c6">!</span>kern) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">149</span><span>        err <span style="color:#ff79c6">=</span> BPF_CGROUP_RUN_PROG_INET_SOCK(sk);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">150</span><span>        <span style="color:#ff79c6">if</span> (err) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">151</span><span>            sk_common_release(sk);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">152</span><span>            <span style="color:#ff79c6">goto</span> out;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">153</span><span>        }
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">154</span><span>    }
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">155</span><span><span style="color:#8be9fd;font-style:italic">out</span>:
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">156</span><span>	<span style="color:#ff79c6">return</span> err;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">156</span><span>    <span style="color:#ff79c6">return</span> err;
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">157</span><span><span style="color:#8be9fd;font-style:italic">out_rcu_unlock</span>:
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">158</span><span>	rcu_read_unlock();
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">159</span><span>	<span style="color:#ff79c6">goto</span> out;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">158</span><span>    rcu_read_unlock();
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">159</span><span>    <span style="color:#ff79c6">goto</span> out;
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">160</span><span>}
 </span></span></code></pre></div><ul>
 <li><code>inetsw</code>定义，通过<code>inet_register_protosw</code>进行注册</li>
@@ -1337,48 +1586,48 @@ document.addEventListener("DOMContentLoaded", function(){
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span><span>...
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span><span style="color:#8be9fd">void</span> inet_register_protosw(<span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">inet_protosw</span> <span style="color:#ff79c6">*</span>p)
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span><span>{
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span><span>	<span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">list_head</span> <span style="color:#ff79c6">*</span>lh;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span><span>	<span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">inet_protosw</span> <span style="color:#ff79c6">*</span>answer;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span>	<span style="color:#8be9fd">int</span> protocol <span style="color:#ff79c6">=</span> p<span style="color:#ff79c6">-&gt;</span>protocol;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span>	<span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">list_head</span> <span style="color:#ff79c6">*</span>last_perm;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span><span>    <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">list_head</span> <span style="color:#ff79c6">*</span>lh;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span><span>    <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">inet_protosw</span> <span style="color:#ff79c6">*</span>answer;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span>    <span style="color:#8be9fd">int</span> protocol <span style="color:#ff79c6">=</span> p<span style="color:#ff79c6">-&gt;</span>protocol;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span>    <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">list_head</span> <span style="color:#ff79c6">*</span>last_perm;
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span>
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span><span>	spin_lock_bh(<span style="color:#ff79c6">&amp;</span>inetsw_lock);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span><span>    spin_lock_bh(<span style="color:#ff79c6">&amp;</span>inetsw_lock);
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span><span>
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span><span>	<span style="color:#ff79c6">if</span> (p<span style="color:#ff79c6">-&gt;</span>type <span style="color:#ff79c6">&gt;=</span> SOCK_MAX)
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span><span>		<span style="color:#ff79c6">goto</span> out_illegal;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span><span>    <span style="color:#ff79c6">if</span> (p<span style="color:#ff79c6">-&gt;</span>type <span style="color:#ff79c6">&gt;=</span> SOCK_MAX)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span><span>        <span style="color:#ff79c6">goto</span> out_illegal;
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span><span>
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span><span>	<span style="color:#6272a4">/* If we are trying to override a permanent protocol, bail. */</span>
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21</span><span>	last_perm <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">&amp;</span>inetsw[p<span style="color:#ff79c6">-&gt;</span>type];
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22</span><span>	list_for_each(lh, <span style="color:#ff79c6">&amp;</span>inetsw[p<span style="color:#ff79c6">-&gt;</span>type]) {
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23</span><span>		answer <span style="color:#ff79c6">=</span> list_entry(lh, <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">inet_protosw</span>, list);
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24</span><span>		<span style="color:#6272a4">/* Check only the non-wild match. */</span>
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25</span><span>		<span style="color:#ff79c6">if</span> ((INET_PROTOSW_PERMANENT <span style="color:#ff79c6">&amp;</span> answer<span style="color:#ff79c6">-&gt;</span>flags) <span style="color:#ff79c6">==</span> <span style="color:#bd93f9">0</span>)
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26</span><span>			<span style="color:#ff79c6">break</span>;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27</span><span>		<span style="color:#ff79c6">if</span> (protocol <span style="color:#ff79c6">==</span> answer<span style="color:#ff79c6">-&gt;</span>protocol)
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28</span><span>			<span style="color:#ff79c6">goto</span> out_permanent;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29</span><span>		last_perm <span style="color:#ff79c6">=</span> lh;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">30</span><span>	}
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span><span>    <span style="color:#6272a4">/* If we are trying to override a permanent protocol, bail. */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21</span><span>    last_perm <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">&amp;</span>inetsw[p<span style="color:#ff79c6">-&gt;</span>type];
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22</span><span>    list_for_each(lh, <span style="color:#ff79c6">&amp;</span>inetsw[p<span style="color:#ff79c6">-&gt;</span>type]) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23</span><span>        answer <span style="color:#ff79c6">=</span> list_entry(lh, <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">inet_protosw</span>, list);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24</span><span>        <span style="color:#6272a4">/* Check only the non-wild match. */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25</span><span>        <span style="color:#ff79c6">if</span> ((INET_PROTOSW_PERMANENT <span style="color:#ff79c6">&amp;</span> answer<span style="color:#ff79c6">-&gt;</span>flags) <span style="color:#ff79c6">==</span> <span style="color:#bd93f9">0</span>)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26</span><span>            <span style="color:#ff79c6">break</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27</span><span>        <span style="color:#ff79c6">if</span> (protocol <span style="color:#ff79c6">==</span> answer<span style="color:#ff79c6">-&gt;</span>protocol)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28</span><span>            <span style="color:#ff79c6">goto</span> out_permanent;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29</span><span>        last_perm <span style="color:#ff79c6">=</span> lh;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">30</span><span>    }
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">31</span><span>
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">32</span><span>	<span style="color:#6272a4">/* Add the new entry after the last permanent entry if any, so that
-</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">33</span><span><span style="color:#6272a4">	 * the new entry does not override a permanent entry when matched with
-</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">34</span><span><span style="color:#6272a4">	 * a wild-card protocol. But it is allowed to override any existing
-</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">35</span><span><span style="color:#6272a4">	 * non-permanent entry.  This means that when we remove this entry, the
-</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">36</span><span><span style="color:#6272a4">	 * system automatically returns to the old behavior.
-</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">37</span><span><span style="color:#6272a4">	 */</span>
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">38</span><span>	list_add_rcu(<span style="color:#ff79c6">&amp;</span>p<span style="color:#ff79c6">-&gt;</span>list, last_perm);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">32</span><span>    <span style="color:#6272a4">/* Add the new entry after the last permanent entry if any, so that
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">33</span><span><span style="color:#6272a4">     * the new entry does not override a permanent entry when matched with
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">34</span><span><span style="color:#6272a4">     * a wild-card protocol. But it is allowed to override any existing
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">35</span><span><span style="color:#6272a4">     * non-permanent entry.  This means that when we remove this entry, the
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">36</span><span><span style="color:#6272a4">     * system automatically returns to the old behavior.
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">37</span><span><span style="color:#6272a4">     */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">38</span><span>    list_add_rcu(<span style="color:#ff79c6">&amp;</span>p<span style="color:#ff79c6">-&gt;</span>list, last_perm);
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">39</span><span><span style="color:#8be9fd;font-style:italic">out</span>:
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">40</span><span>	spin_unlock_bh(<span style="color:#ff79c6">&amp;</span>inetsw_lock);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">40</span><span>    spin_unlock_bh(<span style="color:#ff79c6">&amp;</span>inetsw_lock);
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">41</span><span>
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">42</span><span>	<span style="color:#ff79c6">return</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">42</span><span>    <span style="color:#ff79c6">return</span>;
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">43</span><span>
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">44</span><span><span style="color:#8be9fd;font-style:italic">out_permanent</span>:
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">45</span><span>	pr_err(<span style="color:#f1fa8c">&#34;Attempt to override permanent protocol %d</span><span style="color:#f1fa8c">\n</span><span style="color:#f1fa8c">&#34;</span>, protocol);
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">46</span><span>	<span style="color:#ff79c6">goto</span> out;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">45</span><span>    pr_err(<span style="color:#f1fa8c">&#34;Attempt to override permanent protocol %d</span><span style="color:#f1fa8c">\n</span><span style="color:#f1fa8c">&#34;</span>, protocol);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">46</span><span>    <span style="color:#ff79c6">goto</span> out;
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">47</span><span>
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">48</span><span><span style="color:#8be9fd;font-style:italic">out_illegal</span>:
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">49</span><span>	pr_err(<span style="color:#f1fa8c">&#34;Ignoring attempt to register invalid socket type %d</span><span style="color:#f1fa8c">\n</span><span style="color:#f1fa8c">&#34;</span>,
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">50</span><span>	       p<span style="color:#ff79c6">-&gt;</span>type);
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">51</span><span>	<span style="color:#ff79c6">goto</span> out;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">49</span><span>    pr_err(<span style="color:#f1fa8c">&#34;Ignoring attempt to register invalid socket type %d</span><span style="color:#f1fa8c">\n</span><span style="color:#f1fa8c">&#34;</span>,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">50</span><span>           p<span style="color:#ff79c6">-&gt;</span>type);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">51</span><span>    <span style="color:#ff79c6">goto</span> out;
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">52</span><span>}
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">53</span><span>EXPORT_SYMBOL(inet_register_protosw);
 </span></span></code></pre></div><ul>
@@ -1390,45 +1639,45 @@ document.addEventListener("DOMContentLoaded", function(){
 </span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span><span><span style="color:#6272a4"> */</span>
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span><span><span style="color:#ff79c6">static</span> <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">inet_protosw</span> inetsw_array[] <span style="color:#ff79c6">=</span>
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span><span>{
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span><span>	{
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span>		.type <span style="color:#ff79c6">=</span>       SOCK_STREAM,
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span><span>		.protocol <span style="color:#ff79c6">=</span>   IPPROTO_TCP,
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span><span>		.prot <span style="color:#ff79c6">=</span>       <span style="color:#ff79c6">&amp;</span>tcp_prot,
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span><span>		.ops <span style="color:#ff79c6">=</span>        <span style="color:#ff79c6">&amp;</span>inet_stream_ops,
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span>		.flags <span style="color:#ff79c6">=</span>      INET_PROTOSW_PERMANENT <span style="color:#ff79c6">|</span>
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span>			      INET_PROTOSW_ICSK,
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span>	},
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span><span>    {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span>        .type <span style="color:#ff79c6">=</span>       SOCK_STREAM,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span><span>        .protocol <span style="color:#ff79c6">=</span>   IPPROTO_TCP,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span><span>        .prot <span style="color:#ff79c6">=</span>       <span style="color:#ff79c6">&amp;</span>tcp_prot,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span><span>        .ops <span style="color:#ff79c6">=</span>        <span style="color:#ff79c6">&amp;</span>inet_stream_ops,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span>        .flags <span style="color:#ff79c6">=</span>      INET_PROTOSW_PERMANENT <span style="color:#ff79c6">|</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span>                  INET_PROTOSW_ICSK,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span>    },
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span><span>
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span><span>	{
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span><span>		.type <span style="color:#ff79c6">=</span>       SOCK_DGRAM,
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span><span>		.protocol <span style="color:#ff79c6">=</span>   IPPROTO_UDP,
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span><span>		.prot <span style="color:#ff79c6">=</span>       <span style="color:#ff79c6">&amp;</span>udp_prot,
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span><span>		.ops <span style="color:#ff79c6">=</span>        <span style="color:#ff79c6">&amp;</span>inet_dgram_ops,
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21</span><span>		.flags <span style="color:#ff79c6">=</span>      INET_PROTOSW_PERMANENT,
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22</span><span>       },
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span><span>    {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span><span>        .type <span style="color:#ff79c6">=</span>       SOCK_DGRAM,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span><span>        .protocol <span style="color:#ff79c6">=</span>   IPPROTO_UDP,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span><span>        .prot <span style="color:#ff79c6">=</span>       <span style="color:#ff79c6">&amp;</span>udp_prot,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span><span>        .ops <span style="color:#ff79c6">=</span>        <span style="color:#ff79c6">&amp;</span>inet_dgram_ops,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21</span><span>        .flags <span style="color:#ff79c6">=</span>      INET_PROTOSW_PERMANENT,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22</span><span>    },
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23</span><span>
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24</span><span>       {
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25</span><span>		.type <span style="color:#ff79c6">=</span>       SOCK_DGRAM,
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26</span><span>		.protocol <span style="color:#ff79c6">=</span>   IPPROTO_ICMP,
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27</span><span>		.prot <span style="color:#ff79c6">=</span>       <span style="color:#ff79c6">&amp;</span>ping_prot,
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28</span><span>		.ops <span style="color:#ff79c6">=</span>        <span style="color:#ff79c6">&amp;</span>inet_sockraw_ops,
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29</span><span>		.flags <span style="color:#ff79c6">=</span>      INET_PROTOSW_REUSE,
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">30</span><span>       },
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24</span><span>    {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25</span><span>        .type <span style="color:#ff79c6">=</span>       SOCK_DGRAM,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26</span><span>        .protocol <span style="color:#ff79c6">=</span>   IPPROTO_ICMP,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27</span><span>        .prot <span style="color:#ff79c6">=</span>       <span style="color:#ff79c6">&amp;</span>ping_prot,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28</span><span>        .ops <span style="color:#ff79c6">=</span>        <span style="color:#ff79c6">&amp;</span>inet_sockraw_ops,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29</span><span>        .flags <span style="color:#ff79c6">=</span>      INET_PROTOSW_REUSE,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">30</span><span>    },
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">31</span><span>
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">32</span><span>       {
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">33</span><span>	       .type <span style="color:#ff79c6">=</span>       SOCK_RAW,
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">34</span><span>	       .protocol <span style="color:#ff79c6">=</span>   IPPROTO_IP,	<span style="color:#6272a4">/* wild card */</span>
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">35</span><span>	       .prot <span style="color:#ff79c6">=</span>       <span style="color:#ff79c6">&amp;</span>raw_prot,
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">36</span><span>	       .ops <span style="color:#ff79c6">=</span>        <span style="color:#ff79c6">&amp;</span>inet_sockraw_ops,
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">37</span><span>	       .flags <span style="color:#ff79c6">=</span>      INET_PROTOSW_REUSE,
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">38</span><span>       }
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">32</span><span>    {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">33</span><span>        .type <span style="color:#ff79c6">=</span>       SOCK_RAW,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">34</span><span>        .protocol <span style="color:#ff79c6">=</span>   IPPROTO_IP,	<span style="color:#6272a4">/* wild card */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">35</span><span>        .prot <span style="color:#ff79c6">=</span>       <span style="color:#ff79c6">&amp;</span>raw_prot,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">36</span><span>        .ops <span style="color:#ff79c6">=</span>        <span style="color:#ff79c6">&amp;</span>inet_sockraw_ops,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">37</span><span>        .flags <span style="color:#ff79c6">=</span>      INET_PROTOSW_REUSE,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">38</span><span>    }
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">39</span><span>};
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">40</span><span>...
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">41</span><span><span style="color:#ff79c6">static</span> <span style="color:#8be9fd">int</span> __init inet_init(<span style="color:#8be9fd">void</span>)
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">42</span><span>{
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">43</span><span>...
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">44</span><span>	<span style="color:#ff79c6">for</span> (q <span style="color:#ff79c6">=</span> inetsw_array; q <span style="color:#ff79c6">&lt;</span> <span style="color:#ff79c6">&amp;</span>inetsw_array[INETSW_ARRAY_LEN]; <span style="color:#ff79c6">++</span>q)
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">45</span><span>		inet_register_protosw(q);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">44</span><span>    <span style="color:#ff79c6">for</span> (q <span style="color:#ff79c6">=</span> inetsw_array; q <span style="color:#ff79c6">&lt;</span> <span style="color:#ff79c6">&amp;</span>inetsw_array[INETSW_ARRAY_LEN]; <span style="color:#ff79c6">++</span>q)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">45</span><span>        inet_register_protosw(q);
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">46</span><span>...
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">47</span><span>}
 </span></span></code></pre></div></article>

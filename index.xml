@@ -6,15 +6,6 @@
     <description>Recent content in 首页 on 技术的路上奔跑</description>
     <generator>Hugo -- gohugo.io</generator><atom:link href="/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title></title>
-      <link>/docs/linux-kernel/net/socket/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>/docs/linux-kernel/net/socket/</guid>
-      <description>一、socket相关系统调用 #  1SYSCALL_DEFINE3(socket, int, family, int, type, int, protocol); 2SYSCALL_DEFINE4(socketpair, int, family, int, type, int, protocol, int __user *, usockvec); 3SYSCALL_DEFINE3(bind, int, fd, struct sockaddr __user *, umyaddr, int, addrlen); 4SYSCALL_DEFINE2(listen, int, fd, int, backlog); 5SYSCALL_DEFINE4(accept4, int, fd, struct sockaddr __user *, upeer_sockaddr, int __user *, upeer_addrlen, int, flags); 6SYSCALL_DEFINE3(accept, int, fd, struct sockaddr __user *, upeer_sockaddr, int __user *, upeer_addrlen); 7SYSCALL_DEFINE3(connect, int, fd, struct sockaddr __user *, uservaddr, int, addrlen); 8SYSCALL_DEFINE3(getsockname, int, fd, struct sockaddr __user *, usockaddr, int __user *, usockaddr_len); 9SYSCALL_DEFINE3(getpeername, int, fd, struct sockaddr __user *, usockaddr, int __user *, usockaddr_len); 10SYSCALL_DEFINE6(sendto, int, fd, void __user *, buff, size_t, len, unsigned int, flags, struct sockaddr __user *, addr, int, addr_len); 11SYSCALL_DEFINE4(send, int, fd, void __user *, buff, size_t, len, unsigned int, flags); 12SYSCALL_DEFINE6(recvfrom, int, fd, void __user *, ubuf, size_t, size, unsigned int, flags, struct sockaddr __user *, addr, int __user *, addr_len); 13SYSCALL_DEFINE4(recv, int, fd, void __user *, ubuf, size_t, size, unsigned int, flags); 14SYSCALL_DEFINE5(setsockopt, int, fd, int, level, int, optname, char __user *, optval, int, optlen); 15SYSCALL_DEFINE5(getsockopt, int, fd, int, level, int, optname, char __user *, optval, int __user *, optlen); 16SYSCALL_DEFINE2(shutdown, int, fd, int, how); 17SYSCALL_DEFINE3(sendmsg, int, fd, struct user_msghdr __user *, msg, unsigned int, flags); 18SYSCALL_DEFINE4(sendmmsg, int, fd, struct mmsghdr __user *, mmsg, unsigned int, vlen, unsigned int, flags); 19SYSCALL_DEFINE3(recvmsg, int, fd, struct user_msghdr __user *, msg, unsigned int, flags); 20SYSCALL_DEFINE5(recvmmsg, int, fd, struct mmsghdr __user *, mmsg, unsigned int, vlen, unsigned int, flags, struct __kernel_timespec __user *, timeout); 21SYSCALL_DEFINE5(recvmmsg_time32, int, fd, struct mmsghdr __user *, mmsg, unsigned int, vlen, unsigned int, flags, struct old_timespec32 __user *, timeout); 22SYSCALL_DEFINE2(socketcall, int, call, unsigned long __user *, args); 二、socket创建过程 #   socket创建需要使用family、type和protocol 在底层socket可以说相当于一个基类，将底层不同类型封装成统一的接口  @startuml class net_families { net_proto_family[NPROTO] } class net_proto_family { int	family; int	(*create)(struct net *net, struct socket *sock, int protocol, int kern); struct module	*owner; } class socket() {} class inet_init() {} class inet6_init() {} class af_unix_init() {} &amp;quot;inet_init()&amp;quot; -up-&amp;gt; net_families : sock_register注册AF_INET &amp;quot;inet6_init()&amp;quot; -up-&amp;gt; net_families : sock_register注册AF_INET6 &amp;quot;af_unix_init()&amp;quot; -up-&amp;gt; net_families : sock_register注册AF_UNIX &amp;quot;socket()&amp;quot; -down-&amp;gt; net_proto_family : 调用create &amp;quot;socket()&amp;quot; -down-&amp;gt; net_families : 根据不同的family获取对应的net_proto_family net_proto_family &amp;lt;-left- net_families @enduml 1.</description>
-    </item>
-    
-    <item>
       <title>container_of() 根据成员地址找其所在结构体</title>
       <link>/docs/linux-kernel/data-structures/container_of/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
@@ -24,7 +15,7 @@
     </item>
     
     <item>
-      <title>网络数据包处理</title>
+      <title>网络数据包处理流程</title>
       <link>/docs/linux-kernel/net/common/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
@@ -39,6 +30,15 @@
       
       <guid>/docs/linux-kernel/drivers/net/common/</guid>
       <description>一、驱动到网络协议栈处理过程 #  @startuml box kernel #White participant net participant ksoftirqd end box box driver #White participant eth end box participant cpu autonumber net -&amp;gt; eth: net_device_ops::ndo_open eth -&amp;gt; cpu: 注册硬件中断处理函数 eth -&amp;gt; net: 调用netif_napi_add注册poll函数到napi列表里面 == 收到包 == autonumber 1 cpu -&amp;gt; eth: 来中断了 eth -&amp;gt; ksoftirqd: 设置软中断NET_RX_SOFTIRQ ksoftirqd -&amp;gt; net: 根据软中断类型调用net_rx_action net -&amp;gt; eth: 从napi列表中遍历处理，找到对应的poll函数 eth -&amp;gt; eth: 从硬件buffer中读取数据帧创建sk_buff eth -&amp;gt; net: 将sk_buff通过函数napi_gro_receive调用到内核 net -&amp;gt; net: napi_gro_receive =&amp;gt; napi_skb_finish net -&amp;gt; net: napi_skb_finish =&amp;gt; netif_receive_skb @enduml 二、驱动定义 #  1.</description>
+    </item>
+    
+    <item>
+      <title>预定义宏</title>
+      <link>/docs/c&#43;&#43;/macro/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/c&#43;&#43;/macro/</guid>
+      <description>一、变量修饰 #  1. 返回值修饰 #  1.1. _GLIBCXX_NODISCARD #   C++17生效，会在返回值没有使用的情况下编译报warning  1// /usr/include/c++/12.2.0/x86_64-pc-linux-gnu/bits/c++config.h 2// Macro to warn about unused results. 3#if __cplusplus &amp;gt;= 201703L 4# define _GLIBCXX_NODISCARD [[__nodiscard__]] 5#else 6# define _GLIBCXX_NODISCARD 7#endif </description>
     </item>
     
     <item>
@@ -58,6 +58,15 @@
       <guid>/docs/linux-kernel/net/iptables/</guid>
       <description>一、iptables的规则链 #  参考 Linux-iptables 防火墙、四表五链及SNAT与DNAT的原理与应用
 1. 规则链图 #  @startuml title 规则链生效时机 node &amp;quot;用户空间&amp;quot; { [Application] #Yellow } node &amp;quot;内核空间&amp;quot; { [INPUT] [OUTPUT] [POSTROUTING] [PREROUTING] [FORWARD] [入站路由] #Yellow note left of &amp;quot;入站路由&amp;quot; 判断是否在本地有监听地址 end note [出站路由] #Yellow note right of &amp;quot;出站路由&amp;quot; 出站路由会选择下一跳 也就是会选择网卡 end note } node &amp;quot;网络&amp;quot; { [网卡1] [网卡2] [网卡3] } [网卡1] -up-&amp;gt; [PREROUTING] [PREROUTING] -up-&amp;gt; [入站路由] [入站路由] -right-&amp;gt; [FORWARD]: 非本机流量 [入站路由] -up-&amp;gt; [INPUT]: 本机流量 [INPUT] -up-&amp;gt; [Application] [Application] -down-&amp;gt; [OUTPUT] [OUTPUT] -down-&amp;gt; [出站路由] [FORWARD] -right-&amp;gt; [出站路由] [出站路由] -down-&amp;gt; [POSTROUTING] [POSTROUTING] -down-&amp;gt; [网卡2] @enduml 2.</description>
+    </item>
+    
+    <item>
+      <title></title>
+      <link>/docs/linux-kernel/net/socket/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux-kernel/net/socket/</guid>
+      <description>一、socket相关系统调用 #  1SYSCALL_DEFINE3(socket, int, family, int, type, int, protocol); 2SYSCALL_DEFINE4(socketpair, int, family, int, type, int, protocol, int __user *, usockvec); 3SYSCALL_DEFINE3(bind, int, fd, struct sockaddr __user *, umyaddr, int, addrlen); 4SYSCALL_DEFINE2(listen, int, fd, int, backlog); 5SYSCALL_DEFINE4(accept4, int, fd, struct sockaddr __user *, upeer_sockaddr, int __user *, upeer_addrlen, int, flags); 6SYSCALL_DEFINE3(accept, int, fd, struct sockaddr __user *, upeer_sockaddr, int __user *, upeer_addrlen); 7SYSCALL_DEFINE3(connect, int, fd, struct sockaddr __user *, uservaddr, int, addrlen); 8SYSCALL_DEFINE3(getsockname, int, fd, struct sockaddr __user *, usockaddr, int __user *, usockaddr_len); 9SYSCALL_DEFINE3(getpeername, int, fd, struct sockaddr __user *, usockaddr, int __user *, usockaddr_len); 10SYSCALL_DEFINE6(sendto, int, fd, void __user *, buff, size_t, len, unsigned int, flags, struct sockaddr __user *, addr, int, addr_len); 11SYSCALL_DEFINE4(send, int, fd, void __user *, buff, size_t, len, unsigned int, flags); 12SYSCALL_DEFINE6(recvfrom, int, fd, void __user *, ubuf, size_t, size, unsigned int, flags, struct sockaddr __user *, addr, int __user *, addr_len); 13SYSCALL_DEFINE4(recv, int, fd, void __user *, ubuf, size_t, size, unsigned int, flags); 14SYSCALL_DEFINE5(setsockopt, int, fd, int, level, int, optname, char __user *, optval, int, optlen); 15SYSCALL_DEFINE5(getsockopt, int, fd, int, level, int, optname, char __user *, optval, int __user *, optlen); 16SYSCALL_DEFINE2(shutdown, int, fd, int, how); 17SYSCALL_DEFINE3(sendmsg, int, fd, struct user_msghdr __user *, msg, unsigned int, flags); 18SYSCALL_DEFINE4(sendmmsg, int, fd, struct mmsghdr __user *, mmsg, unsigned int, vlen, unsigned int, flags); 19SYSCALL_DEFINE3(recvmsg, int, fd, struct user_msghdr __user *, msg, unsigned int, flags); 20SYSCALL_DEFINE5(recvmmsg, int, fd, struct mmsghdr __user *, mmsg, unsigned int, vlen, unsigned int, flags, struct __kernel_timespec __user *, timeout); 21SYSCALL_DEFINE5(recvmmsg_time32, int, fd, struct mmsghdr __user *, mmsg, unsigned int, vlen, unsigned int, flags, struct old_timespec32 __user *, timeout); 22SYSCALL_DEFINE2(socketcall, int, call, unsigned long __user *, args); 二、socket创建过程 #   socket创建需要使用family、type和protocol 在底层socket可以说相当于一个基类，将底层不同类型封装成统一的接口  @startuml class net_families { net_proto_family[NPROTO] } class net_proto_family { int	family; int	(*create)(struct net *net, struct socket *sock, int protocol, int kern); struct module	*owner; } class socket() {} class inet_init() {} class inet6_init() {} class af_unix_init() {} &amp;quot;inet_init()&amp;quot; -up-&amp;gt; net_families : sock_register注册AF_INET &amp;quot;inet6_init()&amp;quot; -up-&amp;gt; net_families : sock_register注册AF_INET6 &amp;quot;af_unix_init()&amp;quot; -up-&amp;gt; net_families : sock_register注册AF_UNIX &amp;quot;socket()&amp;quot; -down-&amp;gt; net_proto_family : 调用create &amp;quot;socket()&amp;quot; -down-&amp;gt; net_families : 根据不同的family获取对应的net_proto_family net_proto_family &amp;lt;-left- net_families @enduml 1.</description>
     </item>
     
     <item>
@@ -87,7 +96,7 @@ We&amp;rsquo;ll start with creating a new site with a very basic template.</desc
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>/docs/linux-kernel/net/ipv4/ipv4/</guid>
-      <description>一、ipv4收包后如何处理 #  1. ip层包入口 #  1// net/ipv4/ip_input.c 2/* 3* Deliver IP Packets to the higher protocol layers. 4*/ 5int ip_local_deliver(struct sk_buff *skb) { 6	/* 7*	Reassemble IP fragments. 8*/ 9	struct net *net = dev_net(skb-&amp;gt;dev); 10 11 // 判断是否为分片包，分片包就先处理分片 12	if (ip_is_fragment(ip_hdr(skb))) { 13	if (ip_defrag(net, skb, IP_DEFRAG_LOCAL_DELIVER)) 14	return 0; 15	} 16 17 // 分片处理完毕调用ip_local_deliver_finish() 18	return NF_HOOK(NFPROTO_IPV4, NF_INET_LOCAL_IN, 19	net, NULL, skb, skb-&amp;gt;dev, NULL, 20	ip_local_deliver_finish); 21}  根据ip包内的协议处理具体的协议  1// net/ipv4/ip_input.</description>
+      <description>一、ipv4收包后如何处理 #  1. ip层包入口 #  1// net/ipv4/ip_input.c 2/* 3* Deliver IP Packets to the higher protocol layers. 4*/ 5int ip_local_deliver(struct sk_buff *skb) { 6 /* 7*	Reassemble IP fragments. 8*/ 9 struct net *net = dev_net(skb-&amp;gt;dev); 10 11 // 判断是否为分片包，分片包就先处理分片 12 if (ip_is_fragment(ip_hdr(skb))) { 13 if (ip_defrag(net, skb, IP_DEFRAG_LOCAL_DELIVER)) 14 return 0; 15 } 16 17 // 分片处理完毕调用ip_local_deliver_finish() 18 return NF_HOOK(NFPROTO_IPV4, NF_INET_LOCAL_IN, 19 net, NULL, skb, skb-&amp;gt;dev, NULL, 20 ip_local_deliver_finish); 21}  根据ip包内的协议处理具体的协议  1// net/ipv4/ip_input.</description>
     </item>
     
     <item>
@@ -111,6 +120,15 @@ Save it somewhere specific as we will be using it in the next step.
 More complete instructions are available at Install Hugo
 Step 2. Build the Docs #  Hugo has its own example site which happens to also be the documentation site you are reading right now.
 Follow the following steps:</description>
+    </item>
+    
+    <item>
+      <title></title>
+      <link>/docs/c&#43;&#43;/move/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/c&#43;&#43;/move/</guid>
+      <description>源码 #  1// /usr/include/c++/12.2.0/bits/move.h 2 /** 3* @brief Convert a value to an rvalue. 4* @param __t A thing of arbitrary type. 5* @return The parameter cast to an rvalue-reference to allow moving it. 6*/ 7 template&amp;lt;typename _Tp&amp;gt; 8 _GLIBCXX_NODISCARD 9 constexpr typename std::remove_reference&amp;lt;_Tp&amp;gt;::type&amp;amp;&amp;amp; 10 move(_Tp&amp;amp;&amp;amp; __t) noexcept 11 { return static_cast&amp;lt;typename std::remove_reference&amp;lt;_Tp&amp;gt;::type&amp;amp;&amp;amp;&amp;gt;(__t); }  可以看到std::move仅对类型做了一次转换，变成右值 在调用=时会匹配到移动赋值函数，所以对象内容会被转移（具体看对应的实现） 如果仅使用std::move(xxx)没有任何效果  </description>
     </item>
     
     <item>
@@ -157,6 +175,15 @@ Follow the following steps:</description>
       
       <guid>/docs/linux-kernel/net/ipv4/udp/</guid>
       <description>一、udp socket如何进行收包 #   udp会注册udp_protocol到inet_protos里面  1// net/ipv4/af_inet.c 2static const struct net_protocol udp_protocol = { 3	.handler =	udp_rcv, 4	.err_handler =	udp_err, 5	.no_policy =	1, 6}; 7... 8static int __init inet_init(void) 9{ 10... 11	if (inet_add_protocol(&amp;amp;udp_protocol, IPPROTO_UDP) &amp;lt; 0) 12	pr_crit(&amp;#34;%s: Cannot add UDP protocol\n&amp;#34;, __func__); 13... 14}  ipv4里面分析了，当ip层收到驱动的包之后，根据IPPROTO_UDP找到udp_protocol，然后调用handler函数对应udp_rcv  1// net/ipv4/udp.c 2/* 3*	All we need to do is get the socket, and then do a checksum.</description>
+    </item>
+    
+    <item>
+      <title>kfifo 无锁循环队列</title>
+      <link>/docs/linux-kernel/data-structures/kfifo/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux-kernel/data-structures/kfifo/</guid>
+      <description>一、提供的接口 #  1. 定义相关 #   声明和初始化  1// include/linux/kfifo.h 2/** 3* DECLARE_KFIFO - macro to declare a fifo object 4* @fifo: name of the declared fifo 5* @type: type of the fifo elements 6* @size: the number of elements in the fifo, this must be a power of 2 7*/ 8#define DECLARE_KFIFO(fifo, type, size) STRUCT_KFIFO(type, size) fifo 9 10/** 11* INIT_KFIFO - Initialize a fifo declared by DECLARE_KFIFO 12* @fifo: name of the declared fifo datatype 13*/ 14#define INIT_KFIFO(fifo) \ 15(void)({ \ 16typeof(&amp;amp;(fifo)) __tmp = &amp;amp;(fifo); \ 17struct __kfifo *__kfifo = &amp;amp;__tmp-&amp;gt;kfifo; \ 18__kfifo-&amp;gt;in = 0; \ 19__kfifo-&amp;gt;out = 0; \ 20__kfifo-&amp;gt;mask = __is_kfifo_ptr(__tmp) ?</description>
     </item>
     
     <item>
