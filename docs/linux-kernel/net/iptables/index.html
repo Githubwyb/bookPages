@@ -8,20 +8,18 @@
 <meta name="description" content="一、iptables的规则链 #  参考 Linux-iptables 防火墙、四表五链及SNAT与DNAT的原理与应用
 1. 规则链图 #  @startuml title 规则链生效时机 node &quot;用户空间&quot; { [Application] #Yellow } node &quot;内核空间&quot; { [INPUT] [OUTPUT] [POSTROUTING] [PREROUTING] [FORWARD] [入站路由] #Yellow note left of &quot;入站路由&quot; 判断是否在本地有监听地址 end note [出站路由] #Yellow note right of &quot;出站路由&quot; 出站路由会选择下一跳 也就是会选择网卡 end note } node &quot;网络&quot; { [网卡1] [网卡2] [网卡3] } [网卡1] -up-&gt; [PREROUTING] [PREROUTING] -up-&gt; [入站路由] [入站路由] -right-&gt; [FORWARD]: 非本机流量 [入站路由] -up-&gt; [INPUT]: 本机流量 [INPUT] -up-&gt; [Application] [Application] -down-&gt; [OUTPUT] [OUTPUT] -down-&gt; [出站路由] [FORWARD] -right-&gt; [出站路由] [出站路由] -down-&gt; [POSTROUTING] [POSTROUTING] -down-&gt; [网卡2] @enduml 2.">
 <meta name="theme-color" content="#FFFFFF"><meta property="og:title" content="" />
-<meta property="og:description" content="一、iptables的规则链 #  参考 Linux-iptables 防火墙、四表五链及SNAT与DNAT的原理与应用
-1. 规则链图 #  @startuml title 规则链生效时机 node &quot;用户空间&quot; { [Application] #Yellow } node &quot;内核空间&quot; { [INPUT] [OUTPUT] [POSTROUTING] [PREROUTING] [FORWARD] [入站路由] #Yellow note left of &quot;入站路由&quot; 判断是否在本地有监听地址 end note [出站路由] #Yellow note right of &quot;出站路由&quot; 出站路由会选择下一跳 也就是会选择网卡 end note } node &quot;网络&quot; { [网卡1] [网卡2] [网卡3] } [网卡1] -up-&gt; [PREROUTING] [PREROUTING] -up-&gt; [入站路由] [入站路由] -right-&gt; [FORWARD]: 非本机流量 [入站路由] -up-&gt; [INPUT]: 本机流量 [INPUT] -up-&gt; [Application] [Application] -down-&gt; [OUTPUT] [OUTPUT] -down-&gt; [出站路由] [FORWARD] -right-&gt; [出站路由] [出站路由] -down-&gt; [POSTROUTING] [POSTROUTING] -down-&gt; [网卡2] @enduml 2." />
-<meta property="og:type" content="article" />
-<meta property="og:url" content="/docs/linux-kernel/net/iptables/" /><meta property="article:section" content="docs" />
-
-<meta property="article:modified_time" content="2022-10-17T17:24:10+08:00" />
+<meta property="og:description" content="" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="/docs/linux-kernel/net/iptables/" />
 
 <title>Iptables | 技术的路上奔跑</title>
 <link rel="manifest" href="../../../../manifest.json">
 <link rel="icon" href="../../../../favicon.png" type="image/x-icon">
 <link rel="stylesheet" href="../../../../book.min.46181bc93375ba932026e753b37c40e6ff8bb16a9ef770c78bcc663e4577b1ba.css" integrity="sha256-RhgbyTN1upMgJudTs3xA5v&#43;LsWqe93DHi8xmPkV3sbo=">
-<script defer src="../../../../en.search.min.cc93d1126d110e2f75d6d40d7f94329c36ae0acc7ad337e6f220edd2898a3cc9.js" integrity="sha256-zJPREm0RDi911tQNf5QynDauCsx60zfm8iDt0omKPMk="></script>
+<script defer src="../../../../en.search.min.b69268a1d582425b561f865ccc183821f62d81a99f371aee16369850a38b6a29.js" integrity="sha256-tpJoodWCQltWH4ZczBg4IfYtgamfNxruFjaYUKOLaik="></script>
 
 <script defer src="../../../../sw.min.6f6f90fcb8eb1c49ec389838e6b801d0de19430b8e516902f8d75c3c8bd98739.js" integrity="sha256-b2&#43;Q/LjrHEnsOJg45rgB0N4ZQwuOUWkC&#43;NdcPIvZhzk="></script>
+<link rel="alternate" type="application/rss+xml" href="../../../../docs/linux-kernel/net/iptables/index.xml" title="技术的路上奔跑" />
 <!--
 Made with Book Theme
 https://github.com/alex-shpak/hugo-book
@@ -153,7 +151,7 @@ document.addEventListener("DOMContentLoaded", function(){
   
 
   
-    <a href="../../../../docs/c&#43;&#43;/move/" class="">Move</a>
+    <a href="../../../../docs/c&#43;&#43;/move/" class="">std::move</a>
   
 
         </li>
@@ -166,7 +164,7 @@ document.addEventListener("DOMContentLoaded", function(){
   
 
   
-    <a href="../../../../docs/c&#43;&#43;/shared_ptr/" class="">Shared Ptr</a>
+    <a href="../../../../docs/c&#43;&#43;/shared_ptr/" class="">std::shared_ptr</a>
   
 
         </li>
@@ -378,6 +376,11 @@ document.addEventListener("DOMContentLoaded", function(){
     <a href="../../../../docs/linux-kernel/net/common/" class="">网络数据包处理流程</a>
   
 
+          
+  <ul>
+    
+  </ul>
+
         </li>
       
     
@@ -450,6 +453,11 @@ document.addEventListener("DOMContentLoaded", function(){
   
     <a href="../../../../docs/linux-kernel/net/iptables/" class=" active">Iptables</a>
   
+
+          
+  <ul>
+    
+  </ul>
 
         </li>
       
@@ -581,6 +589,27 @@ document.addEventListener("DOMContentLoaded", function(){
 
         </li>
       
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-af870650dfa28a44b51c7b5be31ceafc" class="toggle"  />
+    <label for="section-af870650dfa28a44b51c7b5be31ceafc" class="flex justify-between">
+      <a href="../../../../docs/linux-kernel/intterupt/" class="">中断</a>
+    </label>
+  
+
+          
+  <ul>
     
   </ul>
 
@@ -794,6 +823,24 @@ document.addEventListener("DOMContentLoaded", function(){
 
   
     <a href="../../../../docs/leetcode/simple/leetcode2441/" class="">2441. Largest Positive Integer That Exists With Its Negative</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/simple/leetcode2446/" class="">2446. Determine if Two Events Have Conflict</a>
   
 
           
@@ -1286,6 +1333,24 @@ document.addEventListener("DOMContentLoaded", function(){
 
   
     <a href="../../../../docs/leetcode/hard/leetcode864/" class="">* 864. Shortest Path to Get All Keys</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/hard/leetcode2444/" class="">2444. Count Subarrays With Fixed Bounds</a>
   
 
           

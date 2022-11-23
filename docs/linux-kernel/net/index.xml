@@ -6,31 +6,12 @@
     <description>Recent content in /net/ 网络部分 on 技术的路上奔跑</description>
     <generator>Hugo -- gohugo.io</generator><atom:link href="/docs/linux-kernel/net/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>网络数据包处理流程</title>
-      <link>/docs/linux-kernel/net/common/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>/docs/linux-kernel/net/common/</guid>
-      <description>一、从驱动来的包处理流程 #  图取自 linux内核协议栈 UDP之数据报接收过程</description>
-    </item>
-    
-    <item>
       <title></title>
       <link>/docs/linux-kernel/net/epoll/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>/docs/linux-kernel/net/epoll/</guid>
       <description> 参考 从linux5.9看网络层的设计  1.1. epoll #   epoll对于fd的储存使用的是红黑树 使用链表保存处于就绪状态的fd  1) 接口定义 #  1// fs/eventpoll.c 2SYSCALL_DEFINE1(epoll_create, int, size) 3{ 4	if (size &amp;lt;= 0) 5	return -EINVAL; 6 7	return do_epoll_create(0); 8} 9 10/* 11* The following function implements the controller interface for 12* the eventpoll file that enables the insertion/removal/change of 13* file descriptors inside the interest set. 14*/ 15SYSCALL_DEFINE4(epoll_ctl, int, epfd, int, op, int, fd, 16	struct epoll_event __user *, event) 17{ 18	struct epoll_event epds; 19 20	if (ep_op_has_event(op) &amp;amp;&amp;amp; 21	copy_from_user(&amp;amp;epds, event, sizeof(struct epoll_event))) 22	return -EFAULT; 23 24	return do_epoll_ctl(epfd, op, fd, &amp;amp;epds, false); 25} 26 27SYSCALL_DEFINE4(epoll_wait, int, epfd, struct epoll_event __user *, events, 28	int, maxevents, int, timeout) 29{ 30	struct timespec64 to; 31 32	return do_epoll_wait(epfd, events, maxevents, 33	ep_timeout_to_timespec(&amp;amp;to, timeout)); 34} 2) 数据结构 #  1 </description>
-    </item>
-    
-    <item>
-      <title></title>
-      <link>/docs/linux-kernel/net/iptables/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>/docs/linux-kernel/net/iptables/</guid>
-      <description>一、iptables的规则链 #  参考 Linux-iptables 防火墙、四表五链及SNAT与DNAT的原理与应用
-1. 规则链图 #  @startuml title 规则链生效时机 node &amp;quot;用户空间&amp;quot; { [Application] #Yellow } node &amp;quot;内核空间&amp;quot; { [INPUT] [OUTPUT] [POSTROUTING] [PREROUTING] [FORWARD] [入站路由] #Yellow note left of &amp;quot;入站路由&amp;quot; 判断是否在本地有监听地址 end note [出站路由] #Yellow note right of &amp;quot;出站路由&amp;quot; 出站路由会选择下一跳 也就是会选择网卡 end note } node &amp;quot;网络&amp;quot; { [网卡1] [网卡2] [网卡3] } [网卡1] -up-&amp;gt; [PREROUTING] [PREROUTING] -up-&amp;gt; [入站路由] [入站路由] -right-&amp;gt; [FORWARD]: 非本机流量 [入站路由] -up-&amp;gt; [INPUT]: 本机流量 [INPUT] -up-&amp;gt; [Application] [Application] -down-&amp;gt; [OUTPUT] [OUTPUT] -down-&amp;gt; [出站路由] [FORWARD] -right-&amp;gt; [出站路由] [出站路由] -down-&amp;gt; [POSTROUTING] [POSTROUTING] -down-&amp;gt; [网卡2] @enduml 2.</description>
     </item>
     
     <item>

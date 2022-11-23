@@ -5,19 +5,19 @@
   <meta name="generator" content="Hugo 0.92.2" />
   <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="一、ipv4收包后如何处理 #  1. ip层包入口 #  1// net/ipv4/ip_input.c 2/* 3* Deliver IP Packets to the higher protocol layers. 4*/ 5int ip_local_deliver(struct sk_buff *skb) { 6 /* 7*	Reassemble IP fragments. 8*/ 9 struct net *net = dev_net(skb-&gt;dev); 10 11 // 判断是否为分片包，分片包就先处理分片 12 if (ip_is_fragment(ip_hdr(skb))) { 13 if (ip_defrag(net, skb, IP_DEFRAG_LOCAL_DELIVER)) 14 return 0; 15 } 16 17 // 分片处理完毕调用ip_local_deliver_finish() 18 return NF_HOOK(NFPROTO_IPV4, NF_INET_LOCAL_IN, 19 net, NULL, skb, skb-&gt;dev, NULL, 20 ip_local_deliver_finish); 21}  根据ip包内的协议处理具体的协议  1// net/ipv4/ip_input.">
+<meta name="description" content="一、ipv4收包后如何处理 #  1. ip层包入口 #   最开始注册一个packet_type结构体，定义func为ip_rcv，被inet_init注册  1// net/ipv4/af_inet.c 2static struct packet_type ip_packet_type __read_mostly = { 3	.type = cpu_to_be16(ETH_P_IP), 4	.func = ip_rcv, 5	.list_func = ip_list_rcv, 6}; 7 8static int __init inet_init(void) 9{ 10	struct inet_protosw *q; 11	struct list_head *r; 12	int rc; 13 14	sock_skb_cb_check_size(sizeof(struct inet_skb_parm)); 15 16	rc = proto_register(&amp;tcp_prot, 1); 17	if (rc) 18	goto out; 19 20	rc = proto_register(&amp;udp_prot, 1); 21	if (rc) 22	goto out_unregister_tcp_proto; 23 24	rc = proto_register(&amp;raw_prot, 1); 25	if (rc) 26	goto out_unregister_udp_proto; 27 28	rc = proto_register(&amp;ping_prot, 1); 29	if (rc) 30	goto out_unregister_raw_proto; 31 32	/* 33*	Tell SOCKET that we are alive.">
 <meta name="theme-color" content="#FFFFFF"><meta property="og:title" content="" />
-<meta property="og:description" content="一、ipv4收包后如何处理 #  1. ip层包入口 #  1// net/ipv4/ip_input.c 2/* 3* Deliver IP Packets to the higher protocol layers. 4*/ 5int ip_local_deliver(struct sk_buff *skb) { 6 /* 7*	Reassemble IP fragments. 8*/ 9 struct net *net = dev_net(skb-&gt;dev); 10 11 // 判断是否为分片包，分片包就先处理分片 12 if (ip_is_fragment(ip_hdr(skb))) { 13 if (ip_defrag(net, skb, IP_DEFRAG_LOCAL_DELIVER)) 14 return 0; 15 } 16 17 // 分片处理完毕调用ip_local_deliver_finish() 18 return NF_HOOK(NFPROTO_IPV4, NF_INET_LOCAL_IN, 19 net, NULL, skb, skb-&gt;dev, NULL, 20 ip_local_deliver_finish); 21}  根据ip包内的协议处理具体的协议  1// net/ipv4/ip_input." />
+<meta property="og:description" content="一、ipv4收包后如何处理 #  1. ip层包入口 #   最开始注册一个packet_type结构体，定义func为ip_rcv，被inet_init注册  1// net/ipv4/af_inet.c 2static struct packet_type ip_packet_type __read_mostly = { 3	.type = cpu_to_be16(ETH_P_IP), 4	.func = ip_rcv, 5	.list_func = ip_list_rcv, 6}; 7 8static int __init inet_init(void) 9{ 10	struct inet_protosw *q; 11	struct list_head *r; 12	int rc; 13 14	sock_skb_cb_check_size(sizeof(struct inet_skb_parm)); 15 16	rc = proto_register(&amp;tcp_prot, 1); 17	if (rc) 18	goto out; 19 20	rc = proto_register(&amp;udp_prot, 1); 21	if (rc) 22	goto out_unregister_tcp_proto; 23 24	rc = proto_register(&amp;raw_prot, 1); 25	if (rc) 26	goto out_unregister_udp_proto; 27 28	rc = proto_register(&amp;ping_prot, 1); 29	if (rc) 30	goto out_unregister_raw_proto; 31 32	/* 33*	Tell SOCKET that we are alive." />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="/docs/linux-kernel/net/ipv4/ipv4/" /><meta property="article:section" content="docs" />
 
-<meta property="article:modified_time" content="2022-10-29T14:42:10+08:00" />
+<meta property="article:modified_time" content="2022-11-23T09:35:54+08:00" />
 
 <title>Ipv4 | 技术的路上奔跑</title>
 <link rel="manifest" href="../../../../../manifest.json">
 <link rel="icon" href="../../../../../favicon.png" type="image/x-icon">
 <link rel="stylesheet" href="../../../../../book.min.46181bc93375ba932026e753b37c40e6ff8bb16a9ef770c78bcc663e4577b1ba.css" integrity="sha256-RhgbyTN1upMgJudTs3xA5v&#43;LsWqe93DHi8xmPkV3sbo=">
-<script defer src="../../../../../en.search.min.cc93d1126d110e2f75d6d40d7f94329c36ae0acc7ad337e6f220edd2898a3cc9.js" integrity="sha256-zJPREm0RDi911tQNf5QynDauCsx60zfm8iDt0omKPMk="></script>
+<script defer src="../../../../../en.search.min.b69268a1d582425b561f865ccc183821f62d81a99f371aee16369850a38b6a29.js" integrity="sha256-tpJoodWCQltWH4ZczBg4IfYtgamfNxruFjaYUKOLaik="></script>
 
 <script defer src="../../../../../sw.min.6f6f90fcb8eb1c49ec389838e6b801d0de19430b8e516902f8d75c3c8bd98739.js" integrity="sha256-b2&#43;Q/LjrHEnsOJg45rgB0N4ZQwuOUWkC&#43;NdcPIvZhzk="></script>
 <!--
@@ -151,7 +151,7 @@ document.addEventListener("DOMContentLoaded", function(){
   
 
   
-    <a href="../../../../../docs/c&#43;&#43;/move/" class="">Move</a>
+    <a href="../../../../../docs/c&#43;&#43;/move/" class="">std::move</a>
   
 
         </li>
@@ -164,7 +164,7 @@ document.addEventListener("DOMContentLoaded", function(){
   
 
   
-    <a href="../../../../../docs/c&#43;&#43;/shared_ptr/" class="">Shared Ptr</a>
+    <a href="../../../../../docs/c&#43;&#43;/shared_ptr/" class="">std::shared_ptr</a>
   
 
         </li>
@@ -376,6 +376,11 @@ document.addEventListener("DOMContentLoaded", function(){
     <a href="../../../../../docs/linux-kernel/net/common/" class="">网络数据包处理流程</a>
   
 
+          
+  <ul>
+    
+  </ul>
+
         </li>
       
     
@@ -448,6 +453,11 @@ document.addEventListener("DOMContentLoaded", function(){
   
     <a href="../../../../../docs/linux-kernel/net/iptables/" class="">Iptables</a>
   
+
+          
+  <ul>
+    
+  </ul>
 
         </li>
       
@@ -579,6 +589,27 @@ document.addEventListener("DOMContentLoaded", function(){
 
         </li>
       
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-af870650dfa28a44b51c7b5be31ceafc" class="toggle"  />
+    <label for="section-af870650dfa28a44b51c7b5be31ceafc" class="flex justify-between">
+      <a href="../../../../../docs/linux-kernel/intterupt/" class="">中断</a>
+    </label>
+  
+
+          
+  <ul>
     
   </ul>
 
@@ -792,6 +823,24 @@ document.addEventListener("DOMContentLoaded", function(){
 
   
     <a href="../../../../../docs/leetcode/simple/leetcode2441/" class="">2441. Largest Positive Integer That Exists With Its Negative</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2446/" class="">2446. Determine if Two Events Have Conflict</a>
   
 
           
@@ -1294,6 +1343,24 @@ document.addEventListener("DOMContentLoaded", function(){
         </li>
       
     
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/hard/leetcode2444/" class="">2444. Count Subarrays With Fixed Bounds</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
   </ul>
 
         </li>
@@ -1400,6 +1467,199 @@ document.addEventListener("DOMContentLoaded", function(){
   1. ip层包入口
   <a class="anchor" href="#1-ip%e5%b1%82%e5%8c%85%e5%85%a5%e5%8f%a3">#</a>
 </h2>
+<ul>
+<li>最开始注册一个<code>packet_type</code>结构体，定义func为<code>ip_rcv</code>，被<code>inet_init</code>注册</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  1</span><span><span style="color:#6272a4">// net/ipv4/af_inet.c
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  2</span><span><span style="color:#6272a4"></span><span style="color:#ff79c6">static</span> <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">packet_type</span> ip_packet_type __read_mostly <span style="color:#ff79c6">=</span> {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  3</span><span>	.type <span style="color:#ff79c6">=</span> cpu_to_be16(ETH_P_IP),
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  4</span><span>	.func <span style="color:#ff79c6">=</span> ip_rcv,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  5</span><span>	.list_func <span style="color:#ff79c6">=</span> ip_list_rcv,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  6</span><span>};
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  7</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  8</span><span><span style="color:#ff79c6">static</span> <span style="color:#8be9fd">int</span> __init <span style="color:#50fa7b">inet_init</span>(<span style="color:#8be9fd">void</span>)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  9</span><span>{
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 10</span><span>	<span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">inet_protosw</span> <span style="color:#ff79c6">*</span>q;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 11</span><span>	<span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">list_head</span> <span style="color:#ff79c6">*</span>r;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 12</span><span>	<span style="color:#8be9fd">int</span> rc;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 13</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 14</span><span>	sock_skb_cb_check_size(<span style="color:#ff79c6">sizeof</span>(<span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">inet_skb_parm</span>));
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 15</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 16</span><span>	rc <span style="color:#ff79c6">=</span> proto_register(<span style="color:#ff79c6">&amp;</span>tcp_prot, <span style="color:#bd93f9">1</span>);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 17</span><span>	<span style="color:#ff79c6">if</span> (rc)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 18</span><span>		<span style="color:#ff79c6">goto</span> out;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 19</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 20</span><span>	rc <span style="color:#ff79c6">=</span> proto_register(<span style="color:#ff79c6">&amp;</span>udp_prot, <span style="color:#bd93f9">1</span>);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 21</span><span>	<span style="color:#ff79c6">if</span> (rc)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 22</span><span>		<span style="color:#ff79c6">goto</span> out_unregister_tcp_proto;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 23</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 24</span><span>	rc <span style="color:#ff79c6">=</span> proto_register(<span style="color:#ff79c6">&amp;</span>raw_prot, <span style="color:#bd93f9">1</span>);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 25</span><span>	<span style="color:#ff79c6">if</span> (rc)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 26</span><span>		<span style="color:#ff79c6">goto</span> out_unregister_udp_proto;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 27</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 28</span><span>	rc <span style="color:#ff79c6">=</span> proto_register(<span style="color:#ff79c6">&amp;</span>ping_prot, <span style="color:#bd93f9">1</span>);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 29</span><span>	<span style="color:#ff79c6">if</span> (rc)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 30</span><span>		<span style="color:#ff79c6">goto</span> out_unregister_raw_proto;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 31</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 32</span><span>	<span style="color:#6272a4">/*
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 33</span><span><span style="color:#6272a4">	 *	Tell SOCKET that we are alive...
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 34</span><span><span style="color:#6272a4">	 */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 35</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 36</span><span>	(<span style="color:#8be9fd">void</span>)sock_register(<span style="color:#ff79c6">&amp;</span>inet_family_ops);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 37</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 38</span><span><span style="color:#ff79c6">#ifdef CONFIG_SYSCTL
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 39</span><span><span style="color:#ff79c6"></span>	ip_static_sysctl_init();
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 40</span><span><span style="color:#ff79c6">#endif
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 41</span><span><span style="color:#ff79c6"></span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 42</span><span>	<span style="color:#6272a4">/*
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 43</span><span><span style="color:#6272a4">	 *	Add all the base protocols.
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 44</span><span><span style="color:#6272a4">	 */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 45</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 46</span><span>	<span style="color:#ff79c6">if</span> (inet_add_protocol(<span style="color:#ff79c6">&amp;</span>icmp_protocol, IPPROTO_ICMP) <span style="color:#ff79c6">&lt;</span> <span style="color:#bd93f9">0</span>)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 47</span><span>		pr_crit(<span style="color:#f1fa8c">&#34;%s: Cannot add ICMP protocol</span><span style="color:#f1fa8c">\n</span><span style="color:#f1fa8c">&#34;</span>, __func__);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 48</span><span>	<span style="color:#ff79c6">if</span> (inet_add_protocol(<span style="color:#ff79c6">&amp;</span>udp_protocol, IPPROTO_UDP) <span style="color:#ff79c6">&lt;</span> <span style="color:#bd93f9">0</span>)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 49</span><span>		pr_crit(<span style="color:#f1fa8c">&#34;%s: Cannot add UDP protocol</span><span style="color:#f1fa8c">\n</span><span style="color:#f1fa8c">&#34;</span>, __func__);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 50</span><span>	<span style="color:#ff79c6">if</span> (inet_add_protocol(<span style="color:#ff79c6">&amp;</span>tcp_protocol, IPPROTO_TCP) <span style="color:#ff79c6">&lt;</span> <span style="color:#bd93f9">0</span>)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 51</span><span>		pr_crit(<span style="color:#f1fa8c">&#34;%s: Cannot add TCP protocol</span><span style="color:#f1fa8c">\n</span><span style="color:#f1fa8c">&#34;</span>, __func__);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 52</span><span><span style="color:#ff79c6">#ifdef CONFIG_IP_MULTICAST
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 53</span><span><span style="color:#ff79c6"></span>	<span style="color:#ff79c6">if</span> (inet_add_protocol(<span style="color:#ff79c6">&amp;</span>igmp_protocol, IPPROTO_IGMP) <span style="color:#ff79c6">&lt;</span> <span style="color:#bd93f9">0</span>)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 54</span><span>		pr_crit(<span style="color:#f1fa8c">&#34;%s: Cannot add IGMP protocol</span><span style="color:#f1fa8c">\n</span><span style="color:#f1fa8c">&#34;</span>, __func__);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 55</span><span><span style="color:#ff79c6">#endif
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 56</span><span><span style="color:#ff79c6"></span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 57</span><span>	<span style="color:#6272a4">/* Register the socket-side information for inet_create. */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 58</span><span>	<span style="color:#ff79c6">for</span> (r <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">&amp;</span>inetsw[<span style="color:#bd93f9">0</span>]; r <span style="color:#ff79c6">&lt;</span> <span style="color:#ff79c6">&amp;</span>inetsw[SOCK_MAX]; <span style="color:#ff79c6">++</span>r)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 59</span><span>		INIT_LIST_HEAD(r);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 60</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 61</span><span>	<span style="color:#ff79c6">for</span> (q <span style="color:#ff79c6">=</span> inetsw_array; q <span style="color:#ff79c6">&lt;</span> <span style="color:#ff79c6">&amp;</span>inetsw_array[INETSW_ARRAY_LEN]; <span style="color:#ff79c6">++</span>q)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 62</span><span>		inet_register_protosw(q);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 63</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 64</span><span>	<span style="color:#6272a4">/*
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 65</span><span><span style="color:#6272a4">	 *	Set the ARP module up
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 66</span><span><span style="color:#6272a4">	 */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 67</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 68</span><span>	arp_init();
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 69</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 70</span><span>	<span style="color:#6272a4">/*
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 71</span><span><span style="color:#6272a4">	 *	Set the IP module up
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 72</span><span><span style="color:#6272a4">	 */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 73</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 74</span><span>	ip_init();
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 75</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 76</span><span>	<span style="color:#6272a4">/* Initialise per-cpu ipv4 mibs */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 77</span><span>	<span style="color:#ff79c6">if</span> (init_ipv4_mibs())
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 78</span><span>		panic(<span style="color:#f1fa8c">&#34;%s: Cannot init ipv4 mibs</span><span style="color:#f1fa8c">\n</span><span style="color:#f1fa8c">&#34;</span>, __func__);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 79</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 80</span><span>	<span style="color:#6272a4">/* Setup TCP slab cache for open requests. */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 81</span><span>	tcp_init();
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 82</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 83</span><span>	<span style="color:#6272a4">/* Setup UDP memory threshold */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 84</span><span>	udp_init();
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 85</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 86</span><span>	<span style="color:#6272a4">/* Add UDP-Lite (RFC 3828) */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 87</span><span>	udplite4_register();
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 88</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 89</span><span>	raw_init();
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 90</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 91</span><span>	ping_init();
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 92</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 93</span><span>	<span style="color:#6272a4">/*
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 94</span><span><span style="color:#6272a4">	 *	Set the ICMP layer up
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 95</span><span><span style="color:#6272a4">	 */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 96</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 97</span><span>	<span style="color:#ff79c6">if</span> (icmp_init() <span style="color:#ff79c6">&lt;</span> <span style="color:#bd93f9">0</span>)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 98</span><span>		panic(<span style="color:#f1fa8c">&#34;Failed to create the ICMP control socket.</span><span style="color:#f1fa8c">\n</span><span style="color:#f1fa8c">&#34;</span>);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 99</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">100</span><span>	<span style="color:#6272a4">/*
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">101</span><span><span style="color:#6272a4">	 *	Initialise the multicast router
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">102</span><span><span style="color:#6272a4">	 */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">103</span><span><span style="color:#ff79c6">#if defined(CONFIG_IP_MROUTE)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">104</span><span><span style="color:#ff79c6"></span>	<span style="color:#ff79c6">if</span> (ip_mr_init())
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">105</span><span>		pr_crit(<span style="color:#f1fa8c">&#34;%s: Cannot init ipv4 mroute</span><span style="color:#f1fa8c">\n</span><span style="color:#f1fa8c">&#34;</span>, __func__);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">106</span><span><span style="color:#ff79c6">#endif
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">107</span><span><span style="color:#ff79c6"></span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">108</span><span>	<span style="color:#ff79c6">if</span> (init_inet_pernet_ops())
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">109</span><span>		pr_crit(<span style="color:#f1fa8c">&#34;%s: Cannot init ipv4 inet pernet ops</span><span style="color:#f1fa8c">\n</span><span style="color:#f1fa8c">&#34;</span>, __func__);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">110</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">111</span><span>	ipv4_proc_init();
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">112</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">113</span><span>	ipfrag_init();
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">114</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">115</span><span>    <span style="color:#6272a4">// 注册到dev里面
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">116</span><span><span style="color:#6272a4"></span>	dev_add_pack(<span style="color:#ff79c6">&amp;</span>ip_packet_type);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">117</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">118</span><span>	ip_tunnel_core_init();
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">119</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">120</span><span>	rc <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">121</span><span><span style="color:#8be9fd;font-style:italic">out</span>:
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">122</span><span>	<span style="color:#ff79c6">return</span> rc;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">123</span><span><span style="color:#8be9fd;font-style:italic">out_unregister_raw_proto</span>:
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">124</span><span>	proto_unregister(<span style="color:#ff79c6">&amp;</span>raw_prot);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">125</span><span><span style="color:#8be9fd;font-style:italic">out_unregister_udp_proto</span>:
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">126</span><span>	proto_unregister(<span style="color:#ff79c6">&amp;</span>udp_prot);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">127</span><span><span style="color:#8be9fd;font-style:italic">out_unregister_tcp_proto</span>:
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">128</span><span>	proto_unregister(<span style="color:#ff79c6">&amp;</span>tcp_prot);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">129</span><span>	<span style="color:#ff79c6">goto</span> out;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">130</span><span>}
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">131</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">132</span><span>fs_initcall(inet_init);
+</span></span></code></pre></div><ul>
+<li>驱动在受到包之后会调用func也就是<code>ip_rcv</code></li>
+<li>可以看到这里是netflt的<code>PRE_ROUTING</code>链的挂载点</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span><span style="color:#6272a4">// net/ipv4/ip_input.c
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span><span><span style="color:#6272a4"></span><span style="color:#6272a4">/*
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span><span style="color:#6272a4"> * IP receive entry point
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span><span><span style="color:#6272a4"> */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span><span><span style="color:#8be9fd">int</span> <span style="color:#50fa7b">ip_rcv</span>(<span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">sk_buff</span> <span style="color:#ff79c6">*</span>skb, <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">net_device</span> <span style="color:#ff79c6">*</span>dev, <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">packet_type</span> <span style="color:#ff79c6">*</span>pt,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span><span>	   <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">net_device</span> <span style="color:#ff79c6">*</span>orig_dev)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span><span>{
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span>	<span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">net</span> <span style="color:#ff79c6">*</span>net <span style="color:#ff79c6">=</span> dev_net(dev);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span><span>	skb <span style="color:#ff79c6">=</span> ip_rcv_core(skb, net);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span><span>	<span style="color:#ff79c6">if</span> (skb <span style="color:#ff79c6">==</span> <span style="color:#8be9fd;font-style:italic">NULL</span>)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span>		<span style="color:#ff79c6">return</span> NET_RX_DROP;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span>	<span style="color:#ff79c6">return</span> NF_HOOK(NFPROTO_IPV4, NF_INET_PRE_ROUTING,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span><span>		       net, <span style="color:#8be9fd;font-style:italic">NULL</span>, skb, dev, <span style="color:#8be9fd;font-style:italic">NULL</span>,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span><span>		       ip_rcv_finish);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span><span>}
+</span></span></code></pre></div><ul>
+<li><code>ip_rcv_finish</code>这里处理了路由，如果路由不过就进行drop</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span><span style="color:#6272a4">// net/ipv4/ip_input.c
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span><span><span style="color:#6272a4"></span><span style="color:#ff79c6">static</span> <span style="color:#8be9fd">int</span> <span style="color:#50fa7b">ip_rcv_finish</span>(<span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">net</span> <span style="color:#ff79c6">*</span>net, <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">sock</span> <span style="color:#ff79c6">*</span>sk, <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">sk_buff</span> <span style="color:#ff79c6">*</span>skb)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span>{
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span><span>	<span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">net_device</span> <span style="color:#ff79c6">*</span>dev <span style="color:#ff79c6">=</span> skb<span style="color:#ff79c6">-&gt;</span>dev;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span><span>	<span style="color:#8be9fd">int</span> ret;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span><span>	<span style="color:#6272a4">/* if ingress device is enslaved to an L3 master device pass the
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span><span style="color:#6272a4">	 * skb to its handler for processing
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span><span><span style="color:#6272a4">	 */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span><span>	skb <span style="color:#ff79c6">=</span> l3mdev_ip_rcv(skb);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span><span>	<span style="color:#ff79c6">if</span> (<span style="color:#ff79c6">!</span>skb)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span>		<span style="color:#ff79c6">return</span> NET_RX_SUCCESS;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span>    <span style="color:#6272a4">// 这个函数处理了路由
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span><span><span style="color:#6272a4"></span>	ret <span style="color:#ff79c6">=</span> ip_rcv_finish_core(net, sk, skb, dev, <span style="color:#8be9fd;font-style:italic">NULL</span>);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span><span>	<span style="color:#ff79c6">if</span> (ret <span style="color:#ff79c6">!=</span> NET_RX_DROP)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span><span>		ret <span style="color:#ff79c6">=</span> dst_input(skb);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span><span>	<span style="color:#ff79c6">return</span> ret;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span><span>}
+</span></span></code></pre></div><ul>
+<li><code>dst_input</code>里面就是调用<code>ip_local_deiver</code></li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1</span><span><span style="color:#6272a4">// include/net/dst.h
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2</span><span><span style="color:#6272a4"></span>INDIRECT_CALLABLE_DECLARE(<span style="color:#8be9fd">int</span> ip6_input(<span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">sk_buff</span> <span style="color:#ff79c6">*</span>));
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3</span><span>INDIRECT_CALLABLE_DECLARE(<span style="color:#8be9fd">int</span> ip_local_deliver(<span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">sk_buff</span> <span style="color:#ff79c6">*</span>));
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">4</span><span><span style="color:#6272a4">/* Input packet from network to transport.  */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">5</span><span><span style="color:#ff79c6">static</span> <span style="color:#ff79c6">inline</span> <span style="color:#8be9fd">int</span> <span style="color:#50fa7b">dst_input</span>(<span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">sk_buff</span> <span style="color:#ff79c6">*</span>skb)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">6</span><span>{
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">7</span><span>	<span style="color:#ff79c6">return</span> INDIRECT_CALL_INET(skb_dst(skb)<span style="color:#ff79c6">-&gt;</span>input,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">8</span><span>				  ip6_input, ip_local_deliver, skb);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">9</span><span>}
+</span></span></code></pre></div><ul>
+<li>这里也是netfilter的<code>LOCAL_IN</code>挂载点，可以在这里进行过滤</li>
+</ul>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span><span style="color:#6272a4">// net/ipv4/ip_input.c
 </span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span><span><span style="color:#6272a4"></span><span style="color:#6272a4">/*
 </span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span><span style="color:#6272a4"> * 	Deliver IP Packets to the higher protocol layers.
@@ -1417,10 +1677,11 @@ document.addEventListener("DOMContentLoaded", function(){
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span><span>    }
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span><span>
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span><span>    <span style="color:#6272a4">// 分片处理完毕调用ip_local_deliver_finish()
-</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span><span><span style="color:#6272a4"></span>    <span style="color:#ff79c6">return</span> NF_HOOK(NFPROTO_IPV4, NF_INET_LOCAL_IN,
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span><span>               net, <span style="color:#8be9fd;font-style:italic">NULL</span>, skb, skb<span style="color:#ff79c6">-&gt;</span>dev, <span style="color:#8be9fd;font-style:italic">NULL</span>,
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span><span>               ip_local_deliver_finish);
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21</span><span>}
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span><span><span style="color:#6272a4"></span>    <span style="color:#6272a4">// NF_HOOK挂载netflt
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span><span><span style="color:#6272a4"></span>    <span style="color:#ff79c6">return</span> NF_HOOK(NFPROTO_IPV4, NF_INET_LOCAL_IN,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span><span>               net, <span style="color:#8be9fd;font-style:italic">NULL</span>, skb, skb<span style="color:#ff79c6">-&gt;</span>dev, <span style="color:#8be9fd;font-style:italic">NULL</span>,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21</span><span>               ip_local_deliver_finish);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22</span><span>}
 </span></span></code></pre></div><ul>
 <li>根据ip包内的协议处理具体的协议</li>
 </ul>

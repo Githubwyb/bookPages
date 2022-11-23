@@ -11,13 +11,13 @@
 <meta property="og:type" content="article" />
 <meta property="og:url" content="/docs/linux-kernel/drivers/net/igb/" /><meta property="article:section" content="docs" />
 
-<meta property="article:modified_time" content="2022-09-15T20:58:00+08:00" />
+<meta property="article:modified_time" content="2022-11-23T09:35:54+08:00" />
 
 <title>Igb | 技术的路上奔跑</title>
 <link rel="manifest" href="../../../../../manifest.json">
 <link rel="icon" href="../../../../../favicon.png" type="image/x-icon">
 <link rel="stylesheet" href="../../../../../book.min.46181bc93375ba932026e753b37c40e6ff8bb16a9ef770c78bcc663e4577b1ba.css" integrity="sha256-RhgbyTN1upMgJudTs3xA5v&#43;LsWqe93DHi8xmPkV3sbo=">
-<script defer src="../../../../../en.search.min.cc93d1126d110e2f75d6d40d7f94329c36ae0acc7ad337e6f220edd2898a3cc9.js" integrity="sha256-zJPREm0RDi911tQNf5QynDauCsx60zfm8iDt0omKPMk="></script>
+<script defer src="../../../../../en.search.min.b69268a1d582425b561f865ccc183821f62d81a99f371aee16369850a38b6a29.js" integrity="sha256-tpJoodWCQltWH4ZczBg4IfYtgamfNxruFjaYUKOLaik="></script>
 
 <script defer src="../../../../../sw.min.6f6f90fcb8eb1c49ec389838e6b801d0de19430b8e516902f8d75c3c8bd98739.js" integrity="sha256-b2&#43;Q/LjrHEnsOJg45rgB0N4ZQwuOUWkC&#43;NdcPIvZhzk="></script>
 <!--
@@ -151,7 +151,7 @@ document.addEventListener("DOMContentLoaded", function(){
   
 
   
-    <a href="../../../../../docs/c&#43;&#43;/move/" class="">Move</a>
+    <a href="../../../../../docs/c&#43;&#43;/move/" class="">std::move</a>
   
 
         </li>
@@ -164,7 +164,7 @@ document.addEventListener("DOMContentLoaded", function(){
   
 
   
-    <a href="../../../../../docs/c&#43;&#43;/shared_ptr/" class="">Shared Ptr</a>
+    <a href="../../../../../docs/c&#43;&#43;/shared_ptr/" class="">std::shared_ptr</a>
   
 
         </li>
@@ -376,6 +376,11 @@ document.addEventListener("DOMContentLoaded", function(){
     <a href="../../../../../docs/linux-kernel/net/common/" class="">网络数据包处理流程</a>
   
 
+          
+  <ul>
+    
+  </ul>
+
         </li>
       
     
@@ -448,6 +453,11 @@ document.addEventListener("DOMContentLoaded", function(){
   
     <a href="../../../../../docs/linux-kernel/net/iptables/" class="">Iptables</a>
   
+
+          
+  <ul>
+    
+  </ul>
 
         </li>
       
@@ -579,6 +589,27 @@ document.addEventListener("DOMContentLoaded", function(){
 
         </li>
       
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-af870650dfa28a44b51c7b5be31ceafc" class="toggle"  />
+    <label for="section-af870650dfa28a44b51c7b5be31ceafc" class="flex justify-between">
+      <a href="../../../../../docs/linux-kernel/intterupt/" class="">中断</a>
+    </label>
+  
+
+          
+  <ul>
     
   </ul>
 
@@ -792,6 +823,24 @@ document.addEventListener("DOMContentLoaded", function(){
 
   
     <a href="../../../../../docs/leetcode/simple/leetcode2441/" class="">2441. Largest Positive Integer That Exists With Its Negative</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2446/" class="">2446. Determine if Two Events Have Conflict</a>
   
 
           
@@ -1294,6 +1343,24 @@ document.addEventListener("DOMContentLoaded", function(){
         </li>
       
     
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/hard/leetcode2444/" class="">2444. Count Subarrays With Fixed Bounds</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
   </ul>
 
         </li>
@@ -1378,8 +1445,10 @@ document.addEventListener("DOMContentLoaded", function(){
     <li><a href="#二启动过程">二、启动过程</a>
       <ul>
         <li><a href="#1-ndo_open--igb_open">1. <code>.ndo_open = igb_open</code></a></li>
+        <li><a href="#2-注册poll到napi">2. 注册poll到napi</a></li>
       </ul>
     </li>
+    <li><a href="#三收包处理">三、收包处理</a></li>
   </ul>
 </nav>
 
@@ -1589,6 +1658,115 @@ document.addEventListener("DOMContentLoaded", function(){
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">77</span><span>    <span style="color:#6272a4">// 这里设置软中断NET_RX_SOFTIRQ
 </span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">78</span><span><span style="color:#6272a4"></span>	__raise_softirq_irqoff(NET_RX_SOFTIRQ);
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">79</span><span>}
+</span></span></code></pre></div><h2 id="2-注册poll到napi">
+  2. 注册poll到napi
+  <a class="anchor" href="#2-%e6%b3%a8%e5%86%8cpoll%e5%88%b0napi">#</a>
+</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span><span style="color:#6272a4">/**
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span><span><span style="color:#6272a4"> *  igb_alloc_q_vector - Allocate memory for a single interrupt vector
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span><span style="color:#6272a4"> *  @adapter: board private structure to initialize
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span><span><span style="color:#6272a4"> *  @v_count: q_vectors allocated on adapter, used for ring interleaving
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span><span><span style="color:#6272a4"> *  @v_idx: index of vector in adapter struct
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span><span><span style="color:#6272a4"> *  @txr_count: total number of Tx rings to allocate
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span><span><span style="color:#6272a4"> *  @txr_idx: index of first Tx ring to allocate
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span><span style="color:#6272a4"> *  @rxr_count: total number of Rx rings to allocate
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span><span><span style="color:#6272a4"> *  @rxr_idx: index of first Rx ring to allocate
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span><span><span style="color:#6272a4"> *
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span><span><span style="color:#6272a4"> *  We allocate one q_vector.  If allocation fails we return -ENOMEM.
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span><span style="color:#6272a4"> **/</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span><span style="color:#ff79c6">static</span> <span style="color:#8be9fd">int</span> <span style="color:#50fa7b">igb_alloc_q_vector</span>(<span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">igb_adapter</span> <span style="color:#ff79c6">*</span>adapter,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span>			      <span style="color:#8be9fd">int</span> v_count, <span style="color:#8be9fd">int</span> v_idx,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span><span>			      <span style="color:#8be9fd">int</span> txr_count, <span style="color:#8be9fd">int</span> txr_idx,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span><span>			      <span style="color:#8be9fd">int</span> rxr_count, <span style="color:#8be9fd">int</span> rxr_idx)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span><span>{
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span><span>	...
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span><span>	<span style="color:#6272a4">/* initialize NAPI */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span><span>	netif_napi_add(adapter<span style="color:#ff79c6">-&gt;</span>netdev, <span style="color:#ff79c6">&amp;</span>q_vector<span style="color:#ff79c6">-&gt;</span>napi,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21</span><span>		       igb_poll, <span style="color:#bd93f9">64</span>);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22</span><span>	...
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23</span><span>}
+</span></span></code></pre></div><h1 id="三收包处理">
+  三、收包处理
+  <a class="anchor" href="#%e4%b8%89%e6%94%b6%e5%8c%85%e5%a4%84%e7%90%86">#</a>
+</h1>
+<ul>
+<li>内核软中断处理收包后会调用注册的poll函数，也就是这里的<code>igb_poll</code></li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span><span style="color:#6272a4">// drivers/net/ethernet/intel/igb/igb_main.c
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span><span><span style="color:#6272a4"></span><span style="color:#6272a4">/**
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span><span style="color:#6272a4"> *  igb_poll - NAPI Rx polling callback
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span><span><span style="color:#6272a4"> *  @napi: napi polling structure
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span><span><span style="color:#6272a4"> *  @budget: count of how many packets we should handle
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span><span><span style="color:#6272a4"> **/</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span><span><span style="color:#ff79c6">static</span> <span style="color:#8be9fd">int</span> <span style="color:#50fa7b">igb_poll</span>(<span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">napi_struct</span> <span style="color:#ff79c6">*</span>napi, <span style="color:#8be9fd">int</span> budget)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span>{
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span><span>	<span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">igb_q_vector</span> <span style="color:#ff79c6">*</span>q_vector <span style="color:#ff79c6">=</span> container_of(napi,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span><span>						     <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">igb_q_vector</span>,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span><span>						     napi);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span>	<span style="color:#8be9fd">bool</span> clean_complete <span style="color:#ff79c6">=</span> <span style="color:#8be9fd;font-style:italic">true</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span>	<span style="color:#8be9fd">int</span> work_done <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span><span><span style="color:#ff79c6">#ifdef CONFIG_IGB_DCA
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span><span><span style="color:#ff79c6"></span>	<span style="color:#ff79c6">if</span> (q_vector<span style="color:#ff79c6">-&gt;</span>adapter<span style="color:#ff79c6">-&gt;</span>flags <span style="color:#ff79c6">&amp;</span> IGB_FLAG_DCA_ENABLED)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span><span>		igb_update_dca(q_vector);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span><span><span style="color:#ff79c6">#endif
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span><span><span style="color:#ff79c6"></span>	<span style="color:#ff79c6">if</span> (q_vector<span style="color:#ff79c6">-&gt;</span>tx.ring)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span><span>		clean_complete <span style="color:#ff79c6">=</span> igb_clean_tx_irq(q_vector, budget);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22</span><span>	<span style="color:#ff79c6">if</span> (q_vector<span style="color:#ff79c6">-&gt;</span>rx.ring) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23</span><span>		<span style="color:#8be9fd">int</span> cleaned <span style="color:#ff79c6">=</span> igb_clean_rx_irq(q_vector, budget);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25</span><span>		work_done <span style="color:#ff79c6">+=</span> cleaned;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26</span><span>		<span style="color:#ff79c6">if</span> (cleaned <span style="color:#ff79c6">&gt;=</span> budget)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27</span><span>			clean_complete <span style="color:#ff79c6">=</span> <span style="color:#8be9fd;font-style:italic">false</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28</span><span>	}
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">30</span><span>	<span style="color:#6272a4">/* If all work not completed, return budget and keep polling */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">31</span><span>	<span style="color:#ff79c6">if</span> (<span style="color:#ff79c6">!</span>clean_complete)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">32</span><span>		<span style="color:#ff79c6">return</span> budget;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">33</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">34</span><span>	<span style="color:#6272a4">/* Exit the polling mode, but don&#39;t re-enable interrupts if stack might
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">35</span><span><span style="color:#6272a4">	 * poll us due to busy-polling
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">36</span><span><span style="color:#6272a4">	 */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">37</span><span>	<span style="color:#ff79c6">if</span> (likely(napi_complete_done(napi, work_done)))
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">38</span><span>		igb_ring_irq_enable(q_vector);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">39</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">40</span><span>	<span style="color:#ff79c6">return</span> work_done;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">41</span><span>}
+</span></span></code></pre></div><ul>
+<li>在<code>igb_clean_rx_irq</code>函数里面调用到<code>napi_gro_receive</code></li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span><span style="color:#6272a4">// drivers/net/ethernet/intel/igb/igb_main.c
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span><span><span style="color:#6272a4"></span><span style="color:#ff79c6">static</span> <span style="color:#8be9fd">int</span> <span style="color:#50fa7b">igb_clean_rx_irq</span>(<span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">igb_q_vector</span> <span style="color:#ff79c6">*</span>q_vector, <span style="color:#ff79c6">const</span> <span style="color:#8be9fd">int</span> budget)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span>{
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span><span>	<span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">igb_adapter</span> <span style="color:#ff79c6">*</span>adapter <span style="color:#ff79c6">=</span> q_vector<span style="color:#ff79c6">-&gt;</span>adapter;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span><span>	<span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">igb_ring</span> <span style="color:#ff79c6">*</span>rx_ring <span style="color:#ff79c6">=</span> q_vector<span style="color:#ff79c6">-&gt;</span>rx.ring;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span><span>	<span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">sk_buff</span> <span style="color:#ff79c6">*</span>skb <span style="color:#ff79c6">=</span> rx_ring<span style="color:#ff79c6">-&gt;</span>skb;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span><span>	<span style="color:#8be9fd">unsigned</span> <span style="color:#8be9fd">int</span> total_bytes <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0</span>, total_packets <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span>	u16 cleaned_count <span style="color:#ff79c6">=</span> igb_desc_unused(rx_ring);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span><span>	<span style="color:#8be9fd">unsigned</span> <span style="color:#8be9fd">int</span> xdp_xmit <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span><span>	<span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">xdp_buff</span> xdp;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span><span>	u32 frame_sz <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span>	<span style="color:#8be9fd">int</span> rx_buf_pgcnt;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span>	<span style="color:#6272a4">/* Frame size depend on rx_ring setup when PAGE_SIZE=4K */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span><span><span style="color:#ff79c6">#if (PAGE_SIZE &lt; 8192)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span><span><span style="color:#ff79c6"></span>	frame_sz <span style="color:#ff79c6">=</span> igb_rx_frame_truesize(rx_ring, <span style="color:#bd93f9">0</span>);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span><span><span style="color:#ff79c6">#endif
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span><span><span style="color:#ff79c6"></span>	xdp_init_buff(<span style="color:#ff79c6">&amp;</span>xdp, frame_sz, <span style="color:#ff79c6">&amp;</span>rx_ring<span style="color:#ff79c6">-&gt;</span>xdp_rxq);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span><span>	<span style="color:#ff79c6">while</span> (likely(total_packets <span style="color:#ff79c6">&lt;</span> budget)) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21</span><span>		...
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22</span><span>		napi_gro_receive(<span style="color:#ff79c6">&amp;</span>q_vector<span style="color:#ff79c6">-&gt;</span>napi, skb);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24</span><span>		<span style="color:#6272a4">/* reset skb pointer */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25</span><span>		skb <span style="color:#ff79c6">=</span> <span style="color:#8be9fd;font-style:italic">NULL</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27</span><span>		<span style="color:#6272a4">/* update budget accounting */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28</span><span>		total_packets<span style="color:#ff79c6">++</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29</span><span>	}
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">30</span><span>	...
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">31</span><span>}
 </span></span></code></pre></div></article>
  
       
@@ -1629,8 +1807,10 @@ document.addEventListener("DOMContentLoaded", function(){
     <li><a href="#二启动过程">二、启动过程</a>
       <ul>
         <li><a href="#1-ndo_open--igb_open">1. <code>.ndo_open = igb_open</code></a></li>
+        <li><a href="#2-注册poll到napi">2. 注册poll到napi</a></li>
       </ul>
     </li>
+    <li><a href="#三收包处理">三、收包处理</a></li>
   </ul>
 </nav>
 

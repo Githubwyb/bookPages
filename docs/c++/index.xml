@@ -15,7 +15,7 @@
     </item>
     
     <item>
-      <title></title>
+      <title>std::move</title>
       <link>/docs/c&#43;&#43;/move/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
@@ -24,7 +24,7 @@
     </item>
     
     <item>
-      <title></title>
+      <title>std::shared_ptr</title>
       <link>/docs/c&#43;&#43;/shared_ptr/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       

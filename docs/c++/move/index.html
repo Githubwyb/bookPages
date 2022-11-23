@@ -6,18 +6,18 @@
   <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="源码 #  1// /usr/include/c&#43;&#43;/12.2.0/bits/move.h 2 /** 3* @brief Convert a value to an rvalue. 4* @param __t A thing of arbitrary type. 5* @return The parameter cast to an rvalue-reference to allow moving it. 6*/ 7 template&lt;typename _Tp&gt; 8 _GLIBCXX_NODISCARD 9 constexpr typename std::remove_reference&lt;_Tp&gt;::type&amp;&amp; 10 move(_Tp&amp;&amp; __t) noexcept 11 { return static_cast&lt;typename std::remove_reference&lt;_Tp&gt;::type&amp;&amp;&gt;(__t); }  可以看到std::move仅对类型做了一次转换，变成右值 在调用=时会匹配到移动赋值函数，所以对象内容会被转移（具体看对应的实现） 如果仅使用std::move(xxx)没有任何效果  ">
-<meta name="theme-color" content="#FFFFFF"><meta property="og:title" content="" />
+<meta name="theme-color" content="#FFFFFF"><meta property="og:title" content="std::move" />
 <meta property="og:description" content="源码 #  1// /usr/include/c&#43;&#43;/12.2.0/bits/move.h 2 /** 3* @brief Convert a value to an rvalue. 4* @param __t A thing of arbitrary type. 5* @return The parameter cast to an rvalue-reference to allow moving it. 6*/ 7 template&lt;typename _Tp&gt; 8 _GLIBCXX_NODISCARD 9 constexpr typename std::remove_reference&lt;_Tp&gt;::type&amp;&amp; 10 move(_Tp&amp;&amp; __t) noexcept 11 { return static_cast&lt;typename std::remove_reference&lt;_Tp&gt;::type&amp;&amp;&gt;(__t); }  可以看到std::move仅对类型做了一次转换，变成右值 在调用=时会匹配到移动赋值函数，所以对象内容会被转移（具体看对应的实现） 如果仅使用std::move(xxx)没有任何效果  " />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="/docs/c&#43;&#43;/move/" /><meta property="article:section" content="docs" />
 
-<meta property="article:modified_time" content="2022-10-29T14:42:10+08:00" />
+<meta property="article:modified_time" content="2022-11-23T09:35:54+08:00" />
 
-<title>Move | 技术的路上奔跑</title>
+<title>std::move | 技术的路上奔跑</title>
 <link rel="manifest" href="../../../manifest.json">
 <link rel="icon" href="../../../favicon.png" type="image/x-icon">
 <link rel="stylesheet" href="../../../book.min.46181bc93375ba932026e753b37c40e6ff8bb16a9ef770c78bcc663e4577b1ba.css" integrity="sha256-RhgbyTN1upMgJudTs3xA5v&#43;LsWqe93DHi8xmPkV3sbo=">
-<script defer src="../../../en.search.min.cc93d1126d110e2f75d6d40d7f94329c36ae0acc7ad337e6f220edd2898a3cc9.js" integrity="sha256-zJPREm0RDi911tQNf5QynDauCsx60zfm8iDt0omKPMk="></script>
+<script defer src="../../../en.search.min.b69268a1d582425b561f865ccc183821f62d81a99f371aee16369850a38b6a29.js" integrity="sha256-tpJoodWCQltWH4ZczBg4IfYtgamfNxruFjaYUKOLaik="></script>
 
 <script defer src="../../../sw.min.6f6f90fcb8eb1c49ec389838e6b801d0de19430b8e516902f8d75c3c8bd98739.js" integrity="sha256-b2&#43;Q/LjrHEnsOJg45rgB0N4ZQwuOUWkC&#43;NdcPIvZhzk="></script>
 <!--
@@ -151,7 +151,7 @@ document.addEventListener("DOMContentLoaded", function(){
   
 
   
-    <a href="../../../docs/c&#43;&#43;/move/" class=" active">Move</a>
+    <a href="../../../docs/c&#43;&#43;/move/" class=" active">std::move</a>
   
 
         </li>
@@ -164,7 +164,7 @@ document.addEventListener("DOMContentLoaded", function(){
   
 
   
-    <a href="../../../docs/c&#43;&#43;/shared_ptr/" class="">Shared Ptr</a>
+    <a href="../../../docs/c&#43;&#43;/shared_ptr/" class="">std::shared_ptr</a>
   
 
         </li>
@@ -376,6 +376,11 @@ document.addEventListener("DOMContentLoaded", function(){
     <a href="../../../docs/linux-kernel/net/common/" class="">网络数据包处理流程</a>
   
 
+          
+  <ul>
+    
+  </ul>
+
         </li>
       
     
@@ -448,6 +453,11 @@ document.addEventListener("DOMContentLoaded", function(){
   
     <a href="../../../docs/linux-kernel/net/iptables/" class="">Iptables</a>
   
+
+          
+  <ul>
+    
+  </ul>
 
         </li>
       
@@ -579,6 +589,27 @@ document.addEventListener("DOMContentLoaded", function(){
 
         </li>
       
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-af870650dfa28a44b51c7b5be31ceafc" class="toggle"  />
+    <label for="section-af870650dfa28a44b51c7b5be31ceafc" class="flex justify-between">
+      <a href="../../../docs/linux-kernel/intterupt/" class="">中断</a>
+    </label>
+  
+
+          
+  <ul>
     
   </ul>
 
@@ -792,6 +823,24 @@ document.addEventListener("DOMContentLoaded", function(){
 
   
     <a href="../../../docs/leetcode/simple/leetcode2441/" class="">2441. Largest Positive Integer That Exists With Its Negative</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../docs/leetcode/simple/leetcode2446/" class="">2446. Determine if Two Events Have Conflict</a>
   
 
           
@@ -1294,6 +1343,24 @@ document.addEventListener("DOMContentLoaded", function(){
         </li>
       
     
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../docs/leetcode/hard/leetcode2444/" class="">2444. Count Subarrays With Fixed Bounds</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
   </ul>
 
         </li>
@@ -1358,7 +1425,7 @@ document.addEventListener("DOMContentLoaded", function(){
     <img src="../../../svg/menu.svg" class="book-icon" alt="Menu" />
   </label>
 
-  <strong>Move</strong>
+  <strong>std::move</strong>
 
   <label for="toc-control">
     

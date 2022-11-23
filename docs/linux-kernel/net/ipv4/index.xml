@@ -11,7 +11,7 @@
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>/docs/linux-kernel/net/ipv4/ipv4/</guid>
-      <description>一、ipv4收包后如何处理 #  1. ip层包入口 #  1// net/ipv4/ip_input.c 2/* 3* Deliver IP Packets to the higher protocol layers. 4*/ 5int ip_local_deliver(struct sk_buff *skb) { 6 /* 7*	Reassemble IP fragments. 8*/ 9 struct net *net = dev_net(skb-&amp;gt;dev); 10 11 // 判断是否为分片包，分片包就先处理分片 12 if (ip_is_fragment(ip_hdr(skb))) { 13 if (ip_defrag(net, skb, IP_DEFRAG_LOCAL_DELIVER)) 14 return 0; 15 } 16 17 // 分片处理完毕调用ip_local_deliver_finish() 18 return NF_HOOK(NFPROTO_IPV4, NF_INET_LOCAL_IN, 19 net, NULL, skb, skb-&amp;gt;dev, NULL, 20 ip_local_deliver_finish); 21}  根据ip包内的协议处理具体的协议  1// net/ipv4/ip_input.</description>
+      <description>一、ipv4收包后如何处理 #  1. ip层包入口 #   最开始注册一个packet_type结构体，定义func为ip_rcv，被inet_init注册  1// net/ipv4/af_inet.c 2static struct packet_type ip_packet_type __read_mostly = { 3	.type = cpu_to_be16(ETH_P_IP), 4	.func = ip_rcv, 5	.list_func = ip_list_rcv, 6}; 7 8static int __init inet_init(void) 9{ 10	struct inet_protosw *q; 11	struct list_head *r; 12	int rc; 13 14	sock_skb_cb_check_size(sizeof(struct inet_skb_parm)); 15 16	rc = proto_register(&amp;amp;tcp_prot, 1); 17	if (rc) 18	goto out; 19 20	rc = proto_register(&amp;amp;udp_prot, 1); 21	if (rc) 22	goto out_unregister_tcp_proto; 23 24	rc = proto_register(&amp;amp;raw_prot, 1); 25	if (rc) 26	goto out_unregister_udp_proto; 27 28	rc = proto_register(&amp;amp;ping_prot, 1); 29	if (rc) 30	goto out_unregister_raw_proto; 31 32	/* 33*	Tell SOCKET that we are alive.</description>
     </item>
     
     <item>
