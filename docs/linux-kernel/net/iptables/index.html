@@ -6,7 +6,8 @@
   <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="一、iptables的规则链 #  参考 Linux-iptables 防火墙、四表五链及SNAT与DNAT的原理与应用
-1. 规则链图 #  @startuml title 规则链生效时机 node &quot;用户空间&quot; { [Application] #Yellow } node &quot;内核空间&quot; { [INPUT] [OUTPUT] [POSTROUTING] [PREROUTING] [FORWARD] [入站路由] #Yellow note left of &quot;入站路由&quot; 判断是否在本地有监听地址 end note [出站路由] #Yellow note right of &quot;出站路由&quot; 出站路由会选择下一跳 也就是会选择网卡 end note } node &quot;网络&quot; { [网卡1] [网卡2] [网卡3] } [网卡1] -up-&gt; [PREROUTING] [PREROUTING] -up-&gt; [入站路由] [入站路由] -right-&gt; [FORWARD]: 非本机流量 [入站路由] -up-&gt; [INPUT]: 本机流量 [INPUT] -up-&gt; [Application] [Application] -down-&gt; [OUTPUT] [OUTPUT] -down-&gt; [出站路由] [FORWARD] -right-&gt; [出站路由] [出站路由] -down-&gt; [POSTROUTING] [POSTROUTING] -down-&gt; [网卡2] @enduml 2.">
+1. 规则链图 #    
+2. 每个表对应的链 #   表匹配顺序: raw -&gt; mangle -&gt; nat -&gt; filter      说明 PREROUTING INPUT FORWARD OUTPUT POSTROUTING     raw 确定是否跟踪数据包状态 1   1    mangle 修改数据包内容，如设置标记 1 1 1 1 1   nat 网络地址转换 1 1  1 1   filter 数据包是否放行  1 1 1     3.">
 <meta name="theme-color" content="#FFFFFF"><meta property="og:title" content="" />
 <meta property="og:description" content="" />
 <meta property="og:type" content="website" />
@@ -16,7 +17,7 @@
 <link rel="manifest" href="../../../../manifest.json">
 <link rel="icon" href="../../../../favicon.png" type="image/x-icon">
 <link rel="stylesheet" href="../../../../book.min.46181bc93375ba932026e753b37c40e6ff8bb16a9ef770c78bcc663e4577b1ba.css" integrity="sha256-RhgbyTN1upMgJudTs3xA5v&#43;LsWqe93DHi8xmPkV3sbo=">
-<script defer src="../../../../en.search.min.b69268a1d582425b561f865ccc183821f62d81a99f371aee16369850a38b6a29.js" integrity="sha256-tpJoodWCQltWH4ZczBg4IfYtgamfNxruFjaYUKOLaik="></script>
+<script defer src="../../../../en.search.min.22217bce06f3309f7f7a99407db8d5766e1afb1d3b299218862c5f9f2cd1b109.js" integrity="sha256-IiF7zgbzMJ9/eplAfbjVdm4a&#43;x07KZIYhixfnyzRsQk="></script>
 
 <script defer src="../../../../sw.min.6f6f90fcb8eb1c49ec389838e6b801d0de19430b8e516902f8d75c3c8bd98739.js" integrity="sha256-b2&#43;Q/LjrHEnsOJg45rgB0N4ZQwuOUWkC&#43;NdcPIvZhzk="></script>
 <link rel="alternate" type="application/rss+xml" href="../../../../docs/linux-kernel/net/iptables/index.xml" title="技术的路上奔跑" />
@@ -604,12 +605,25 @@ document.addEventListener("DOMContentLoaded", function(){
   
     <input type="checkbox" id="section-af870650dfa28a44b51c7b5be31ceafc" class="toggle"  />
     <label for="section-af870650dfa28a44b51c7b5be31ceafc" class="flex justify-between">
-      <a href="../../../../docs/linux-kernel/intterupt/" class="">中断</a>
+      <a  class="">中断</a>
     </label>
   
 
           
   <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/linux-kernel/intterupt/common/" class="">上半部和下半部</a>
+  
+
+        </li>
+      
     
   </ul>
 
@@ -841,6 +855,24 @@ document.addEventListener("DOMContentLoaded", function(){
 
   
     <a href="../../../../docs/leetcode/simple/leetcode2446/" class="">2446. Determine if Two Events Have Conflict</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/simple/leetcode2485/" class="">2485. Find the Pivot Integer</a>
   
 
           
@@ -1232,6 +1264,42 @@ document.addEventListener("DOMContentLoaded", function(){
         </li>
       
     
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/medium/leetcode2486/" class="">2486. Append Characters to String to Make Subsequence</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/medium/leetcode2487/" class="">2487. Remove Nodes From Linked List</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
   </ul>
 
         </li>
@@ -1361,6 +1429,24 @@ document.addEventListener("DOMContentLoaded", function(){
         </li>
       
     
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/hard/leetcode2488/" class="">2488. Count Subarrays With Median K</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
   </ul>
 
         </li>
@@ -1472,45 +1558,13 @@ document.addEventListener("DOMContentLoaded", function(){
   1. 规则链图
   <a class="anchor" href="#1-%e8%a7%84%e5%88%99%e9%93%be%e5%9b%be">#</a>
 </h2>
-<pre tabindex="0"><code class="language-plantuml" data-lang="plantuml">@startuml
-title 规则链生效时机
-node &quot;用户空间&quot; {
-    [Application] #Yellow
-}
-node &quot;内核空间&quot; {
-    [INPUT]
-    [OUTPUT]
-    [POSTROUTING]
-    [PREROUTING]
-    [FORWARD]
-    [入站路由] #Yellow
-note left of &quot;入站路由&quot;
-判断是否在本地有监听地址
-end note
-    [出站路由] #Yellow
-note right of &quot;出站路由&quot;
-出站路由会选择下一跳
-也就是会选择网卡
-end note
-}
-node &quot;网络&quot; {
-    [网卡1]
-    [网卡2]
-    [网卡3]
-}
-[网卡1] -up-&gt; [PREROUTING]
-[PREROUTING] -up-&gt; [入站路由]
-[入站路由] -right-&gt; [FORWARD]: 非本机流量
-[入站路由] -up-&gt; [INPUT]: 本机流量
-[INPUT] -up-&gt; [Application]
-[Application] -down-&gt; [OUTPUT]
-[OUTPUT] -down-&gt; [出站路由]
-[FORWARD] -right-&gt; [出站路由]
-[出站路由] -down-&gt; [POSTROUTING]
-[POSTROUTING] -down-&gt; [网卡2]
-
-@enduml
-</code></pre><h2 id="2-每个表对应的链">
+<p>
+    <div class="post-img-view">
+    <a data-fancybox="gallery" href="../imgs/2022-09-23-02.png">
+    <img src="../imgs/2022-09-23-02.png" alt=""  />
+    </a>
+    </div></p>
+<h2 id="2-每个表对应的链">
   2. 每个表对应的链
   <a class="anchor" href="#2-%e6%af%8f%e4%b8%aa%e8%a1%a8%e5%af%b9%e5%ba%94%e7%9a%84%e9%93%be">#</a>
 </h2>
@@ -1552,7 +1606,7 @@ node &quot;网络&quot; {
 <td>nat</td>
 <td>网络地址转换</td>
 <td>1</td>
-<td></td>
+<td>1</td>
 <td></td>
 <td>1</td>
 <td>1</td>
@@ -1572,10 +1626,10 @@ node &quot;网络&quot; {
   3. 规则匹配顺序
   <a class="anchor" href="#3-%e8%a7%84%e5%88%99%e5%8c%b9%e9%85%8d%e9%a1%ba%e5%ba%8f">#</a>
 </h2>
-<ul>
-<li>下图仅看规则匹配顺序即可，出站路由选择是错的，实际应该先经过OUTPUT链再进行路由选择</li>
-</ul>
 <img src="../imgs/2022-09-06-01.png" />
+<ul>
+<li>路由选择确实是在OUTPUT链前面，但是如果OUTPUT链里面做了nat或设置了mark，在netfilter里面会重新走一遍路由</li>
+</ul>
 <h2 id="4-常用控制类型">
   4. 常用控制类型
   <a class="anchor" href="#4-%e5%b8%b8%e7%94%a8%e6%8e%a7%e5%88%b6%e7%b1%bb%e5%9e%8b">#</a>
@@ -1587,13 +1641,18 @@ node &quot;网络&quot; {
 <li><code>SNAT</code>: 修改数据包的源地址</li>
 <li><code>DNAT</code>: 修改数据包的目的地址</li>
 <li><code>MASQUERADE</code>: 伪装成一个非固定公网IP地址</li>
-<li><code>LOG</code>: 在<code>/var/log/messages</code>文件中记录日志信息，然后将数据包传递给下一条规则。LOG只是一种辅助动作，并没有真正处理数据包</li>
+<li><code>LOG</code>: 在<code>/var/log/messages</code>文件中记录日志信息，然后将数据包传递给下一条规则。LOG只是一种辅助动作，并没有真正处理数据包
+<ul>
+<li>当前测试只能在filter表上才能加LOG，其他表加LOG没生效</li>
+</ul>
+</li>
 </ul>
 <h2 id="5-常用的管理选项">
   5. 常用的管理选项
   <a class="anchor" href="#5-%e5%b8%b8%e7%94%a8%e7%9a%84%e7%ae%a1%e7%90%86%e9%80%89%e9%a1%b9">#</a>
 </h2>
 <ul>
+<li><code>-t</code>: 指定表，也就是raw、mangle、nat、filter，不指定默认是filter</li>
 <li><code>-A</code>: 在指定链的末尾追加(&ndash;append) 一条新的规则</li>
 <li><code>-I</code>: 在指定链的开头插入(&ndash;insert)一条新的规则，未指定序号时默认作为第一条规则</li>
 <li><code>-R</code>: 修改、替换(&ndash;replace) 指定链中的某一条规则，可指定规则序号或具体内容</li>

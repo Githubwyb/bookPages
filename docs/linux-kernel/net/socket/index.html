@@ -17,7 +17,7 @@
 <link rel="manifest" href="../../../../manifest.json">
 <link rel="icon" href="../../../../favicon.png" type="image/x-icon">
 <link rel="stylesheet" href="../../../../book.min.46181bc93375ba932026e753b37c40e6ff8bb16a9ef770c78bcc663e4577b1ba.css" integrity="sha256-RhgbyTN1upMgJudTs3xA5v&#43;LsWqe93DHi8xmPkV3sbo=">
-<script defer src="../../../../en.search.min.b69268a1d582425b561f865ccc183821f62d81a99f371aee16369850a38b6a29.js" integrity="sha256-tpJoodWCQltWH4ZczBg4IfYtgamfNxruFjaYUKOLaik="></script>
+<script defer src="../../../../en.search.min.22217bce06f3309f7f7a99407db8d5766e1afb1d3b299218862c5f9f2cd1b109.js" integrity="sha256-IiF7zgbzMJ9/eplAfbjVdm4a&#43;x07KZIYhixfnyzRsQk="></script>
 
 <script defer src="../../../../sw.min.6f6f90fcb8eb1c49ec389838e6b801d0de19430b8e516902f8d75c3c8bd98739.js" integrity="sha256-b2&#43;Q/LjrHEnsOJg45rgB0N4ZQwuOUWkC&#43;NdcPIvZhzk="></script>
 <!--
@@ -604,12 +604,25 @@ document.addEventListener("DOMContentLoaded", function(){
   
     <input type="checkbox" id="section-af870650dfa28a44b51c7b5be31ceafc" class="toggle"  />
     <label for="section-af870650dfa28a44b51c7b5be31ceafc" class="flex justify-between">
-      <a href="../../../../docs/linux-kernel/intterupt/" class="">中断</a>
+      <a  class="">中断</a>
     </label>
   
 
           
   <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/linux-kernel/intterupt/common/" class="">上半部和下半部</a>
+  
+
+        </li>
+      
     
   </ul>
 
@@ -841,6 +854,24 @@ document.addEventListener("DOMContentLoaded", function(){
 
   
     <a href="../../../../docs/leetcode/simple/leetcode2446/" class="">2446. Determine if Two Events Have Conflict</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/simple/leetcode2485/" class="">2485. Find the Pivot Integer</a>
   
 
           
@@ -1232,6 +1263,42 @@ document.addEventListener("DOMContentLoaded", function(){
         </li>
       
     
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/medium/leetcode2486/" class="">2486. Append Characters to String to Make Subsequence</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/medium/leetcode2487/" class="">2487. Remove Nodes From Linked List</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
   </ul>
 
         </li>
@@ -1361,6 +1428,24 @@ document.addEventListener("DOMContentLoaded", function(){
         </li>
       
     
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/leetcode/hard/leetcode2488/" class="">2488. Count Subarrays With Median K</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
   </ul>
 
         </li>
@@ -1448,6 +1533,7 @@ document.addEventListener("DOMContentLoaded", function(){
         <li><a href="#2-创建socket后创建fd并将socket和fd绑定">2. 创建socket后，创建fd，并将socket和fd绑定</a></li>
       </ul>
     </li>
+    <li><a href="#三socket唤醒操作">三、socket唤醒操作</a></li>
   </ul>
 </nav>
 
@@ -1632,7 +1718,44 @@ net_proto_family &lt;-left- net_families
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span>    <span style="color:#ff79c6">return</span> file;
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span>}
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span>EXPORT_SYMBOL(sock_alloc_file);
-</span></span></code></pre></div></article>
+</span></span></code></pre></div><h1 id="三socket唤醒操作">
+  三、socket唤醒操作
+  <a class="anchor" href="#%e4%b8%89socket%e5%94%a4%e9%86%92%e6%93%8d%e4%bd%9c">#</a>
+</h1>
+<ul>
+<li>init时注册data_ready函数</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span><span style="color:#6272a4">// net/core/sock.c
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span><span><span style="color:#6272a4"></span><span style="color:#8be9fd">void</span> <span style="color:#50fa7b">sock_init_data</span>(<span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">socket</span> <span style="color:#ff79c6">*</span>sock, <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">sock</span> <span style="color:#ff79c6">*</span>sk)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span>{
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span><span>    ...
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span><span>	sk<span style="color:#ff79c6">-&gt;</span>sk_state_change	<span style="color:#ff79c6">=</span>	sock_def_wakeup;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span><span>	sk<span style="color:#ff79c6">-&gt;</span>sk_data_ready	<span style="color:#ff79c6">=</span>	sock_def_readable;      <span style="color:#6272a4">// 注册可读函数，当有数据时调用
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span><span><span style="color:#6272a4"></span>	sk<span style="color:#ff79c6">-&gt;</span>sk_write_space	<span style="color:#ff79c6">=</span>	sock_def_write_space;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span>	sk<span style="color:#ff79c6">-&gt;</span>sk_error_report	<span style="color:#ff79c6">=</span>	sock_def_error_report;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span><span>	sk<span style="color:#ff79c6">-&gt;</span>sk_destruct		<span style="color:#ff79c6">=</span>	sock_def_destruct;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span><span>    ...
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span><span>}
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span>EXPORT_SYMBOL(sock_init_data);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span><span style="color:#6272a4">// net/core/sock.c
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span><span><span style="color:#6272a4"></span><span style="color:#8be9fd">void</span> <span style="color:#50fa7b">sock_def_readable</span>(<span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">sock</span> <span style="color:#ff79c6">*</span>sk)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span><span>{
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span><span>	<span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">socket_wq</span> <span style="color:#ff79c6">*</span>wq;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span><span>	rcu_read_lock();
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span><span>	wq <span style="color:#ff79c6">=</span> rcu_dereference(sk<span style="color:#ff79c6">-&gt;</span>sk_wq);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21</span><span>    <span style="color:#6272a4">// 唤醒队列上的线程
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22</span><span><span style="color:#6272a4"></span>	<span style="color:#ff79c6">if</span> (skwq_has_sleeper(wq))
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23</span><span>		wake_up_interruptible_sync_poll(<span style="color:#ff79c6">&amp;</span>wq<span style="color:#ff79c6">-&gt;</span>wait, EPOLLIN <span style="color:#ff79c6">|</span> EPOLLPRI <span style="color:#ff79c6">|</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24</span><span>						EPOLLRDNORM <span style="color:#ff79c6">|</span> EPOLLRDBAND);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25</span><span>	sk_wake_async(sk, SOCK_WAKE_WAITD, POLL_IN);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26</span><span>	rcu_read_unlock();
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27</span><span>}
+</span></span></code></pre></div><ul>
+<li>各自协议内部有数据后进行调用</li>
+</ul>
+</article>
  
       
 
@@ -1675,6 +1798,7 @@ net_proto_family &lt;-left- net_families
         <li><a href="#2-创建socket后创建fd并将socket和fd绑定">2. 创建socket后，创建fd，并将socket和fd绑定</a></li>
       </ul>
     </li>
+    <li><a href="#三socket唤醒操作">三、socket唤醒操作</a></li>
   </ul>
 </nav>
 
