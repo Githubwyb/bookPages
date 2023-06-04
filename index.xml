@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>首页 on 技术的路上奔跑</title>
+    <link>/</link>
+    <description>Recent content in 首页 on 技术的路上奔跑</description>
+    <generator>Hugo -- gohugo.io</generator><atom:link href="/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>container_of() 根据成员地址找其所在结构体</title>
+      <link>/docs/linux-kernel/data-structures/container_of/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux-kernel/data-structures/container_of/</guid>
+      <description>一、源码 # 1// include/linux/kernel.h 2 3/** 4 * container_of - cast a member of a structure out to the containing structure 5 * @ptr:	the pointer to the member. 6 * @type:	the type of the container struct this is embedded in. 7 * @member:	the name of the member within the struct. 8 * 9 */ 10#define container_of(ptr, type, member) ({	\ 11	void *__mptr = (void *)(ptr);	\ 12	BUILD_BUG_ON_MSG(!</description>
+    </item>
+    
+    <item>
+      <title>socket总述</title>
+      <link>/docs/linux-kernel/net/socket/socket/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux-kernel/net/socket/socket/</guid>
+      <description>一、总述 # 1. 结构体 # @startuml xxx namespace 用户空间 { class fd } namespace 内核空间 { class socket { socket_state	state; struct file	*file; struct sock	*sk; const struct proto_ops	*ops; } enum socket_state { SS_FREE = 0,	/* not allocated	*/ SS_UNCONNECTED,	/* unconnected to any socket	*/ SS_CONNECTING,	/* in process of connecting	*/ SS_CONNECTED,	/* connected to socket	*/ SS_DISCONNECTING	/* in process of disconnecting	*/ } class file {} class sock { struc sock_common __sk_common; } class sock_common { volatile unsigned char skc_state; struct proto	*skc_prot; } note right of sock sk_state =&amp;gt; __sk_common.</description>
+    </item>
+    
+    <item>
+      <title>上半部和下半部</title>
+      <link>/docs/linux-kernel/intterupt/common/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux-kernel/intterupt/common/</guid>
+      <description> 一、上半部实现 # 二、下半部实现 # 1. 软中断 # 软中断触发时机：
+从中断返回时触发调用软中断，这时候在中断上下文中，但是是允许响应中断的 在ksoftirqd线程中，处于进程上下文中 在显示调用软中断的代码中，比如网络子系统 由于软中断调用时机即可能是中断上下文，也可能是进程上下文，所以软中断按照最严格的上下文处理，也就是中断上下文，不允许睡眠。
+2. tasklet # tasklet是使用软中断实现的，存在高优先级和普通优先级两个tasklet
+1// include/linux/intterupt.h 3. 工作队列 # 工作队列是运行在进程上下文中，本身优先级很低 工作队列线程在每个cpu都有一个，默认的为event/n </description>
+    </item>
+    
+    <item>
+      <title>通用网络驱动开发知识</title>
+      <link>/docs/linux-kernel/drivers/net/common/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux-kernel/drivers/net/common/</guid>
+      <description>一、驱动到网络协议栈处理过程 # @startuml box kernel #White participant net participant ksoftirqd end box box driver #White participant eth end box participant cpu autonumber net -&amp;gt; eth: net_device_ops::ndo_open eth -&amp;gt; cpu: 注册硬件中断处理函数 eth -&amp;gt; net: 调用netif_napi_add注册poll函数到napi列表里面 == 收到包 == autonumber 1 cpu -&amp;gt; eth: 来中断了 eth -&amp;gt; ksoftirqd: 设置软中断NET_RX_SOFTIRQ ksoftirqd -&amp;gt; net: 根据软中断类型调用net_rx_action net -&amp;gt; eth: 从napi列表中遍历处理，找到对应的poll函数 eth -&amp;gt; eth: 从硬件buffer中读取数据帧创建sk_buff eth -&amp;gt; net: 将sk_buff通过函数napi_gro_receive调用到内核 net -&amp;gt; net: napi_gro_receive =&amp;gt; napi_skb_finish net -&amp;gt; net: napi_skb_finish =&amp;gt; netif_receive_skb net -&amp;gt; net: netif_receive_skb =&amp;gt; deliver_skb net -&amp;gt; net: deliver_skb =&amp;gt; ip_rcv @enduml 二、驱动定义 # 1.</description>
+    </item>
+    
+    <item>
+      <title>预定义宏</title>
+      <link>/docs/c&#43;&#43;/macro/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/c&#43;&#43;/macro/</guid>
+      <description> 一、变量修饰 # 1. 返回值修饰 # 1.1. _GLIBCXX_NODISCARD # C++17生效，会在返回值没有使用的情况下编译报warning 1// /usr/include/c++/12.2.0/x86_64-pc-linux-gnu/bits/c++config.h 2// Macro to warn about unused results. 3#if __cplusplus &amp;gt;= 201703L 4# define _GLIBCXX_NODISCARD [[__nodiscard__]] 5#else 6# define _GLIBCXX_NODISCARD 7#endif </description>
+    </item>
+    
+    <item>
+      <title>sendmsg</title>
+      <link>/docs/linux-kernel/net/socket/sendmsg/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux-kernel/net/socket/sendmsg/</guid>
+      <description>一、总述 # sendmsg可以像普通的send一样发送消息，也可以进行fd的转发 做fd的转发需要使用域套接字 二、代码流程 # 入口自然是系统调用的定义 1// net/socket.c 2long __sys_sendmsg(int fd, struct user_msghdr __user *msg, unsigned int flags, 3	bool forbid_cmsg_compat) 4{ 5	int fput_needed, err; 6	struct msghdr msg_sys; 7	struct socket *sock; 8 9	if (forbid_cmsg_compat &amp;amp;&amp;amp; (flags &amp;amp; MSG_CMSG_COMPAT)) 10	return -EINVAL; 11 12 // 根据文件句柄号找sock结构体 13	sock = sockfd_lookup_light(fd, &amp;amp;err, &amp;amp;fput_needed); 14	if (!sock) 15	goto out; 16 17	err = ___sys_sendmsg(sock, msg, &amp;amp;msg_sys, flags, NULL, 0); 18 19	fput_light(sock-&amp;gt;file, fput_needed); 20out: 21	return err; 22} 23 24SYSCALL_DEFINE3(sendmsg, int, fd, struct user_msghdr __user *, msg, unsigned int, flags) 25{ 26	return __sys_sendmsg(fd, msg, flags, true); 27} 继续到发送的地方 1// net/socket.</description>
+    </item>
+    
+    <item>
+      <title>recvmsg</title>
+      <link>/docs/linux-kernel/net/socket/recvmsg/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux-kernel/net/socket/recvmsg/</guid>
+      <description>一、总述 # recvmsg可以像普通的recv一样接收消息，也可以其他进程提供的文件句柄 二、代码流程 # 入口自然是系统调用的定义 1// net/socket.c 2long __sys_recvmsg(int fd, struct user_msghdr __user *msg, unsigned int flags, 3	bool forbid_cmsg_compat) 4{ 5	int fput_needed, err; 6	struct msghdr msg_sys; 7	struct socket *sock; 8 9	if (forbid_cmsg_compat &amp;amp;&amp;amp; (flags &amp;amp; MSG_CMSG_COMPAT)) 10	return -EINVAL; 11 12	sock = sockfd_lookup_light(fd, &amp;amp;err, &amp;amp;fput_needed); 13	if (!sock) 14	goto out; 15 16	err = ___sys_recvmsg(sock, msg, &amp;amp;msg_sys, flags, 0); 17 18	fput_light(sock-&amp;gt;file, fput_needed); 19out: 20	return err; 21} 22 23SYSCALL_DEFINE3(recvmsg, int, fd, struct user_msghdr __user *, msg, 24	unsigned int, flags) 25{ 26	return __sys_recvmsg(fd, msg, flags, true); 27} 继续到接收的地方 1// net/socket.</description>
+    </item>
+    
+    <item>
+      <title>Creating a New Theme</title>
+      <link>/posts/creating-a-new-theme/</link>
+      <pubDate>Sun, 28 Sep 2014 00:00:00 +0000</pubDate>
+      
+      <guid>/posts/creating-a-new-theme/</guid>
+      <description>Introduction # This tutorial will show you how to create a simple theme in Hugo. I assume that you are familiar with HTML, the bash command line, and that you are comfortable using Markdown to format content. I&amp;rsquo;ll explain how Hugo uses templates and how you can organize your templates to create a theme. I won&amp;rsquo;t cover using CSS to style your theme.
+We&amp;rsquo;ll start with creating a new site with a very basic template.</description>
+    </item>
+    
+    <item>
+      <title>Migrate to Hugo from Jekyll</title>
+      <link>/posts/migrate-from-jekyll/</link>
+      <pubDate>Mon, 10 Mar 2014 00:00:00 +0000</pubDate>
+      
+      <guid>/posts/migrate-from-jekyll/</guid>
+      <description>Move static content to static # Jekyll has a rule that any directory not starting with _ will be copied as-is to the _site output. Hugo keeps all static content under static. You should therefore move it all there. With Jekyll, something that looked like
+▾ &amp;lt;root&amp;gt;/ ▾ images/ logo.png should become
+▾ &amp;lt;root&amp;gt;/ ▾ static/ ▾ images/ logo.png Additionally, you&amp;rsquo;ll want any files that should reside at the root (such as CNAME) to be moved to static.</description>
+    </item>
+    
+    <item>
+      <title></title>
+      <link>/docs/linux-kernel/net/ipv4/ipv4/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux-kernel/net/ipv4/ipv4/</guid>
+      <description>一、总述 # 1. 关键结构体关系 # @startuml xxx class socket { struct sock *sk; } class sock {} class inet_sock implements sock { struct sock sk; } note left of inet_sock inet_sock是在sock基础上做了一些拓展 创建时申请的是inet_sock但是使用sock结构体指针赋值给socket 在inet里面的操作做强转使用 end note class inet_connection_sock implements inet_sock { struct inet_sock icsk_inet; } note left of inet_connection_sock inet_connection_sock是拓展了inet_sock 同样复用sock的指针 end note socket &amp;lt;|-- sock @enduml 2.1. inet_sock # 1// include/net/inet_sock.h 2/** struct inet_sock - representation of INET sockets 3 * 4 * @sk - ancestor class 5 * @pinet6 - pointer to IPv6 control block 6 * @inet_daddr - Foreign IPv4 addr 7 * @inet_rcv_saddr - Bound local IPv4 addr 8 * @inet_dport - Destination port 9 * @inet_num - Local port 10 * @inet_saddr - Sending source 11 * @uc_ttl - Unicast TTL 12 * @inet_sport - Source port 13 * @inet_id - ID counter for DF pkts 14 * @tos - TOS 15 * @mc_ttl - Multicasting TTL 16 * @is_icsk - is this an inet_connection_sock?</description>
+    </item>
+    
+    <item>
+      <title>(Hu)go Template Primer</title>
+      <link>/posts/goisforlovers/</link>
+      <pubDate>Wed, 02 Apr 2014 00:00:00 +0000</pubDate>
+      
+      <guid>/posts/goisforlovers/</guid>
+      <description>Hugo uses the excellent Go html/template library for its template engine. It is an extremely lightweight engine that provides a very small amount of logic. In our experience that it is just the right amount of logic to be able to create a good static website. If you have used other template systems from different languages or frameworks you will find a lot of similarities in Go templates.
+This document is a brief primer on using Go templates.</description>
+    </item>
+    
+    <item>
+      <title>Getting Started with Hugo</title>
+      <link>/posts/hugoisforlovers/</link>
+      <pubDate>Wed, 02 Apr 2014 00:00:00 +0000</pubDate>
+      
+      <guid>/posts/hugoisforlovers/</guid>
+      <description>Step 1. Install Hugo # Go to Hugo releases and download the appropriate version for your OS and architecture.
+Save it somewhere specific as we will be using it in the next step.
+More complete instructions are available at Install Hugo
+Step 2. Build the Docs # Hugo has its own example site which happens to also be the documentation site you are reading right now.
+Follow the following steps:</description>
+    </item>
+    
+    <item>
+      <title></title>
+      <link>/docs/leetcode/hidden/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/leetcode/hidden/</guid>
+      <description>This page is hidden in menu # Quondam non pater est dignior ille Eurotas # Latent te facies # Lorem markdownum arma ignoscas vocavit quoque ille texit mandata mentis ultimus, frementes, qui in vel. Hippotades Peleus pennas conscia cuiquam Caeneus quas.
+Pater demittere evincitque reddunt Maxime adhuc pressit huc Danaas quid freta Soror ego Luctus linguam saxa ultroque prior Tatiumque inquit Saepe liquitur subita superata dederat Anius sudor Cum honorum Latona # O fallor in sustinui iussorum equidem.</description>
+    </item>
+    
+    <item>
+      <title></title>
+      <link>/docs/linux-kernel/drivers/net/igb/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux-kernel/drivers/net/igb/</guid>
+      <description>一、igb操作结构体 # 1// drivers/net/ethernet/intel/igb/igb_main.c 2static const struct net_device_ops igb_netdev_ops = { 3	.ndo_open	= igb_open, 4	.ndo_stop	= igb_close, 5	.ndo_start_xmit	= igb_xmit_frame, 6	.ndo_get_stats64	= igb_get_stats64, 7	.ndo_set_rx_mode	= igb_set_rx_mode, 8	.ndo_set_mac_address	= igb_set_mac, 9	.ndo_change_mtu	= igb_change_mtu, 10	.ndo_eth_ioctl	= igb_ioctl, 11	.ndo_tx_timeout	= igb_tx_timeout, 12	.ndo_validate_addr	= eth_validate_addr, 13	.ndo_vlan_rx_add_vid	= igb_vlan_rx_add_vid, 14	.ndo_vlan_rx_kill_vid	= igb_vlan_rx_kill_vid, 15	.ndo_set_vf_mac	= igb_ndo_set_vf_mac, 16	.ndo_set_vf_vlan	= igb_ndo_set_vf_vlan, 17	.ndo_set_vf_rate	= igb_ndo_set_vf_bw, 18	.</description>
+    </item>
+    
+    <item>
+      <title></title>
+      <link>/docs/linux-kernel/fs/inotify/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux-kernel/fs/inotify/</guid>
+      <description>一、介绍 # 1. 提供的系统调用 # 1SYSCALL_DEFINE1(inotify_init1, int, flags) 2SYSCALL_DEFINE0(inotify_init) 3SYSCALL_DEFINE3(inotify_add_watch, int, fd, const char __user *, pathname, u32, mask) 4SYSCALL_DEFINE2(inotify_rm_watch, int, fd, __s32, wd) 2. 示例用法 # 1class FileMonitor final { 2public: 3 explicit FileMonitor(std::string path) : m_filePath(std::move(path)) {} 4 5 ~FileMonitor() { stop(); } 6 7 void start() { 8 stop(); 9 std::promise&amp;lt;void&amp;gt; p; 10 m_monitorFuture = std::make_shared&amp;lt;std::future&amp;lt;void&amp;gt;&amp;gt;(std::async(std::launch::async, [&amp;amp;p, this]() { 11 p.set_value(); 12 std::string tag = &amp;#34;file(&amp;#34; + m_filePath + &amp;#34;) monitor loop&amp;#34;; 13 LOGI(WHAT(&amp;#34;{} begin&amp;#34;, tag)); 14 15 { 16 std::lock_guard&amp;lt;std::mutex&amp;gt; lock(m_fdMutex); 17 // 设置为非阻塞方式 18 m_monitorFD = inotify_init1(IN_NONBLOCK); 19 if (m_monitorFD &amp;lt; 0) { 20 LOGE(WHAT(&amp;#34;{} failed&amp;#34;, tag), 21 REASON(&amp;#34;inotify_init failed, ec: {}&amp;#34;, 22 std::to_string(std::error_code(errno, std::system_category()))), 23 WILL(&amp;#34;exit thread and won&amp;#39;t watch file&amp;#34;)); 24 return; 25 } 26 } 27 28 // 添加文件监听的函数，返回false说明总的文件描述符被关闭 29 if (!</description>
+    </item>
+    
+    <item>
+      <title></title>
+      <link>/docs/linux-kernel/net/unix/unix/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux-kernel/net/unix/unix/</guid>
+      <description>一、socket创建 # 定义unix的操作集，当socket调用pf-&amp;gt;create会调用到unix_create 1// net/unix/af_unix.c 2static const struct net_proto_family unix_family_ops = { 3	.family = PF_UNIX, 4	.create = unix_create, 5	.owner	= THIS_MODULE, 6}; 7 8// net/unix/af_unix.c 9static int unix_create(struct net *net, struct socket *sock, int protocol, 10	int kern) 11{ 12	struct sock *sk; 13 14	if (protocol &amp;amp;&amp;amp; protocol != PF_UNIX) 15	return -EPROTONOSUPPORT; 16 17	sock-&amp;gt;state = SS_UNCONNECTED; 18 19	switch (sock-&amp;gt;type) { 20	case SOCK_STREAM: 21	sock-&amp;gt;ops = &amp;amp;unix_stream_ops; 22	break; 23	/* 24	*	Believe it or not BSD has AF_UNIX, SOCK_RAW though 25	*	nothing uses it.</description>
+    </item>
+    
+    <item>
+      <title>kfifo 无锁循环队列</title>
+      <link>/docs/linux-kernel/data-structures/kfifo/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux-kernel/data-structures/kfifo/</guid>
+      <description>一、提供的接口 # 1. 定义相关 # 声明和初始化 1// include/linux/kfifo.h 2/** 3 * DECLARE_KFIFO - macro to declare a fifo object 4 * @fifo: name of the declared fifo 5 * @type: type of the fifo elements 6 * @size: the number of elements in the fifo, this must be a power of 2 7 */ 8#define DECLARE_KFIFO(fifo, type, size) STRUCT_KFIFO(type, size) fifo 9 10/** 11 * INIT_KFIFO - Initialize a fifo declared by DECLARE_KFIFO 12 * @fifo: name of the declared fifo datatype 13 */ 14#define INIT_KFIFO(fifo) \ 15(void)({ \ 16 typeof(&amp;amp;(fifo)) __tmp = &amp;amp;(fifo); \ 17 struct __kfifo *__kfifo = &amp;amp;__tmp-&amp;gt;kfifo; \ 18 __kfifo-&amp;gt;in = 0; \ 19 __kfifo-&amp;gt;out = 0; \ 20 __kfifo-&amp;gt;mask = __is_kfifo_ptr(__tmp) ?</description>
+    </item>
+    
+    <item>
+      <title>rbtree 红黑树</title>
+      <link>/docs/linux-kernel/data-structures/rbtree/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux-kernel/data-structures/rbtree/</guid>
+      <description>1// include/linux/rbtree.h 2struct rb_node { 3	unsigned long __rb_parent_color; 4	struct rb_node *rb_right; 5	struct rb_node *rb_left; 6} __attribute__((aligned(sizeof(long)))); 先参考 地址对齐 了解为什么可以使用__rb_parent_color的低两位作为颜色 </description>
+    </item>
+    
+    <item>
+      <title>RCU Read-Copy-Update</title>
+      <link>/docs/linux-kernel/data-structures/rcu/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux-kernel/data-structures/rcu/</guid>
+      <description> 1. 原理 # 对一块数据要写入时，先拷贝一份，更新数据完成后，再更新到原数据结构 保证要么读取老数据，要么读取新数据，不会出现读取一半的情况 2. 关键思想 # 复制后更新数据 延迟回收内存，当没有老数据结构引用的读者时，才回收内存 </description>
+    </item>
+    
+    <item>
+      <title>std::move</title>
+      <link>/docs/c&#43;&#43;/move/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/c&#43;&#43;/move/</guid>
+      <description> 源码 # 1// /usr/include/c++/12.2.0/bits/move.h 2 /** 3 * @brief Convert a value to an rvalue. 4 * @param __t A thing of arbitrary type. 5 * @return The parameter cast to an rvalue-reference to allow moving it. 6 */ 7 template&amp;lt;typename _Tp&amp;gt; 8 _GLIBCXX_NODISCARD 9 constexpr typename std::remove_reference&amp;lt;_Tp&amp;gt;::type&amp;amp;&amp;amp; 10 move(_Tp&amp;amp;&amp;amp; __t) noexcept 11 { return static_cast&amp;lt;typename std::remove_reference&amp;lt;_Tp&amp;gt;::type&amp;amp;&amp;amp;&amp;gt;(__t); } 可以看到std::move仅对类型做了一次转换，变成右值 在调用=时会匹配到移动赋值函数，所以对象内容会被转移（具体看对应的实现） 如果仅使用std::move(xxx)没有任何效果 </description>
+    </item>
+    
+    <item>
+      <title>std::shared_ptr</title>
+      <link>/docs/c&#43;&#43;/shared_ptr/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/c&#43;&#43;/shared_ptr/</guid>
+      <description>一、shared_ptr(_Yp* __p)分析 # 1. 初始化 # 1// /usr/include/c++/12.2.0/bits/shared_ptr.h 2 3 template&amp;lt;typename _Tp&amp;gt; 4 class shared_ptr : public __shared_ptr&amp;lt;_Tp&amp;gt; 5 { 6 ... 7 public: 8 ... 9 /** 10 * @brief Construct a %shared_ptr that owns the pointer @a __p. 11 * @param __p A pointer that is convertible to element_type*. 12 * @post use_count() == 1 &amp;amp;&amp;amp; get() == __p 13 * @throw std::bad_alloc, in which case @c delete @a __p is called.</description>
+    </item>
+    
+    <item>
+      <title>udp</title>
+      <link>/docs/linux-kernel/net/ipv4/udp/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux-kernel/net/ipv4/udp/</guid>
+      <description>一、udp socket如何进行收包 # udp会注册udp_protocol到inet_protos里面 1// net/ipv4/af_inet.c 2static const struct net_protocol udp_protocol = { 3	.handler =	udp_rcv, 4	.err_handler =	udp_err, 5	.no_policy =	1, 6}; 7... 8static int __init inet_init(void) 9{ 10... 11	if (inet_add_protocol(&amp;amp;udp_protocol, IPPROTO_UDP) &amp;lt; 0) 12	pr_crit(&amp;#34;%s: Cannot add UDP protocol\n&amp;#34;, __func__); 13... 14} ipv4里面分析了，当ip层收到驱动的包之后，根据IPPROTO_UDP找到udp_protocol，然后调用handler函数对应udp_rcv 1// net/ipv4/udp.c 2/* 3 *	All we need to do is get the socket, and then do a checksum. 4 */ 5// udp_rcv -call-&amp;gt; __udp4_lib_rcv 6int __udp4_lib_rcv(struct sk_buff *skb, struct udp_table *udptable, 7	int proto) 8{ 9	struct sock *sk; 10	struct udphdr *uh; 11	unsigned short ulen; 12	struct rtable *rt = skb_rtable(skb); 13	__be32 saddr, daddr; 14	struct net *net = dev_net(skb-&amp;gt;dev); 15	bool refcounted; 16	int drop_reason; 17 18	drop_reason = SKB_DROP_REASON_NOT_SPECIFIED; 19 20	/* 21	* Validate the packet.</description>
+    </item>
+    
+  </channel>
+</rss>

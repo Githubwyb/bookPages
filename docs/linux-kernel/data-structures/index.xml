@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>数据结构 on 技术的路上奔跑</title>
+    <link>/docs/linux-kernel/data-structures/</link>
+    <description>Recent content in 数据结构 on 技术的路上奔跑</description>
+    <generator>Hugo -- gohugo.io</generator><atom:link href="/docs/linux-kernel/data-structures/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>container_of() 根据成员地址找其所在结构体</title>
+      <link>/docs/linux-kernel/data-structures/container_of/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux-kernel/data-structures/container_of/</guid>
+      <description>一、源码 # 1// include/linux/kernel.h 2 3/** 4 * container_of - cast a member of a structure out to the containing structure 5 * @ptr:	the pointer to the member. 6 * @type:	the type of the container struct this is embedded in. 7 * @member:	the name of the member within the struct. 8 * 9 */ 10#define container_of(ptr, type, member) ({	\ 11	void *__mptr = (void *)(ptr);	\ 12	BUILD_BUG_ON_MSG(!</description>
+    </item>
+    
+    <item>
+      <title>kfifo 无锁循环队列</title>
+      <link>/docs/linux-kernel/data-structures/kfifo/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux-kernel/data-structures/kfifo/</guid>
+      <description>一、提供的接口 # 1. 定义相关 # 声明和初始化 1// include/linux/kfifo.h 2/** 3 * DECLARE_KFIFO - macro to declare a fifo object 4 * @fifo: name of the declared fifo 5 * @type: type of the fifo elements 6 * @size: the number of elements in the fifo, this must be a power of 2 7 */ 8#define DECLARE_KFIFO(fifo, type, size) STRUCT_KFIFO(type, size) fifo 9 10/** 11 * INIT_KFIFO - Initialize a fifo declared by DECLARE_KFIFO 12 * @fifo: name of the declared fifo datatype 13 */ 14#define INIT_KFIFO(fifo) \ 15(void)({ \ 16 typeof(&amp;amp;(fifo)) __tmp = &amp;amp;(fifo); \ 17 struct __kfifo *__kfifo = &amp;amp;__tmp-&amp;gt;kfifo; \ 18 __kfifo-&amp;gt;in = 0; \ 19 __kfifo-&amp;gt;out = 0; \ 20 __kfifo-&amp;gt;mask = __is_kfifo_ptr(__tmp) ?</description>
+    </item>
+    
+    <item>
+      <title>rbtree 红黑树</title>
+      <link>/docs/linux-kernel/data-structures/rbtree/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux-kernel/data-structures/rbtree/</guid>
+      <description>1// include/linux/rbtree.h 2struct rb_node { 3	unsigned long __rb_parent_color; 4	struct rb_node *rb_right; 5	struct rb_node *rb_left; 6} __attribute__((aligned(sizeof(long)))); 先参考 地址对齐 了解为什么可以使用__rb_parent_color的低两位作为颜色 </description>
+    </item>
+    
+    <item>
+      <title>RCU Read-Copy-Update</title>
+      <link>/docs/linux-kernel/data-structures/rcu/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux-kernel/data-structures/rcu/</guid>
+      <description> 1. 原理 # 对一块数据要写入时，先拷贝一份，更新数据完成后，再更新到原数据结构 保证要么读取老数据，要么读取新数据，不会出现读取一半的情况 2. 关键思想 # 复制后更新数据 延迟回收内存，当没有老数据结构引用的读者时，才回收内存 </description>
+    </item>
+    
+  </channel>
+</rss>
