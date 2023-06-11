@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>systemd源码分析记录 on 技术的路上奔跑</title>
+    <link>/docs/systemd/</link>
+    <description>Recent content in systemd源码分析记录 on 技术的路上奔跑</description>
+    <generator>Hugo -- gohugo.io</generator><atom:link href="/docs/systemd/index.xml" rel="self" type="application/rss+xml" />
+  </channel>
+</rss>
