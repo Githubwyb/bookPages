@@ -162,12 +162,30 @@ Pater demittere evincitque reddunt Maxime adhuc pressit huc Danaas quid freta So
     </item>
     
     <item>
+      <title>Certificate</title>
+      <link>/docs/openssl/ssl/certificate/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/openssl/ssl/certificate/</guid>
+      <description>一、构造请求 # 1. 构造服务端证书 # 2. 构造客户端证书 # 1/* 到这一步的堆栈信息 2libssl.so.3!tls_construct_client_certificate(SSL * s, WPACKET * pkt) (/ssl/statem/statem_clnt.c:3504) 3libssl.so.3!write_state_machine(SSL * s) (/ssl/statem/statem.c:855) 4libssl.so.3!state_machine(SSL * s, int server) (/ssl/statem/statem.c:451) 5libssl.so.3!ossl_statem_connect(SSL * s) (/ssl/statem/statem.c:265) 6libssl.so.3!ssl3_write_bytes(SSL * s, int type, const void * buf_, size_t len, size_t * written) (/ssl/record/rec_layer_s3.c:398) 7libssl.so.3!ssl3_write(SSL * s, const void * buf, size_t len, size_t * written) (/ssl/s3_lib.c:4449) 8libssl.so.3!ssl_write_internal(SSL * s, const void * buf, size_t num, size_t * written) (/ssl/ssl_lib.</description>
+    </item>
+    
+    <item>
+      <title>Certificate Verify</title>
+      <link>/docs/openssl/ssl/certificateVerify/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/openssl/ssl/certificateVerify/</guid>
+      <description>一、构造请求 # 1// ssl/statem/statem_lib.c 2int tls_construct_cert_verify(SSL *s, WPACKET *pkt) 3{ 4 EVP_PKEY *pkey = NULL; 5 const EVP_MD *md = NULL; 6 EVP_MD_CTX *mctx = NULL; 7 EVP_PKEY_CTX *pctx = NULL; 8 size_t hdatalen = 0, siglen = 0; 9 void *hdata; 10 unsigned char *sig = NULL; 11 unsigned char tls13tbs[TLS13_TBS_PREAMBLE_SIZE + EVP_MAX_MD_SIZE]; 12 const SIGALG_LOOKUP *lu = s-&amp;gt;s3.tmp.sigalg; 13 14 if (lu == NULL || s-&amp;gt;s3.tmp.cert == NULL) { 15 SSLfatal(s, SSL_AD_INTERNAL_ERROR, ERR_R_INTERNAL_ERROR); 16 goto err; 17 } 18 // 从证书中取私钥用于签名 19 pkey = s-&amp;gt;s3.</description>
+    </item>
+    
+    <item>
       <title>dns 根据/etc/resolv.conf发包处理</title>
       <link>/docs/glibc/nss/hosts/dns/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>/docs/glibc/nss/hosts/dns/</guid>
-      <description>gethostbyname # 源码 # 从_nss_dns_gethostbyname3_r开始 1// resolv/nss_dns/dns-host.c 2enum nss_status 3_nss_dns_gethostbyname3_r (const char *name, int af, struct hostent *result, 4	char *buffer, size_t buflen, int *errnop, 5	int *h_errnop, int32_t *ttlp, char **canonp) 6{ 7 struct resolv_context *ctx = __resolv_context_get (); 8 if (ctx == NULL) 9 { 10 *errnop = errno; 11 *h_errnop = NETDB_INTERNAL; 12 return NSS_STATUS_UNAVAIL; 13 } 14 enum nss_status status = gethostbyname3_context 15 (ctx, name, af, result, buffer, buflen, errnop, h_errnop, ttlp, canonp); 16 __resolv_context_put (ctx); 17 return status; 18} 19libc_hidden_def (_nss_dns_gethostbyname3_r) 1.</description>
+      <description>gethostbyname # dns的一些系统行为 # 具体代码看 发送udp包给一个dns服务器 1. 什么情况下使用下一个dns服务器，当前结果直接丢弃 # 当前dns服务器接收失败（网络错误，收包错误等） dns服务器返回serverfail、notimplement、refused dns服务器返回正常的情况下，下面条件都满足就尝试下一个 answer为空 当前dns服务器不是authoritive answer 当前dns服务器不能递归查询 resource为空 2. 什么情况下使用tcp进行发送dns # 返回响应中有tc字段为1 源码 # 从_nss_dns_gethostbyname3_r开始 1// resolv/nss_dns/dns-host.c 2enum nss_status 3_nss_dns_gethostbyname3_r (const char *name, int af, struct hostent *result, 4	char *buffer, size_t buflen, int *errnop, 5	int *h_errnop, int32_t *ttlp, char **canonp) 6{ 7 struct resolv_context *ctx = __resolv_context_get (); 8 if (ctx == NULL) 9 { 10 *errnop = errno; 11 *h_errnop = NETDB_INTERNAL; 12 return NSS_STATUS_UNAVAIL; 13 } 14 enum nss_status status = gethostbyname3_context 15 (ctx, name, af, result, buffer, buflen, errnop, h_errnop, ttlp, canonp); 16 __resolv_context_put (ctx); 17 return status; 18} 19libc_hidden_def (_nss_dns_gethostbyname3_r) 1.</description>
     </item>
     
     <item>
@@ -231,6 +249,16 @@ Pater demittere evincitque reddunt Maxime adhuc pressit huc Danaas quid freta So
       
       <guid>/docs/linux-kernel/net/ipv4/udp/</guid>
       <description>一、udp socket如何进行收包 # udp会注册udp_protocol到inet_protos里面 1// net/ipv4/af_inet.c 2static const struct net_protocol udp_protocol = { 3	.handler =	udp_rcv, 4	.err_handler =	udp_err, 5	.no_policy =	1, 6}; 7... 8static int __init inet_init(void) 9{ 10... 11	if (inet_add_protocol(&amp;amp;udp_protocol, IPPROTO_UDP) &amp;lt; 0) 12	pr_crit(&amp;#34;%s: Cannot add UDP protocol\n&amp;#34;, __func__); 13... 14} ipv4里面分析了，当ip层收到驱动的包之后，根据IPPROTO_UDP找到udp_protocol，然后调用handler函数对应udp_rcv 1// net/ipv4/udp.c 2/* 3 *	All we need to do is get the socket, and then do a checksum. 4 */ 5// udp_rcv -call-&amp;gt; __udp4_lib_rcv 6int __udp4_lib_rcv(struct sk_buff *skb, struct udp_table *udptable, 7	int proto) 8{ 9	struct sock *sk; 10	struct udphdr *uh; 11	unsigned short ulen; 12	struct rtable *rt = skb_rtable(skb); 13	__be32 saddr, daddr; 14	struct net *net = dev_net(skb-&amp;gt;dev); 15	bool refcounted; 16	int drop_reason; 17 18	drop_reason = SKB_DROP_REASON_NOT_SPECIFIED; 19 20	/* 21	* Validate the packet.</description>
+    </item>
+    
+    <item>
+      <title>X509证书</title>
+      <link>/docs/openssl/crypto/X509/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/openssl/crypto/X509/</guid>
+      <description>一、证书转X509结构体 # 1. PEM格式 # 接口如下，从BIO中读取X509结构体 1// 从bio读取 2X509 *PEM_read_bio_X509(BIO *out, X509 **x, pem_password_cb *cb, void *u); 3// 从fp中读取 4X509 *PEM_read_X509(FILE *out, X509 **x, pem_password_cb *cb, void *u)； 从pem格式的证书文件中读取证书信息
+从bio读取 1int main(int argc, char* argv[]) { 2 BIO* b = NULL; 3 X509* pcert; 4 5 // 读取PEM格式证书文件 6 FILE* fp = fopen(&amp;#34;/home/wangyubo/work/src/local/openssl/20230418/ssl_diy/domain.crt&amp;#34;, &amp;#34;r&amp;#34;); 7 // 获取文件大小 8 fseek(fp, 0, SEEK_END); 9 auto file_size = ftell(fp); 10 rewind(fp); 11 // 分配内存 12 auto buffer = (char*)malloc(sizeof(char) * file_size); 13 if (buffer == NULL) { 14 printf(&amp;#34;内存分配失败\n&amp;#34;); 15 exit(1); 16 } 17 // 读取文件 18 fread(buffer, file_size, 1, fp); 19 // 关闭文件 20 fclose(fp); 21 22 // 转到bio中 23 if ((b = BIO_new(BIO_s_mem())) == NULL) { 24 printf(&amp;#34;内存分配失败\n&amp;#34;); 25 exit(1); 26 } 27 BIO_write(b, buffer, file_size); 28 // 从bio读取证书，X509为NULL代表里面申请内存，后面的密码回调和密码回调参数按需处理 29 pcert = PEM_read_bio_X509(b, NULL, NULL, NULL); 30 return 0; 31} 从fp中读取证书 1int main(int argc, char* argv[]) { 2 BIO* b = NULL; 3 X509* pcert; 4 5 // 读取PEM格式证书文件 6 FILE* fp = fopen(&amp;#34;/home/wangyubo/work/src/local/openssl/20230418/ssl_diy/domain.</description>
     </item>
     
   </channel>
