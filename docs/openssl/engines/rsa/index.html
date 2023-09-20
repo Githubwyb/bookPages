@@ -15,7 +15,7 @@
 <link rel="manifest" href="../../../../manifest.json">
 <link rel="icon" href="../../../../favicon.png" type="image/x-icon">
 <link rel="stylesheet" href="../../../../book.min.46181bc93375ba932026e753b37c40e6ff8bb16a9ef770c78bcc663e4577b1ba.css" integrity="sha256-RhgbyTN1upMgJudTs3xA5v&#43;LsWqe93DHi8xmPkV3sbo=">
-<script defer src="../../../../en.search.min.21339da53394713d3ae314466e222cc2acdd55e29a45568e22234e6483712bf3.js" integrity="sha256-ITOdpTOUcT064xRGbiIswqzdVeKaRVaOIiNOZINxK/M="></script>
+<script defer src="../../../../en.search.min.7d771199e8b0f5dfbda83276c3ab6eede4efea70e901d1a5da8003c944714e75.js" integrity="sha256-fXcRmeiw9d&#43;9qDJ2w6tu7eTv6nDpAdGl2oADyURxTnU="></script>
 
 <script defer src="../../../../sw.min.6f6f90fcb8eb1c49ec389838e6b801d0de19430b8e516902f8d75c3c8bd98739.js" integrity="sha256-b2&#43;Q/LjrHEnsOJg45rgB0N4ZQwuOUWkC&#43;NdcPIvZhzk="></script>
 <link rel="alternate" type="application/rss+xml" href="../../../../docs/openssl/engines/rsa/index.xml" title="技术的路上奔跑" />
@@ -1054,6 +1054,79 @@ document.addEventListener("DOMContentLoaded", function(){
 
           
   <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-8bb89e37bc8ac94ed7933c2c15518f8c" class="toggle"  />
+    <label for="section-8bb89e37bc8ac94ed7933c2c15518f8c" class="flex justify-between">
+      <a  class="">AI相关</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/ai/keywords/" class="">名词解释和学习大纲</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-1cc51252e9449a6be453972b2b6526e1" class="toggle"  />
+    <label for="section-1cc51252e9449a6be453972b2b6526e1" class="flex justify-between">
+      <a  class="">计算机视觉</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../docs/ai/cv/minst/" class="">minst手写数字识别——神经网络实战笔记</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
     
   </ul>
 
@@ -3376,7 +3449,12 @@ document.addEventListener("DOMContentLoaded", function(){
       <ul>
         <li><a href="#1-certificate中证书信息的获取">1. <code>Certificate</code>中证书信息的获取</a>
           <ul>
-            <li><a href="#11-在收到服务端下发的certificate-request的时候就先加载证书到ssl的上下文中">1.1. 在收到服务端下发的<code>Certificate Request</code>的时候，就先加载证书到ssl的上下文中</a></li>
+            <li><a href="#11-在收到服务端下发的certificate-request的时候就先加载证书到ssl的上下文中">1.1. 在收到服务端下发的<code>Certificate Request</code>的时候，就先加载证书到ssl的上下文中</a>
+              <ul>
+                <li><a href="#1-从引擎获取证书">1) 从引擎获取证书</a></li>
+                <li><a href="#2-随着证书到处的key中为什么只需要公钥即可">2) 随着证书到处的key中为什么只需要公钥即可</a></li>
+              </ul>
+            </li>
             <li><a href="#12-构造certificate请求时把证书信息放到包里面">1.2. 构造<code>Certificate</code>请求时，把证书信息放到包里面</a></li>
           </ul>
         </li>
@@ -3829,9 +3907,10 @@ end note
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">81</span><span>    SSLfatal(s, SSL_AD_INTERNAL_ERROR, ERR_R_INTERNAL_ERROR);
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">82</span><span>    <span style="color:#069;font-weight:bold">return</span> WORK_ERROR;
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">83</span><span>}
-</span></span></code></pre></div><ul>
-<li>从引擎获取证书</li>
-</ul>
+</span></span></code></pre></div><h4 id="1-从引擎获取证书">
+  1) 从引擎获取证书
+  <a class="anchor" href="#1-%e4%bb%8e%e5%bc%95%e6%93%8e%e8%8e%b7%e5%8f%96%e8%af%81%e4%b9%a6">#</a>
+</h4>
 <div class="highlight"><pre tabindex="0" style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span><span style="color:#09f;font-style:italic">/*
 </span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span><span><span style="color:#09f;font-style:italic">libssl.so.3!tls_engine_load_ssl_client_cert(SSL *s, X509 **px509, EVP_PKEY **ppkey) (ssl/tls_depr.c:69)
 </span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span><span style="color:#09f;font-style:italic">libssl.so.3!ssl_do_client_cert_cb(SSL *s, X509 **px509, EVP_PKEY **ppkey) (ssl/statem/statem_clnt.c:3663)
@@ -3856,9 +3935,14 @@ end note
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22</span><span>                                       px509, ppkey, <span style="color:#366">NULL</span>, <span style="color:#366">NULL</span>, <span style="color:#366">NULL</span>);
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23</span><span>}
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24</span><span><span style="color:#099">#endif
-</span></span></span></code></pre></div><ul>
+</span></span></span></code></pre></div><h4 id="2-随着证书到处的key中为什么只需要公钥即可">
+  2) 随着证书到处的key中为什么只需要公钥即可
+  <a class="anchor" href="#2-%e9%9a%8f%e7%9d%80%e8%af%81%e4%b9%a6%e5%88%b0%e5%a4%84%e7%9a%84key%e4%b8%ad%e4%b8%ba%e4%bb%80%e4%b9%88%e5%8f%aa%e9%9c%80%e8%a6%81%e5%85%ac%e9%92%a5%e5%8d%b3%e5%8f%af">#</a>
+</h4>
+<ul>
 <li>pkey中为什么只需要公钥即可，看下面的调用栈，从<code>SSL_use_PrivateKey</code>进来</li>
 <li>检查<code>ppkey</code>就是使用证书的公钥去匹配</li>
+<li>本身证书中也只有公钥，想要看证书和<code>ppkey</code>是否匹配，就是看公钥的类型、算法、数值是否一致</li>
 </ul>
 <div class="highlight"><pre tabindex="0" style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span><span style="color:#09f;font-style:italic">/*
 </span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span><span><span style="color:#09f;font-style:italic">libcrypto.so.3!X509_check_private_key(const X509 * x, const EVP_PKEY * k) (crypto/x509/x509_cmp.c:403)
@@ -4191,7 +4275,12 @@ end note
       <ul>
         <li><a href="#1-certificate中证书信息的获取">1. <code>Certificate</code>中证书信息的获取</a>
           <ul>
-            <li><a href="#11-在收到服务端下发的certificate-request的时候就先加载证书到ssl的上下文中">1.1. 在收到服务端下发的<code>Certificate Request</code>的时候，就先加载证书到ssl的上下文中</a></li>
+            <li><a href="#11-在收到服务端下发的certificate-request的时候就先加载证书到ssl的上下文中">1.1. 在收到服务端下发的<code>Certificate Request</code>的时候，就先加载证书到ssl的上下文中</a>
+              <ul>
+                <li><a href="#1-从引擎获取证书">1) 从引擎获取证书</a></li>
+                <li><a href="#2-随着证书到处的key中为什么只需要公钥即可">2) 随着证书到处的key中为什么只需要公钥即可</a></li>
+              </ul>
+            </li>
             <li><a href="#12-构造certificate请求时把证书信息放到包里面">1.2. 构造<code>Certificate</code>请求时，把证书信息放到包里面</a></li>
           </ul>
         </li>

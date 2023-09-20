@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>AI相关 on 技术的路上奔跑</title>
+    <link>/docs/ai/</link>
+    <description>Recent content in AI相关 on 技术的路上奔跑</description>
+    <generator>Hugo -- gohugo.io</generator><atom:link href="/docs/ai/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>名词解释和学习大纲</title>
+      <link>/docs/ai/keywords/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/ai/keywords/</guid>
+      <description>一、人工智能通识 # 1. 数学基础 # 2. 机器学习 # 2.1. 生成学习算法 # 朴素贝叶斯算法
+2.2. 分类与回归算法 # 决策树算法/支持向量机算法
+2.3. 监督学习 # 神经网络算法/迁移学习
+2.4. 无监督学习 # 自编码器(Auto-Encoder)/变分自编码器(VAE)/PCA主成分分析算法/聚类算法
+2.5. 强化学习 # 马尔科夫链/蒙特卡洛模型/价值学习(Value-Based Learning)/策略学习(Value-Based Learning)
+3. 深度学习 # 二、NLP: Natural language processing 自然语言处理 # 1. 应用场景 # 互联网舆情监测 检索问答系统 基于transformer+crf的信息抽取 2. 语言模型基础 # 2.1. 自然语言处理基础 # 语言模型评价标准/文本生成方式
+2.2. N-Gram模型 # HMM模型/MEMM模型/CRF模型
+2.3. 概率图模型 # 2.4. 文本预处理 # 文本分词/停用词过滤/拼写纠错/词性还原
+2.5. 基于统计的文本表示 # 词袋模型/TF IDF模型
+2.6. 基于神经网络的文本表示 # One-Hot表示/Word2Vec表示/Glove模型 /SkipGram/层次Softmax</description>
+    </item>
+    
+  </channel>
+</rss>

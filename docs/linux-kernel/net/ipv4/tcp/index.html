@@ -15,7 +15,7 @@
 <link rel="manifest" href="../../../../../manifest.json">
 <link rel="icon" href="../../../../../favicon.png" type="image/x-icon">
 <link rel="stylesheet" href="../../../../../book.min.46181bc93375ba932026e753b37c40e6ff8bb16a9ef770c78bcc663e4577b1ba.css" integrity="sha256-RhgbyTN1upMgJudTs3xA5v&#43;LsWqe93DHi8xmPkV3sbo=">
-<script defer src="../../../../../en.search.min.21339da53394713d3ae314466e222cc2acdd55e29a45568e22234e6483712bf3.js" integrity="sha256-ITOdpTOUcT064xRGbiIswqzdVeKaRVaOIiNOZINxK/M="></script>
+<script defer src="../../../../../en.search.min.7d771199e8b0f5dfbda83276c3ab6eede4efea70e901d1a5da8003c944714e75.js" integrity="sha256-fXcRmeiw9d&#43;9qDJ2w6tu7eTv6nDpAdGl2oADyURxTnU="></script>
 
 <script defer src="../../../../../sw.min.6f6f90fcb8eb1c49ec389838e6b801d0de19430b8e516902f8d75c3c8bd98739.js" integrity="sha256-b2&#43;Q/LjrHEnsOJg45rgB0N4ZQwuOUWkC&#43;NdcPIvZhzk="></script>
 <link rel="alternate" type="application/rss+xml" href="../../../../../docs/linux-kernel/net/ipv4/tcp/index.xml" title="技术的路上奔跑" />
@@ -1054,6 +1054,79 @@ document.addEventListener("DOMContentLoaded", function(){
 
           
   <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-8bb89e37bc8ac94ed7933c2c15518f8c" class="toggle"  />
+    <label for="section-8bb89e37bc8ac94ed7933c2c15518f8c" class="flex justify-between">
+      <a  class="">AI相关</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/ai/keywords/" class="">名词解释和学习大纲</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-1cc51252e9449a6be453972b2b6526e1" class="toggle"  />
+    <label for="section-1cc51252e9449a6be453972b2b6526e1" class="flex justify-between">
+      <a  class="">计算机视觉</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/ai/cv/minst/" class="">minst手写数字识别——神经网络实战笔记</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
     
   </ul>
 
@@ -3376,7 +3449,11 @@ document.addEventListener("DOMContentLoaded", function(){
                 <li><a href="#2-tcp_new_syn_recv-发送了synack后收到包处理">2) TCP_NEW_SYN_RECV 发送了syn/ack后收到包处理</a></li>
               </ul>
             </li>
-            <li><a href="#13-客户端">1.3. 客户端</a></li>
+            <li><a href="#13-客户端">1.3. 客户端</a>
+              <ul>
+                <li><a href="#1-tcp_closed--tcp_syn_sent-关闭状态发起connect系统调用">1) <code>TCP_CLOSED =&gt; TCP_SYN_SENT</code> 关闭状态发起connect系统调用</a></li>
+              </ul>
+            </li>
           </ul>
         </li>
         <li><a href="#2-tcp_close状态">2. TCP_CLOSE状态</a>
@@ -3404,6 +3481,16 @@ document.addEventListener("DOMContentLoaded", function(){
           <ul>
             <li><a href="#31-先看定义">3.1. 先看定义</a></li>
             <li><a href="#32-inet_csk_get_port">3.2. inet_csk_get_port</a></li>
+          </ul>
+        </li>
+        <li><a href="#4-connect--ops-connect--inet_stream_connect--sk_prot-connect">4. <code>connect =&gt; ops-&gt;connect =&gt; inet_stream_connect =&gt; sk_prot-&gt;connect</code></a>
+          <ul>
+            <li><a href="#41-先看定义">4.1. 先看定义</a></li>
+            <li><a href="#42-发起连接的过程">4.2. 发起连接的过程</a>
+              <ul>
+                <li><a href="#1-inet_hash_connect-绑定端口">1) <code>inet_hash_connect</code> 绑定端口</a></li>
+              </ul>
+            </li>
           </ul>
         </li>
       </ul>
@@ -4092,7 +4179,58 @@ TCP_SYN_RECV --&gt; TCP_ESTABLISHED : 收到的是ack转此状态
   1.3. 客户端
   <a class="anchor" href="#13-%e5%ae%a2%e6%88%b7%e7%ab%af">#</a>
 </h3>
-<h2 id="2-tcp_close状态">
+<pre tabindex="0"><code class="language-plantuml" data-lang="plantuml">@startuml
+
+[*] --&gt; TCP_SYN_SENT: 系统调用connect()
+
+TCP_SYN_SENT --&gt; TCP_SYN_RCVD: 接收到SYN-ACK
+
+TCP_SYN_SENT --&gt; TCP_CLOSED: 超时
+
+TCP_SYN_RCVD --&gt; TCP_ESTABLISHED: 接收到ACK
+
+TCP_ESTABLISHED --&gt; TCP_CLOSED: 关闭连接
+
+TCP_CLOSED --&gt; [*]
+
+@enduml
+</code></pre><h4 id="1-tcp_closed--tcp_syn_sent-关闭状态发起connect系统调用">
+  1) <code>TCP_CLOSED =&gt; TCP_SYN_SENT</code> 关闭状态发起connect系统调用
+  <a class="anchor" href="#1-tcp_closed--tcp_syn_sent-%e5%85%b3%e9%97%ad%e7%8a%b6%e6%80%81%e5%8f%91%e8%b5%b7connect%e7%b3%bb%e7%bb%9f%e8%b0%83%e7%94%a8">#</a>
+</h4>
+<div class="highlight"><pre tabindex="0" style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span><span style="color:#09f;font-style:italic">/*
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span><span><span style="color:#09f;font-style:italic">tcp_v4_connect(struct sock * sk, struct sockaddr * uaddr, int addr_len) (net/ipv4/tcp_ipv4.c:275)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span><span style="color:#09f;font-style:italic">__inet_stream_connect(struct socket * sock, struct sockaddr * uaddr, int addr_len, int flags, int is_sendmsg) (net/ipv4/af_inet.c:660)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span><span><span style="color:#09f;font-style:italic">inet_stream_connect(struct socket * sock, struct sockaddr * uaddr, int addr_len, int flags) (net/ipv4/af_inet.c:724)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span><span><span style="color:#09f;font-style:italic">__sys_connect(int fd, struct sockaddr * uservaddr, int addrlen) (net/socket.c:1996)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span><span><span style="color:#09f;font-style:italic">__do_sys_connect(int addrlen, struct sockaddr * uservaddr, int fd) (net/socket.c:2006)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span><span><span style="color:#09f;font-style:italic">__se_sys_connect(long addrlen, long uservaddr, long fd) (net/socket.c:2003)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span><span style="color:#09f;font-style:italic">__x64_sys_connect(const struct pt_regs * regs) (net/socket.c:2003)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span><span><span style="color:#09f;font-style:italic">do_syscall_x64(int nr, struct pt_regs * regs) (arch/x86/entry/common.c:50)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span><span><span style="color:#09f;font-style:italic">do_syscall_64(struct pt_regs * regs, int nr) (arch/x86/entry/common.c:80)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span><span><span style="color:#09f;font-style:italic">entry_SYSCALL_64() (arch/x86/entry/entry_64.S:120)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span><span style="color:#09f;font-style:italic">[Unknown/Just-In-Time compiled code] (Unknown Source:0)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span><span style="color:#09f;font-style:italic">fixed_percpu_data (Unknown Source:0)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span><span style="color:#09f;font-style:italic">[Unknown/Just-In-Time compiled code] (Unknown Source:0)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span><span><span style="color:#09f;font-style:italic">fixed_percpu_data (Unknown Source:0)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span><span><span style="color:#09f;font-style:italic">[Unknown/Just-In-Time compiled code] (Unknown Source:0)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span><span><span style="color:#09f;font-style:italic"> */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span><span><span style="color:#09f;font-style:italic">/* This will initiate an outgoing connection. */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span><span><span style="color:#078;font-weight:bold">int</span> <span style="color:#c0f">tcp_v4_connect</span>(<span style="color:#069;font-weight:bold">struct</span> <span style="color:#0a8;font-weight:bold">sock</span> <span style="color:#555">*</span>sk, <span style="color:#069;font-weight:bold">struct</span> <span style="color:#0a8;font-weight:bold">sockaddr</span> <span style="color:#555">*</span>uaddr, <span style="color:#078;font-weight:bold">int</span> addr_len)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span><span>{
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21</span><span>	...
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22</span><span>	<span style="color:#09f;font-style:italic">/* Socket identity is still unknown (sport may be zero).
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23</span><span><span style="color:#09f;font-style:italic">	 * However we set state to SYN-SENT and not releasing socket
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24</span><span><span style="color:#09f;font-style:italic">	 * lock select source port, enter ourselves into the hash tables and
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25</span><span><span style="color:#09f;font-style:italic">	 * complete initialization after this.
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26</span><span><span style="color:#09f;font-style:italic">	 */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27</span><span>	<span style="color:#09f;font-style:italic">// 转到TCP_SYN_SENT状态
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28</span><span><span style="color:#09f;font-style:italic"></span>	tcp_set_state(sk, TCP_SYN_SENT);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29</span><span>	...
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">30</span><span>	<span style="color:#09f;font-style:italic">// 发出sync包
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">31</span><span><span style="color:#09f;font-style:italic"></span>	err <span style="color:#555">=</span> tcp_connect(sk);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">32</span><span>}
+</span></span></code></pre></div><h2 id="2-tcp_close状态">
   2. TCP_CLOSE状态
   <a class="anchor" href="#2-tcp_close%e7%8a%b6%e6%80%81">#</a>
 </h2>
@@ -4470,23 +4608,431 @@ TCP_SYN_RECV --&gt; TCP_ESTABLISHED : 收到的是ack转此状态
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">47</span><span>		<span style="color:#069;font-weight:bold">if</span> ((tb<span style="color:#555">-&gt;</span>fastreuse <span style="color:#555">&gt;</span> <span style="color:#f60">0</span> <span style="color:#555">&amp;&amp;</span> reuse) <span style="color:#555">||</span>
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">48</span><span>		    sk_reuseport_match(tb, sk))
 </span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">49</span><span>			<span style="color:#069;font-weight:bold">goto</span> success;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">50</span><span>		<span style="color:#069;font-weight:bold">if</span> (inet_csk_bind_conflict(sk, tb, <span style="color:#366">true</span>, <span style="color:#366">true</span>))
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">51</span><span>			<span style="color:#069;font-weight:bold">goto</span> fail_unlock;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">52</span><span>	}
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">53</span><span><span style="color:#99f">success</span>:
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">54</span><span>	inet_csk_update_fastreuse(tb, sk);
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">55</span><span>
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">56</span><span>	<span style="color:#09f;font-style:italic">// 将socket和hash表上的端口绑定
-</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">57</span><span><span style="color:#09f;font-style:italic"></span>	<span style="color:#069;font-weight:bold">if</span> (<span style="color:#555">!</span>inet_csk(sk)<span style="color:#555">-&gt;</span>icsk_bind_hash)
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">58</span><span>		inet_bind_hash(sk, tb, port);
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">59</span><span>	WARN_ON(inet_csk(sk)<span style="color:#555">-&gt;</span>icsk_bind_hash <span style="color:#555">!=</span> tb);
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">60</span><span>	ret <span style="color:#555">=</span> <span style="color:#f60">0</span>;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">61</span><span>
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">62</span><span><span style="color:#99f">fail_unlock</span>:
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">63</span><span>	spin_unlock_bh(<span style="color:#555">&amp;</span>head<span style="color:#555">-&gt;</span>lock);
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">64</span><span>	<span style="color:#069;font-weight:bold">return</span> ret;
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">65</span><span>}
-</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">66</span><span>EXPORT_SYMBOL_GPL(inet_csk_get_port);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">50</span><span>		<span style="color:#09f;font-style:italic">// 不是强制复用和快速复用等，进行绑定冲突判断
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">51</span><span><span style="color:#09f;font-style:italic"></span>		<span style="color:#069;font-weight:bold">if</span> (inet_csk_bind_conflict(sk, tb, <span style="color:#366">true</span>, <span style="color:#366">true</span>))
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">52</span><span>			<span style="color:#069;font-weight:bold">goto</span> fail_unlock;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">53</span><span>	}
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">54</span><span><span style="color:#99f">success</span>:
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">55</span><span>	inet_csk_update_fastreuse(tb, sk);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">56</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">57</span><span>	<span style="color:#09f;font-style:italic">// 将socket和hash表上的端口绑定
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">58</span><span><span style="color:#09f;font-style:italic"></span>	<span style="color:#069;font-weight:bold">if</span> (<span style="color:#555">!</span>inet_csk(sk)<span style="color:#555">-&gt;</span>icsk_bind_hash)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">59</span><span>		inet_bind_hash(sk, tb, port);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">60</span><span>	WARN_ON(inet_csk(sk)<span style="color:#555">-&gt;</span>icsk_bind_hash <span style="color:#555">!=</span> tb);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">61</span><span>	ret <span style="color:#555">=</span> <span style="color:#f60">0</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">62</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">63</span><span><span style="color:#99f">fail_unlock</span>:
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">64</span><span>	spin_unlock_bh(<span style="color:#555">&amp;</span>head<span style="color:#555">-&gt;</span>lock);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">65</span><span>	<span style="color:#069;font-weight:bold">return</span> ret;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">66</span><span>}
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">67</span><span>EXPORT_SYMBOL_GPL(inet_csk_get_port);
+</span></span></code></pre></div><ul>
+<li><code>inet_csk_bind_conflict</code>进行绑定冲突判断</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span><span style="color:#09f;font-style:italic">/** 系统调用栈
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span><span><span style="color:#09f;font-style:italic">inet_csk_bind_conflict(const struct sock * sk, const struct inet_bind_bucket * tb, bool relax, bool reuseport_ok) (net/ipv4/inet_connection_sock.c:185)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span><span style="color:#09f;font-style:italic">inet_csk_get_port(struct sock * sk, unsigned short snum) (net/ipv4/inet_connection_sock.c:409)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span><span><span style="color:#09f;font-style:italic">__inet_bind(struct sock * sk, struct sockaddr * uaddr, int addr_len, u32 flags) (net/ipv4/af_inet.c:525)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span><span><span style="color:#09f;font-style:italic">__sys_bind(int fd, struct sockaddr * umyaddr, int addrlen) (net/socket.c:1776)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span><span><span style="color:#09f;font-style:italic">__do_sys_bind(int addrlen, struct sockaddr * umyaddr, int fd) (net/socket.c:1787)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span><span><span style="color:#09f;font-style:italic">__se_sys_bind(long addrlen, long umyaddr, long fd) (net/socket.c:1785)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span><span style="color:#09f;font-style:italic">__x64_sys_bind(const struct pt_regs * regs) (net/socket.c:1785)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span><span><span style="color:#09f;font-style:italic">do_syscall_x64(int nr, struct pt_regs * regs) (arch/x86/entry/common.c:50)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span><span><span style="color:#09f;font-style:italic">do_syscall_64(struct pt_regs * regs, int nr) (arch/x86/entry/common.c:80)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span><span><span style="color:#09f;font-style:italic">entry_SYSCALL_64() (arch/x86/entry/entry_64.S:120)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span><span style="color:#09f;font-style:italic">fixed_percpu_data (Unknown Source:0)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span><span style="color:#09f;font-style:italic">[Unknown/Just-In-Time compiled code] (Unknown Source:0)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span><span style="color:#09f;font-style:italic"> */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span><span><span style="color:#078;font-weight:bold">int</span> <span style="color:#c0f">inet_csk_bind_conflict</span>(<span style="color:#069;font-weight:bold">const</span> <span style="color:#069;font-weight:bold">struct</span> <span style="color:#0a8;font-weight:bold">sock</span> <span style="color:#555">*</span>sk,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span><span>				  <span style="color:#069;font-weight:bold">const</span> <span style="color:#069;font-weight:bold">struct</span> <span style="color:#0a8;font-weight:bold">inet_bind_bucket</span> <span style="color:#555">*</span>tb,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span><span>				  <span style="color:#078;font-weight:bold">bool</span> relax, <span style="color:#078;font-weight:bold">bool</span> reuseport_ok)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span><span>{
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span><span>	<span style="color:#069;font-weight:bold">struct</span> <span style="color:#0a8;font-weight:bold">sock</span> <span style="color:#555">*</span>sk2;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span><span>	<span style="color:#078;font-weight:bold">bool</span> reuseport_cb_ok;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21</span><span>	<span style="color:#078;font-weight:bold">bool</span> reuse <span style="color:#555">=</span> sk<span style="color:#555">-&gt;</span>sk_reuse;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22</span><span>	<span style="color:#078;font-weight:bold">bool</span> reuseport <span style="color:#555">=</span> <span style="color:#555">!!</span>sk<span style="color:#555">-&gt;</span>sk_reuseport;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23</span><span>	<span style="color:#069;font-weight:bold">struct</span> <span style="color:#0a8;font-weight:bold">sock_reuseport</span> <span style="color:#555">*</span>reuseport_cb;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24</span><span>	kuid_t uid <span style="color:#555">=</span> sock_i_uid((<span style="color:#069;font-weight:bold">struct</span> <span style="color:#0a8;font-weight:bold">sock</span> <span style="color:#555">*</span>)sk);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26</span><span>	rcu_read_lock();
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27</span><span>	reuseport_cb <span style="color:#555">=</span> rcu_dereference(sk<span style="color:#555">-&gt;</span>sk_reuseport_cb);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28</span><span>	<span style="color:#09f;font-style:italic">/* paired with WRITE_ONCE() in __reuseport_(add|detach)_closed_sock */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29</span><span>	reuseport_cb_ok <span style="color:#555">=</span> <span style="color:#555">!</span>reuseport_cb <span style="color:#555">||</span> READ_ONCE(reuseport_cb<span style="color:#555">-&gt;</span>num_closed_socks);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">30</span><span>	rcu_read_unlock();
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">31</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">32</span><span>	<span style="color:#09f;font-style:italic">/*
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">33</span><span><span style="color:#09f;font-style:italic">	 * Unlike other sk lookup places we do not check
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">34</span><span><span style="color:#09f;font-style:italic">	 * for sk_net here, since _all_ the socks listed
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">35</span><span><span style="color:#09f;font-style:italic">	 * in tb-&gt;owners list belong to the same net - the
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">36</span><span><span style="color:#09f;font-style:italic">	 * one this bucket belongs to.
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">37</span><span><span style="color:#09f;font-style:italic">	 */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">38</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">39</span><span>	sk_for_each_bound(sk2, <span style="color:#555">&amp;</span>tb<span style="color:#555">-&gt;</span>owners) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">40</span><span>		<span style="color:#078;font-weight:bold">int</span> bound_dev_if2;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">41</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">42</span><span>		<span style="color:#069;font-weight:bold">if</span> (sk <span style="color:#555">==</span> sk2)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">43</span><span>			<span style="color:#069;font-weight:bold">continue</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">44</span><span>		bound_dev_if2 <span style="color:#555">=</span> READ_ONCE(sk2<span style="color:#555">-&gt;</span>sk_bound_dev_if);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">45</span><span>		<span style="color:#069;font-weight:bold">if</span> ((<span style="color:#555">!</span>sk<span style="color:#555">-&gt;</span>sk_bound_dev_if <span style="color:#555">||</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">46</span><span>		     <span style="color:#555">!</span>bound_dev_if2 <span style="color:#555">||</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">47</span><span>		     sk<span style="color:#555">-&gt;</span>sk_bound_dev_if <span style="color:#555">==</span> bound_dev_if2)) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">48</span><span>			<span style="color:#069;font-weight:bold">if</span> (reuse <span style="color:#555">&amp;&amp;</span> sk2<span style="color:#555">-&gt;</span>sk_reuse <span style="color:#555">&amp;&amp;</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">49</span><span>			    sk2<span style="color:#555">-&gt;</span>sk_state <span style="color:#555">!=</span> TCP_LISTEN) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">50</span><span>				<span style="color:#069;font-weight:bold">if</span> ((<span style="color:#555">!</span>relax <span style="color:#555">||</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">51</span><span>				     (<span style="color:#555">!</span>reuseport_ok <span style="color:#555">&amp;&amp;</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">52</span><span>				      reuseport <span style="color:#555">&amp;&amp;</span> sk2<span style="color:#555">-&gt;</span>sk_reuseport <span style="color:#555">&amp;&amp;</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">53</span><span>				      reuseport_cb_ok <span style="color:#555">&amp;&amp;</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">54</span><span>				      (sk2<span style="color:#555">-&gt;</span>sk_state <span style="color:#555">==</span> TCP_TIME_WAIT <span style="color:#555">||</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">55</span><span>				       uid_eq(uid, sock_i_uid(sk2))))) <span style="color:#555">&amp;&amp;</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">56</span><span>				    inet_rcv_saddr_equal(sk, sk2, <span style="color:#366">true</span>))
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">57</span><span>					<span style="color:#069;font-weight:bold">break</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">58</span><span>			} <span style="color:#069;font-weight:bold">else</span> <span style="color:#069;font-weight:bold">if</span> (<span style="color:#555">!</span>reuseport_ok <span style="color:#555">||</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">59</span><span>				   <span style="color:#555">!</span>reuseport <span style="color:#555">||</span> <span style="color:#555">!</span>sk2<span style="color:#555">-&gt;</span>sk_reuseport <span style="color:#555">||</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">60</span><span>				   <span style="color:#555">!</span>reuseport_cb_ok <span style="color:#555">||</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">61</span><span>				   (sk2<span style="color:#555">-&gt;</span>sk_state <span style="color:#555">!=</span> TCP_TIME_WAIT <span style="color:#555">&amp;&amp;</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">62</span><span>				    <span style="color:#555">!</span>uid_eq(uid, sock_i_uid(sk2)))) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">63</span><span>				<span style="color:#09f;font-style:italic">// 这里是判断不能复用或tcp状态不是timewait才判断
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">64</span><span><span style="color:#09f;font-style:italic"></span>				<span style="color:#09f;font-style:italic">// 说明timewait状态是可以直接进行绑定源端口的
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">65</span><span><span style="color:#09f;font-style:italic"></span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">66</span><span>				<span style="color:#09f;font-style:italic">// 端口已经被占用就会走到这个位置break掉，sk2有值，返回有冲突
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">67</span><span><span style="color:#09f;font-style:italic"></span>				<span style="color:#069;font-weight:bold">if</span> (inet_rcv_saddr_equal(sk, sk2, <span style="color:#366">true</span>))
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">68</span><span>					<span style="color:#069;font-weight:bold">break</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">69</span><span>			}
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">70</span><span>		}
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">71</span><span>	}
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">72</span><span>	<span style="color:#069;font-weight:bold">return</span> sk2 <span style="color:#555">!=</span> <span style="color:#366">NULL</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">73</span><span>}
+</span></span></code></pre></div><h2 id="4-connect--ops-connect--inet_stream_connect--sk_prot-connect">
+  4. <code>connect =&gt; ops-&gt;connect =&gt; inet_stream_connect =&gt; sk_prot-&gt;connect</code>
+  <a class="anchor" href="#4-connect--ops-connect--inet_stream_connect--sk_prot-connect">#</a>
+</h2>
+<h3 id="41-先看定义">
+  4.1. 先看定义
+  <a class="anchor" href="#41-%e5%85%88%e7%9c%8b%e5%ae%9a%e4%b9%89">#</a>
+</h3>
+<ul>
+<li>调用到<code>tcp_v4_connect</code></li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1</span><span><span style="color:#09f;font-style:italic">// net/ipv4/tcp_ipv4.c
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2</span><span><span style="color:#09f;font-style:italic"></span><span style="color:#069;font-weight:bold">struct</span> <span style="color:#0a8;font-weight:bold">proto</span> tcp_prot <span style="color:#555">=</span> {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3</span><span>	...
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">4</span><span>	.connect		<span style="color:#555">=</span> tcp_v4_connect,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">5</span><span>	...
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">6</span><span>};
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">7</span><span>EXPORT_SYMBOL(tcp_prot);
+</span></span></code></pre></div><h3 id="42-发起连接的过程">
+  4.2. 发起连接的过程
+  <a class="anchor" href="#42-%e5%8f%91%e8%b5%b7%e8%bf%9e%e6%8e%a5%e7%9a%84%e8%bf%87%e7%a8%8b">#</a>
+</h3>
+<div class="highlight"><pre tabindex="0" style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  1</span><span><span style="color:#09f;font-style:italic">// net/ipv4/tcp_ipv4.c
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  2</span><span><span style="color:#09f;font-style:italic"></span><span style="color:#09f;font-style:italic">/* This will initiate an outgoing connection. */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  3</span><span><span style="color:#078;font-weight:bold">int</span> <span style="color:#c0f">tcp_v4_connect</span>(<span style="color:#069;font-weight:bold">struct</span> <span style="color:#0a8;font-weight:bold">sock</span> <span style="color:#555">*</span>sk, <span style="color:#069;font-weight:bold">struct</span> <span style="color:#0a8;font-weight:bold">sockaddr</span> <span style="color:#555">*</span>uaddr, <span style="color:#078;font-weight:bold">int</span> addr_len)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  4</span><span>{
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  5</span><span>	<span style="color:#069;font-weight:bold">struct</span> <span style="color:#0a8;font-weight:bold">sockaddr_in</span> <span style="color:#555">*</span>usin <span style="color:#555">=</span> (<span style="color:#069;font-weight:bold">struct</span> <span style="color:#0a8;font-weight:bold">sockaddr_in</span> <span style="color:#555">*</span>)uaddr;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  6</span><span>	<span style="color:#069;font-weight:bold">struct</span> <span style="color:#0a8;font-weight:bold">inet_sock</span> <span style="color:#555">*</span>inet <span style="color:#555">=</span> inet_sk(sk);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  7</span><span>	<span style="color:#069;font-weight:bold">struct</span> <span style="color:#0a8;font-weight:bold">tcp_sock</span> <span style="color:#555">*</span>tp <span style="color:#555">=</span> tcp_sk(sk);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  8</span><span>	__be16 orig_sport, orig_dport;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  9</span><span>	__be32 daddr, nexthop;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 10</span><span>	<span style="color:#069;font-weight:bold">struct</span> <span style="color:#0a8;font-weight:bold">flowi4</span> <span style="color:#555">*</span>fl4;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 11</span><span>	<span style="color:#069;font-weight:bold">struct</span> <span style="color:#0a8;font-weight:bold">rtable</span> <span style="color:#555">*</span>rt;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 12</span><span>	<span style="color:#078;font-weight:bold">int</span> err;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 13</span><span>	<span style="color:#069;font-weight:bold">struct</span> <span style="color:#0a8;font-weight:bold">ip_options_rcu</span> <span style="color:#555">*</span>inet_opt;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 14</span><span>	<span style="color:#069;font-weight:bold">struct</span> <span style="color:#0a8;font-weight:bold">inet_timewait_death_row</span> <span style="color:#555">*</span>tcp_death_row <span style="color:#555">=</span> sock_net(sk)<span style="color:#555">-&gt;</span>ipv4.tcp_death_row;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 15</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 16</span><span>	<span style="color:#069;font-weight:bold">if</span> (addr_len <span style="color:#555">&lt;</span> <span style="color:#069;font-weight:bold">sizeof</span>(<span style="color:#069;font-weight:bold">struct</span> <span style="color:#0a8;font-weight:bold">sockaddr_in</span>))
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 17</span><span>		<span style="color:#069;font-weight:bold">return</span> <span style="color:#555">-</span>EINVAL;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 18</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 19</span><span>	<span style="color:#069;font-weight:bold">if</span> (usin<span style="color:#555">-&gt;</span>sin_family <span style="color:#555">!=</span> AF_INET)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 20</span><span>		<span style="color:#069;font-weight:bold">return</span> <span style="color:#555">-</span>EAFNOSUPPORT;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 21</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 22</span><span>	nexthop <span style="color:#555">=</span> daddr <span style="color:#555">=</span> usin<span style="color:#555">-&gt;</span>sin_addr.s_addr;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 23</span><span>	inet_opt <span style="color:#555">=</span> rcu_dereference_protected(inet<span style="color:#555">-&gt;</span>inet_opt,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 24</span><span>					     lockdep_sock_is_held(sk));
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 25</span><span>	<span style="color:#069;font-weight:bold">if</span> (inet_opt <span style="color:#555">&amp;&amp;</span> inet_opt<span style="color:#555">-&gt;</span>opt.srr) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 26</span><span>		<span style="color:#069;font-weight:bold">if</span> (<span style="color:#555">!</span>daddr)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 27</span><span>			<span style="color:#069;font-weight:bold">return</span> <span style="color:#555">-</span>EINVAL;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 28</span><span>		nexthop <span style="color:#555">=</span> inet_opt<span style="color:#555">-&gt;</span>opt.faddr;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 29</span><span>	}
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 30</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 31</span><span>	orig_sport <span style="color:#555">=</span> inet<span style="color:#555">-&gt;</span>inet_sport;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 32</span><span>	orig_dport <span style="color:#555">=</span> usin<span style="color:#555">-&gt;</span>sin_port;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 33</span><span>	fl4 <span style="color:#555">=</span> <span style="color:#555">&amp;</span>inet<span style="color:#555">-&gt;</span>cork.fl.u.ip4;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 34</span><span>	<span style="color:#09f;font-style:italic">// 根据路由找源地址，找网卡，使用网卡的ip
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 35</span><span><span style="color:#09f;font-style:italic"></span>	<span style="color:#09f;font-style:italic">// 端口为0时，这里还不会分配端口只找ip
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 36</span><span><span style="color:#09f;font-style:italic"></span>	rt <span style="color:#555">=</span> ip_route_connect(fl4, nexthop, inet<span style="color:#555">-&gt;</span>inet_saddr,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 37</span><span>			      sk<span style="color:#555">-&gt;</span>sk_bound_dev_if, IPPROTO_TCP, orig_sport,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 38</span><span>			      orig_dport, sk);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 39</span><span>	<span style="color:#069;font-weight:bold">if</span> (IS_ERR(rt)) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 40</span><span>		err <span style="color:#555">=</span> PTR_ERR(rt);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 41</span><span>		<span style="color:#069;font-weight:bold">if</span> (err <span style="color:#555">==</span> <span style="color:#555">-</span>ENETUNREACH)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 42</span><span>			IP_INC_STATS(sock_net(sk), IPSTATS_MIB_OUTNOROUTES);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 43</span><span>		<span style="color:#069;font-weight:bold">return</span> err;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 44</span><span>	}
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 45</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 46</span><span>	<span style="color:#069;font-weight:bold">if</span> (rt<span style="color:#555">-&gt;</span>rt_flags <span style="color:#555">&amp;</span> (RTCF_MULTICAST <span style="color:#555">|</span> RTCF_BROADCAST)) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 47</span><span>		ip_rt_put(rt);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 48</span><span>		<span style="color:#069;font-weight:bold">return</span> <span style="color:#555">-</span>ENETUNREACH;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 49</span><span>	}
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 50</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 51</span><span>	<span style="color:#069;font-weight:bold">if</span> (<span style="color:#555">!</span>inet_opt <span style="color:#555">||</span> <span style="color:#555">!</span>inet_opt<span style="color:#555">-&gt;</span>opt.srr)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 52</span><span>		daddr <span style="color:#555">=</span> fl4<span style="color:#555">-&gt;</span>daddr;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 53</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 54</span><span>	<span style="color:#069;font-weight:bold">if</span> (<span style="color:#555">!</span>inet<span style="color:#555">-&gt;</span>inet_saddr)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 55</span><span>		inet<span style="color:#555">-&gt;</span>inet_saddr <span style="color:#555">=</span> fl4<span style="color:#555">-&gt;</span>saddr;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 56</span><span>	sk_rcv_saddr_set(sk, inet<span style="color:#555">-&gt;</span>inet_saddr);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 57</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 58</span><span>	<span style="color:#069;font-weight:bold">if</span> (tp<span style="color:#555">-&gt;</span>rx_opt.ts_recent_stamp <span style="color:#555">&amp;&amp;</span> inet<span style="color:#555">-&gt;</span>inet_daddr <span style="color:#555">!=</span> daddr) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 59</span><span>		<span style="color:#09f;font-style:italic">/* Reset inherited state */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 60</span><span>		tp<span style="color:#555">-&gt;</span>rx_opt.ts_recent	   <span style="color:#555">=</span> <span style="color:#f60">0</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 61</span><span>		tp<span style="color:#555">-&gt;</span>rx_opt.ts_recent_stamp <span style="color:#555">=</span> <span style="color:#f60">0</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 62</span><span>		<span style="color:#069;font-weight:bold">if</span> (likely(<span style="color:#555">!</span>tp<span style="color:#555">-&gt;</span>repair))
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 63</span><span>			WRITE_ONCE(tp<span style="color:#555">-&gt;</span>write_seq, <span style="color:#f60">0</span>);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 64</span><span>	}
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 65</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 66</span><span>	inet<span style="color:#555">-&gt;</span>inet_dport <span style="color:#555">=</span> usin<span style="color:#555">-&gt;</span>sin_port;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 67</span><span>	sk_daddr_set(sk, daddr);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 68</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 69</span><span>	inet_csk(sk)<span style="color:#555">-&gt;</span>icsk_ext_hdr_len <span style="color:#555">=</span> <span style="color:#f60">0</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 70</span><span>	<span style="color:#069;font-weight:bold">if</span> (inet_opt)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 71</span><span>		inet_csk(sk)<span style="color:#555">-&gt;</span>icsk_ext_hdr_len <span style="color:#555">=</span> inet_opt<span style="color:#555">-&gt;</span>opt.optlen;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 72</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 73</span><span>	tp<span style="color:#555">-&gt;</span>rx_opt.mss_clamp <span style="color:#555">=</span> TCP_MSS_DEFAULT;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 74</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 75</span><span>	<span style="color:#09f;font-style:italic">/* Socket identity is still unknown (sport may be zero).
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 76</span><span><span style="color:#09f;font-style:italic">	 * However we set state to SYN-SENT and not releasing socket
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 77</span><span><span style="color:#09f;font-style:italic">	 * lock select source port, enter ourselves into the hash tables and
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 78</span><span><span style="color:#09f;font-style:italic">	 * complete initialization after this.
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 79</span><span><span style="color:#09f;font-style:italic">	 */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 80</span><span>	tcp_set_state(sk, TCP_SYN_SENT);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 81</span><span>	<span style="color:#09f;font-style:italic">// 这里对于没有源端口（源端口为0）的会进行端口绑定
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 82</span><span><span style="color:#09f;font-style:italic"></span>	err <span style="color:#555">=</span> inet_hash_connect(tcp_death_row, sk);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 83</span><span>	<span style="color:#069;font-weight:bold">if</span> (err)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 84</span><span>		<span style="color:#069;font-weight:bold">goto</span> failure;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 85</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 86</span><span>	sk_set_txhash(sk);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 87</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 88</span><span>	rt <span style="color:#555">=</span> ip_route_newports(fl4, rt, orig_sport, orig_dport,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 89</span><span>			       inet<span style="color:#555">-&gt;</span>inet_sport, inet<span style="color:#555">-&gt;</span>inet_dport, sk);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 90</span><span>	<span style="color:#069;font-weight:bold">if</span> (IS_ERR(rt)) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 91</span><span>		err <span style="color:#555">=</span> PTR_ERR(rt);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 92</span><span>		rt <span style="color:#555">=</span> <span style="color:#366">NULL</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 93</span><span>		<span style="color:#069;font-weight:bold">goto</span> failure;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 94</span><span>	}
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 95</span><span>	<span style="color:#09f;font-style:italic">/* OK, now commit destination to socket.  */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 96</span><span>	sk<span style="color:#555">-&gt;</span>sk_gso_type <span style="color:#555">=</span> SKB_GSO_TCPV4;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 97</span><span>	sk_setup_caps(sk, <span style="color:#555">&amp;</span>rt<span style="color:#555">-&gt;</span>dst);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 98</span><span>	rt <span style="color:#555">=</span> <span style="color:#366">NULL</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 99</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">100</span><span>	<span style="color:#069;font-weight:bold">if</span> (likely(<span style="color:#555">!</span>tp<span style="color:#555">-&gt;</span>repair)) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">101</span><span>		<span style="color:#069;font-weight:bold">if</span> (<span style="color:#555">!</span>tp<span style="color:#555">-&gt;</span>write_seq)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">102</span><span>			WRITE_ONCE(tp<span style="color:#555">-&gt;</span>write_seq,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">103</span><span>				   secure_tcp_seq(inet<span style="color:#555">-&gt;</span>inet_saddr,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">104</span><span>						  inet<span style="color:#555">-&gt;</span>inet_daddr,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">105</span><span>						  inet<span style="color:#555">-&gt;</span>inet_sport,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">106</span><span>						  usin<span style="color:#555">-&gt;</span>sin_port));
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">107</span><span>		tp<span style="color:#555">-&gt;</span>tsoffset <span style="color:#555">=</span> secure_tcp_ts_off(sock_net(sk),
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">108</span><span>						 inet<span style="color:#555">-&gt;</span>inet_saddr,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">109</span><span>						 inet<span style="color:#555">-&gt;</span>inet_daddr);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">110</span><span>	}
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">111</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">112</span><span>	inet<span style="color:#555">-&gt;</span>inet_id <span style="color:#555">=</span> prandom_u32();
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">113</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">114</span><span>	<span style="color:#069;font-weight:bold">if</span> (tcp_fastopen_defer_connect(sk, <span style="color:#555">&amp;</span>err))
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">115</span><span>		<span style="color:#069;font-weight:bold">return</span> err;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">116</span><span>	<span style="color:#069;font-weight:bold">if</span> (err)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">117</span><span>		<span style="color:#069;font-weight:bold">goto</span> failure;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">118</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">119</span><span>	<span style="color:#09f;font-style:italic">// 发起sync包
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">120</span><span><span style="color:#09f;font-style:italic"></span>	err <span style="color:#555">=</span> tcp_connect(sk);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">121</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">122</span><span>	<span style="color:#069;font-weight:bold">if</span> (err)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">123</span><span>		<span style="color:#069;font-weight:bold">goto</span> failure;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">124</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">125</span><span>	<span style="color:#069;font-weight:bold">return</span> <span style="color:#f60">0</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">126</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">127</span><span><span style="color:#99f">failure</span>:
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">128</span><span>	<span style="color:#09f;font-style:italic">/*
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">129</span><span><span style="color:#09f;font-style:italic">	 * This unhashes the socket and releases the local port,
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">130</span><span><span style="color:#09f;font-style:italic">	 * if necessary.
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">131</span><span><span style="color:#09f;font-style:italic">	 */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">132</span><span>	tcp_set_state(sk, TCP_CLOSE);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">133</span><span>	ip_rt_put(rt);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">134</span><span>	sk<span style="color:#555">-&gt;</span>sk_route_caps <span style="color:#555">=</span> <span style="color:#f60">0</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">135</span><span>	inet<span style="color:#555">-&gt;</span>inet_dport <span style="color:#555">=</span> <span style="color:#f60">0</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">136</span><span>	<span style="color:#069;font-weight:bold">return</span> err;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">137</span><span>}
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">138</span><span>EXPORT_SYMBOL(tcp_v4_connect);
+</span></span></code></pre></div><h4 id="1-inet_hash_connect-绑定端口">
+  1) <code>inet_hash_connect</code> 绑定端口
+  <a class="anchor" href="#1-inet_hash_connect-%e7%bb%91%e5%ae%9a%e7%ab%af%e5%8f%a3">#</a>
+</h4>
+<div class="highlight"><pre tabindex="0" style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span><span style="color:#09f;font-style:italic">// net/ipv4/inet_hashtables.c
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span><span><span style="color:#09f;font-style:italic"></span><span style="color:#09f;font-style:italic">/*
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span><span style="color:#09f;font-style:italic"> * Bind a port for a connect operation and hash it.
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span><span><span style="color:#09f;font-style:italic"> */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span><span><span style="color:#078;font-weight:bold">int</span> <span style="color:#c0f">inet_hash_connect</span>(<span style="color:#069;font-weight:bold">struct</span> <span style="color:#0a8;font-weight:bold">inet_timewait_death_row</span> <span style="color:#555">*</span>death_row,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span><span>		      <span style="color:#069;font-weight:bold">struct</span> <span style="color:#0a8;font-weight:bold">sock</span> <span style="color:#555">*</span>sk)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span><span>{
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span>	u64 port_offset <span style="color:#555">=</span> <span style="color:#f60">0</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span><span>	<span style="color:#069;font-weight:bold">if</span> (<span style="color:#555">!</span>inet_sk(sk)<span style="color:#555">-&gt;</span>inet_num)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span><span>		port_offset <span style="color:#555">=</span> inet_sk_port_offset(sk);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span>	<span style="color:#069;font-weight:bold">return</span> __inet_hash_connect(death_row, sk, port_offset,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span>				   __inet_check_established);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span>}
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span><span>EXPORT_SYMBOL_GPL(inet_hash_connect);
+</span></span></code></pre></div><ul>
+<li>直接调用到<code>__inet_hash_connect</code></li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  1</span><span><span style="color:#09f;font-style:italic">/*
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  2</span><span><span style="color:#09f;font-style:italic">__inet_hash_connect(struct inet_timewait_death_row * death_row, struct sock * sk, u64 port_offset, int (*)(struct inet_timewait_death_row *, struct sock *, __u16, struct inet_timewait_sock **) check_established) (net/ipv4/inet_hashtables.c:727)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  3</span><span><span style="color:#09f;font-style:italic">inet_hash_connect(struct inet_timewait_death_row * death_row, struct sock * sk) (net/ipv4/inet_hashtables.c:825)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  4</span><span><span style="color:#09f;font-style:italic">tcp_v4_connect(struct sock * sk, struct sockaddr * uaddr, int addr_len) (net/ipv4/tcp_ipv4.c:276)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  5</span><span><span style="color:#09f;font-style:italic">__inet_stream_connect(struct socket * sock, struct sockaddr * uaddr, int addr_len, int flags, int is_sendmsg) (net/ipv4/af_inet.c:660)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  6</span><span><span style="color:#09f;font-style:italic">inet_stream_connect(struct socket * sock, struct sockaddr * uaddr, int addr_len, int flags) (net/ipv4/af_inet.c:724)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  7</span><span><span style="color:#09f;font-style:italic">__sys_connect(int fd, struct sockaddr * uservaddr, int addrlen) (net/socket.c:1996)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  8</span><span><span style="color:#09f;font-style:italic">__do_sys_connect(int addrlen, struct sockaddr * uservaddr, int fd) (net/socket.c:2006)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  9</span><span><span style="color:#09f;font-style:italic">__se_sys_connect(long addrlen, long uservaddr, long fd) (net/socket.c:2003)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 10</span><span><span style="color:#09f;font-style:italic">__x64_sys_connect(const struct pt_regs * regs) (net/socket.c:2003)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 11</span><span><span style="color:#09f;font-style:italic">do_syscall_x64(int nr, struct pt_regs * regs) (arch/x86/entry/common.c:50)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 12</span><span><span style="color:#09f;font-style:italic">do_syscall_64(struct pt_regs * regs, int nr) (arch/x86/entry/common.c:80)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 13</span><span><span style="color:#09f;font-style:italic">entry_SYSCALL_64() (arch/x86/entry/entry_64.S:120)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 14</span><span><span style="color:#09f;font-style:italic">[Unknown/Just-In-Time compiled code] (Unknown Source:0)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 15</span><span><span style="color:#09f;font-style:italic">fixed_percpu_data (Unknown Source:0)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 16</span><span><span style="color:#09f;font-style:italic">[Unknown/Just-In-Time compiled code] (Unknown Source:0)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 17</span><span><span style="color:#09f;font-style:italic">fixed_percpu_data (Unknown Source:0)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 18</span><span><span style="color:#09f;font-style:italic">[Unknown/Just-In-Time compiled code] (Unknown Source:0)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 19</span><span><span style="color:#09f;font-style:italic"> */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 20</span><span><span style="color:#078;font-weight:bold">int</span> <span style="color:#c0f">__inet_hash_connect</span>(<span style="color:#069;font-weight:bold">struct</span> <span style="color:#0a8;font-weight:bold">inet_timewait_death_row</span> <span style="color:#555">*</span>death_row,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 21</span><span>		<span style="color:#069;font-weight:bold">struct</span> <span style="color:#0a8;font-weight:bold">sock</span> <span style="color:#555">*</span>sk, u64 port_offset,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 22</span><span>		<span style="color:#078;font-weight:bold">int</span> (<span style="color:#555">*</span>check_established)(<span style="color:#069;font-weight:bold">struct</span> <span style="color:#0a8;font-weight:bold">inet_timewait_death_row</span> <span style="color:#555">*</span>,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 23</span><span>			<span style="color:#069;font-weight:bold">struct</span> <span style="color:#0a8;font-weight:bold">sock</span> <span style="color:#555">*</span>, __u16, <span style="color:#069;font-weight:bold">struct</span> <span style="color:#0a8;font-weight:bold">inet_timewait_sock</span> <span style="color:#555">**</span>))
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 24</span><span>{
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 25</span><span>	<span style="color:#069;font-weight:bold">struct</span> <span style="color:#0a8;font-weight:bold">inet_hashinfo</span> <span style="color:#555">*</span>hinfo <span style="color:#555">=</span> death_row<span style="color:#555">-&gt;</span>hashinfo;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 26</span><span>	<span style="color:#069;font-weight:bold">struct</span> <span style="color:#0a8;font-weight:bold">inet_timewait_sock</span> <span style="color:#555">*</span>tw <span style="color:#555">=</span> <span style="color:#366">NULL</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 27</span><span>	<span style="color:#069;font-weight:bold">struct</span> <span style="color:#0a8;font-weight:bold">inet_bind_hashbucket</span> <span style="color:#555">*</span>head;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 28</span><span>	<span style="color:#078;font-weight:bold">int</span> port <span style="color:#555">=</span> inet_sk(sk)<span style="color:#555">-&gt;</span>inet_num;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 29</span><span>	<span style="color:#069;font-weight:bold">struct</span> <span style="color:#0a8;font-weight:bold">net</span> <span style="color:#555">*</span>net <span style="color:#555">=</span> sock_net(sk);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 30</span><span>	<span style="color:#069;font-weight:bold">struct</span> <span style="color:#0a8;font-weight:bold">inet_bind_bucket</span> <span style="color:#555">*</span>tb;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 31</span><span>	u32 remaining, offset;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 32</span><span>	<span style="color:#078;font-weight:bold">int</span> ret, i, low, high;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 33</span><span>	<span style="color:#078;font-weight:bold">int</span> l3mdev;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 34</span><span>	u32 index;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 35</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 36</span><span>	<span style="color:#069;font-weight:bold">if</span> (port) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 37</span><span>		<span style="color:#09f;font-style:italic">// 有端口就在bind的hash表中查找此端口
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 38</span><span><span style="color:#09f;font-style:italic"></span>		head <span style="color:#555">=</span> <span style="color:#555">&amp;</span>hinfo<span style="color:#555">-&gt;</span>bhash[inet_bhashfn(net, port,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 39</span><span>						  hinfo<span style="color:#555">-&gt;</span>bhash_size)];
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 40</span><span>		tb <span style="color:#555">=</span> inet_csk(sk)<span style="color:#555">-&gt;</span>icsk_bind_hash;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 41</span><span>		spin_lock_bh(<span style="color:#555">&amp;</span>head<span style="color:#555">-&gt;</span>lock);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 42</span><span>		<span style="color:#069;font-weight:bold">if</span> (sk_head(<span style="color:#555">&amp;</span>tb<span style="color:#555">-&gt;</span>owners) <span style="color:#555">==</span> sk <span style="color:#555">&amp;&amp;</span> <span style="color:#555">!</span>sk<span style="color:#555">-&gt;</span>sk_bind_node.next) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 43</span><span>			inet_ehash_nolisten(sk, <span style="color:#366">NULL</span>, <span style="color:#366">NULL</span>);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 44</span><span>			spin_unlock_bh(<span style="color:#555">&amp;</span>head<span style="color:#555">-&gt;</span>lock);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 45</span><span>			<span style="color:#069;font-weight:bold">return</span> <span style="color:#f60">0</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 46</span><span>		}
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 47</span><span>		spin_unlock(<span style="color:#555">&amp;</span>head<span style="color:#555">-&gt;</span>lock);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 48</span><span>		<span style="color:#09f;font-style:italic">/* No definite answer... Walk to established hash table */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 49</span><span>		ret <span style="color:#555">=</span> check_established(death_row, sk, port, <span style="color:#366">NULL</span>);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 50</span><span>		local_bh_enable();
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 51</span><span>		<span style="color:#069;font-weight:bold">return</span> ret;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 52</span><span>	}
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 53</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 54</span><span>	l3mdev <span style="color:#555">=</span> inet_sk_bound_l3mdev(sk);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 55</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 56</span><span>	inet_get_local_port_range(net, <span style="color:#555">&amp;</span>low, <span style="color:#555">&amp;</span>high);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 57</span><span>	high<span style="color:#555">++</span>; <span style="color:#09f;font-style:italic">/* [32768, 60999] -&gt; [32768, 61000[ */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 58</span><span>	remaining <span style="color:#555">=</span> high <span style="color:#555">-</span> low;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 59</span><span>	<span style="color:#069;font-weight:bold">if</span> (likely(remaining <span style="color:#555">&gt;</span> <span style="color:#f60">1</span>))
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 60</span><span>		remaining <span style="color:#555">&amp;=</span> <span style="color:#555">~</span><span style="color:#f60">1U</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 61</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 62</span><span>	net_get_random_once(table_perturb,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 63</span><span>			    INET_TABLE_PERTURB_SIZE <span style="color:#555">*</span> <span style="color:#069;font-weight:bold">sizeof</span>(<span style="color:#555">*</span>table_perturb));
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 64</span><span>	index <span style="color:#555">=</span> port_offset <span style="color:#555">&amp;</span> (INET_TABLE_PERTURB_SIZE <span style="color:#555">-</span> <span style="color:#f60">1</span>);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 65</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 66</span><span>	offset <span style="color:#555">=</span> READ_ONCE(table_perturb[index]) <span style="color:#555">+</span> (port_offset <span style="color:#555">&gt;&gt;</span> <span style="color:#f60">32</span>);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 67</span><span>	offset <span style="color:#555">%=</span> remaining;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 68</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 69</span><span>	<span style="color:#09f;font-style:italic">/* In first pass we try ports of @low parity.
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 70</span><span><span style="color:#09f;font-style:italic">	 * inet_csk_get_port() does the opposite choice.
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 71</span><span><span style="color:#09f;font-style:italic">	 */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 72</span><span>	offset <span style="color:#555">&amp;=</span> <span style="color:#555">~</span><span style="color:#f60">1U</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 73</span><span><span style="color:#99f">other_parity_scan</span>:
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 74</span><span>	port <span style="color:#555">=</span> low <span style="color:#555">+</span> offset;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 75</span><span>	<span style="color:#09f;font-style:italic">// 没端口就开始进行随机查找端口
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 76</span><span><span style="color:#09f;font-style:italic"></span>	<span style="color:#069;font-weight:bold">for</span> (i <span style="color:#555">=</span> <span style="color:#f60">0</span>; i <span style="color:#555">&lt;</span> remaining; i <span style="color:#555">+=</span> <span style="color:#f60">2</span>, port <span style="color:#555">+=</span> <span style="color:#f60">2</span>) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 77</span><span>		<span style="color:#069;font-weight:bold">if</span> (unlikely(port <span style="color:#555">&gt;=</span> high))
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 78</span><span>			port <span style="color:#555">-=</span> remaining;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 79</span><span>		<span style="color:#09f;font-style:italic">// 排除保留端口
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 80</span><span><span style="color:#09f;font-style:italic"></span>		<span style="color:#069;font-weight:bold">if</span> (inet_is_local_reserved_port(net, port))
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 81</span><span>			<span style="color:#069;font-weight:bold">continue</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 82</span><span>		<span style="color:#09f;font-style:italic">// 此端口先在bind的hash表中查找一下对应的链表
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 83</span><span><span style="color:#09f;font-style:italic"></span>		head <span style="color:#555">=</span> <span style="color:#555">&amp;</span>hinfo<span style="color:#555">-&gt;</span>bhash[inet_bhashfn(net, port,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 84</span><span>						  hinfo<span style="color:#555">-&gt;</span>bhash_size)];
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 85</span><span>		spin_lock_bh(<span style="color:#555">&amp;</span>head<span style="color:#555">-&gt;</span>lock);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 86</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 87</span><span>		<span style="color:#09f;font-style:italic">/* Does not bother with rcv_saddr checks, because
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 88</span><span><span style="color:#09f;font-style:italic">		 * the established check is already unique enough.
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 89</span><span><span style="color:#09f;font-style:italic">		 */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 90</span><span>		inet_bind_bucket_for_each(tb, <span style="color:#555">&amp;</span>head<span style="color:#555">-&gt;</span>chain) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 91</span><span>			<span style="color:#069;font-weight:bold">if</span> (net_eq(ib_net(tb), net) <span style="color:#555">&amp;&amp;</span> tb<span style="color:#555">-&gt;</span>l3mdev <span style="color:#555">==</span> l3mdev <span style="color:#555">&amp;&amp;</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 92</span><span>			    tb<span style="color:#555">-&gt;</span>port <span style="color:#555">==</span> port) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 93</span><span>				<span style="color:#069;font-weight:bold">if</span> (tb<span style="color:#555">-&gt;</span>fastreuse <span style="color:#555">&gt;=</span> <span style="color:#f60">0</span> <span style="color:#555">||</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 94</span><span>				    tb<span style="color:#555">-&gt;</span>fastreuseport <span style="color:#555">&gt;=</span> <span style="color:#f60">0</span>)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 95</span><span>					<span style="color:#069;font-weight:bold">goto</span> next_port;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 96</span><span>				WARN_ON(hlist_empty(<span style="color:#555">&amp;</span>tb<span style="color:#555">-&gt;</span>owners));
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 97</span><span>				<span style="color:#069;font-weight:bold">if</span> (<span style="color:#555">!</span>check_established(death_row, sk,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 98</span><span>						       port, <span style="color:#555">&amp;</span>tw))
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 99</span><span>					<span style="color:#069;font-weight:bold">goto</span> ok;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">100</span><span>				<span style="color:#069;font-weight:bold">goto</span> next_port;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">101</span><span>			}
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">102</span><span>		}
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">103</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">104</span><span>		<span style="color:#09f;font-style:italic">// 这里是说明此源端口没有在bind的hash表中，新建一个此端口的hash桶
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">105</span><span><span style="color:#09f;font-style:italic"></span>		tb <span style="color:#555">=</span> inet_bind_bucket_create(hinfo<span style="color:#555">-&gt;</span>bind_bucket_cachep,
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">106</span><span>					     net, head, port, l3mdev);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">107</span><span>		<span style="color:#069;font-weight:bold">if</span> (<span style="color:#555">!</span>tb) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">108</span><span>			spin_unlock_bh(<span style="color:#555">&amp;</span>head<span style="color:#555">-&gt;</span>lock);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">109</span><span>			<span style="color:#069;font-weight:bold">return</span> <span style="color:#555">-</span>ENOMEM;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">110</span><span>		}
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">111</span><span>		tb<span style="color:#555">-&gt;</span>fastreuse <span style="color:#555">=</span> <span style="color:#555">-</span><span style="color:#f60">1</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">112</span><span>		tb<span style="color:#555">-&gt;</span>fastreuseport <span style="color:#555">=</span> <span style="color:#555">-</span><span style="color:#f60">1</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">113</span><span>		<span style="color:#069;font-weight:bold">goto</span> ok;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">114</span><span><span style="color:#99f">next_port</span>:
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">115</span><span>		spin_unlock_bh(<span style="color:#555">&amp;</span>head<span style="color:#555">-&gt;</span>lock);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">116</span><span>		cond_resched();
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">117</span><span>	}
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">118</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">119</span><span>	offset<span style="color:#555">++</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">120</span><span>	<span style="color:#069;font-weight:bold">if</span> ((offset <span style="color:#555">&amp;</span> <span style="color:#f60">1</span>) <span style="color:#555">&amp;&amp;</span> remaining <span style="color:#555">&gt;</span> <span style="color:#f60">1</span>)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">121</span><span>		<span style="color:#069;font-weight:bold">goto</span> other_parity_scan;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">122</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">123</span><span>	<span style="color:#069;font-weight:bold">return</span> <span style="color:#555">-</span>EADDRNOTAVAIL;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">124</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">125</span><span><span style="color:#99f">ok</span>:
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">126</span><span>	<span style="color:#09f;font-style:italic">/* Here we want to add a little bit of randomness to the next source
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">127</span><span><span style="color:#09f;font-style:italic">	 * port that will be chosen. We use a max() with a random here so that
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">128</span><span><span style="color:#09f;font-style:italic">	 * on low contention the randomness is maximal and on high contention
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">129</span><span><span style="color:#09f;font-style:italic">	 * it may be inexistent.
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">130</span><span><span style="color:#09f;font-style:italic">	 */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">131</span><span>	i <span style="color:#555">=</span> max_t(<span style="color:#078;font-weight:bold">int</span>, i, (prandom_u32() <span style="color:#555">&amp;</span> <span style="color:#f60">7</span>) <span style="color:#555">*</span> <span style="color:#f60">2</span>);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">132</span><span>	WRITE_ONCE(table_perturb[index], READ_ONCE(table_perturb[index]) <span style="color:#555">+</span> i <span style="color:#555">+</span> <span style="color:#f60">2</span>);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">133</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">134</span><span>	<span style="color:#09f;font-style:italic">/* Head lock still held and bh&#39;s disabled */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">135</span><span>	<span style="color:#09f;font-style:italic">// 在找到的bind表中此端口对应的tb表中存一下sk
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">136</span><span><span style="color:#09f;font-style:italic"></span>	inet_bind_hash(sk, tb, port);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">137</span><span>	<span style="color:#069;font-weight:bold">if</span> (sk_unhashed(sk)) {
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">138</span><span>		inet_sk(sk)<span style="color:#555">-&gt;</span>inet_sport <span style="color:#555">=</span> htons(port);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">139</span><span>		<span style="color:#09f;font-style:italic">// 在establish的表中存一下
+</span></span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">140</span><span><span style="color:#09f;font-style:italic"></span>		inet_ehash_nolisten(sk, (<span style="color:#069;font-weight:bold">struct</span> <span style="color:#0a8;font-weight:bold">sock</span> <span style="color:#555">*</span>)tw, <span style="color:#366">NULL</span>);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">141</span><span>	}
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">142</span><span>	<span style="color:#069;font-weight:bold">if</span> (tw)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">143</span><span>		inet_twsk_bind_unhash(tw, hinfo);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">144</span><span>	spin_unlock(<span style="color:#555">&amp;</span>head<span style="color:#555">-&gt;</span>lock);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">145</span><span>	<span style="color:#069;font-weight:bold">if</span> (tw)
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">146</span><span>		inet_twsk_deschedule_put(tw);
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">147</span><span>	local_bh_enable();
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">148</span><span>	<span style="color:#069;font-weight:bold">return</span> <span style="color:#f60">0</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">149</span><span>}
 </span></span></code></pre></div><h1 id="五tcp处理网卡收到的包">
   五、tcp处理网卡收到的包
   <a class="anchor" href="#%e4%ba%94tcp%e5%a4%84%e7%90%86%e7%bd%91%e5%8d%a1%e6%94%b6%e5%88%b0%e7%9a%84%e5%8c%85">#</a>
@@ -5007,7 +5553,11 @@ TCP_SYN_RECV --&gt; TCP_ESTABLISHED : 收到的是ack转此状态
                 <li><a href="#2-tcp_new_syn_recv-发送了synack后收到包处理">2) TCP_NEW_SYN_RECV 发送了syn/ack后收到包处理</a></li>
               </ul>
             </li>
-            <li><a href="#13-客户端">1.3. 客户端</a></li>
+            <li><a href="#13-客户端">1.3. 客户端</a>
+              <ul>
+                <li><a href="#1-tcp_closed--tcp_syn_sent-关闭状态发起connect系统调用">1) <code>TCP_CLOSED =&gt; TCP_SYN_SENT</code> 关闭状态发起connect系统调用</a></li>
+              </ul>
+            </li>
           </ul>
         </li>
         <li><a href="#2-tcp_close状态">2. TCP_CLOSE状态</a>
@@ -5035,6 +5585,16 @@ TCP_SYN_RECV --&gt; TCP_ESTABLISHED : 收到的是ack转此状态
           <ul>
             <li><a href="#31-先看定义">3.1. 先看定义</a></li>
             <li><a href="#32-inet_csk_get_port">3.2. inet_csk_get_port</a></li>
+          </ul>
+        </li>
+        <li><a href="#4-connect--ops-connect--inet_stream_connect--sk_prot-connect">4. <code>connect =&gt; ops-&gt;connect =&gt; inet_stream_connect =&gt; sk_prot-&gt;connect</code></a>
+          <ul>
+            <li><a href="#41-先看定义">4.1. 先看定义</a></li>
+            <li><a href="#42-发起连接的过程">4.2. 发起连接的过程</a>
+              <ul>
+                <li><a href="#1-inet_hash_connect-绑定端口">1) <code>inet_hash_connect</code> 绑定端口</a></li>
+              </ul>
+            </li>
           </ul>
         </li>
       </ul>
