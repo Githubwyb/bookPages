@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>实践场景 on 技术的路上奔跑</title>
+    <link>/docs/examination/system-architect/large-concurrency/proctical-scene/</link>
+    <description>Recent content in 实践场景 on 技术的路上奔跑</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language><atom:link href="/docs/examination/system-architect/large-concurrency/proctical-scene/index.xml" rel="self" type="application/rss+xml" />
+  </channel>
+</rss>

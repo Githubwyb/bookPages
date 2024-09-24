@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>bit_spinlock on 技术的路上奔跑</title>
+    <link>/docs/linux/linux-kernel/kernel/locking/bit_spinlock/</link>
+    <description>Recent content in bit_spinlock on 技术的路上奔跑</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language><atom:link href="/docs/linux/linux-kernel/kernel/locking/bit_spinlock/index.xml" rel="self" type="application/rss+xml" />
+  </channel>
+</rss>

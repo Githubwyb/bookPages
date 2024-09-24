@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>ssl ssl协议相关 on 技术的路上奔跑</title>
+    <link>/docs/openssl/ssl/</link>
+    <description>Recent content in ssl ssl协议相关 on 技术的路上奔跑</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language><atom:link href="/docs/openssl/ssl/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Certificate</title>
+      <link>/docs/openssl/ssl/certificate/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/openssl/ssl/certificate/</guid>
+      <description>一、构造请求 # 1. 构造服务端证书 # 2. 构造客户端证书 # 1/* 到这一步的堆栈信息 2libssl.so.3!tls_construct_client_certificate(SSL * s, WPACKET * pkt) (/ssl/statem/statem_clnt.c:3504) 3libssl.so.3!write_state_machine(SSL * s) (/ssl/statem/statem.c:855) 4libssl.so.3!state_machine(SSL * s, int server) (/ssl/statem/statem.c:451) 5libssl.so.3!ossl_statem_connect(SSL * s) (/ssl/statem/statem.c:265) 6libssl.so.3!ssl3_write_bytes(SSL * s, int type, const void * buf_, size_t len, size_t * written) (/ssl/record/rec_layer_s3.c:398) 7libssl.so.3!ssl3_write(SSL * s, const void * buf, size_t len, size_t * written) (/ssl/s3_lib.c:4449) 8libssl.so.3!ssl_write_internal(SSL * s, const void * buf, size_t num, size_t * written) (/ssl/ssl_lib.</description>
+    </item>
+    
+    <item>
+      <title>Certificate Verify</title>
+      <link>/docs/openssl/ssl/certificateVerify/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/openssl/ssl/certificateVerify/</guid>
+      <description>一、构造请求 # 1// ssl/statem/statem_lib.c 2int tls_construct_cert_verify(SSL *s, WPACKET *pkt) 3{ 4 EVP_PKEY *pkey = NULL; 5 const EVP_MD *md = NULL; 6 EVP_MD_CTX *mctx = NULL; 7 EVP_PKEY_CTX *pctx = NULL; 8 size_t hdatalen = 0, siglen = 0; 9 void *hdata; 10 unsigned char *sig = NULL; 11 unsigned char tls13tbs[TLS13_TBS_PREAMBLE_SIZE + EVP_MAX_MD_SIZE]; 12 const SIGALG_LOOKUP *lu = s-&amp;gt;s3.tmp.sigalg; 13 14 if (lu == NULL || s-&amp;gt;s3.tmp.cert == NULL) { 15 SSLfatal(s, SSL_AD_INTERNAL_ERROR, ERR_R_INTERNAL_ERROR); 16 goto err; 17 } 18 // 从证书中取私钥用于签名 19 pkey = s-&amp;gt;s3.</description>
+    </item>
+    
+  </channel>
+</rss>

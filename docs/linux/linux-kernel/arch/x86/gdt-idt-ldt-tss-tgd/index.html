@@ -1,0 +1,5415 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="介绍 # GDT，IDT都是全局的。LDT是局部的（在GDT中有它的描述符） GDT用来存储描述符（门或非门）；系统中几个CPU,就有几个GDT IDT整个系统只有一个 系统启动时候需要初始化GDT和IDT。LDT和进程相关，并不一定必有 TSS: Task-State Segment，任务状态段，保存任务状态信息的系统段 TSS只能存在于GDT中 Task-Gate Descriptor，任务门描述符，用来间接的宝玉引用任务。可以放到GDT、LDT、IDT中，里面的TSS段选择指向GDT的TSS描述符 1. 相关结构的cpu手册 # IDT结构 下图为32位TSS结构 下图为64位TSS或LDT结构 一、数据结构 # 1// arch/x86/include/asm/desc_defs.h 2// gdt结构 3/* 8 byte segment descriptor */ 4struct desc_struct { 5 u16 limit0; // 段管理的内存上限low 6 u16 base0; // 段的对应的内存实际地址low 7 u16 base1 : 8; // 段的对应的内存实际地址mid 8 u16 type : 4; 9 u16 s : 1; // 系统段为1，普通段为0 10 u16 dpl : 2; 11 u16 p : 1; 12 u16 limit1 : 4; // 段管理的内存上限low 13 u16 avl : 1; 14 u16 l : 1; 15 u16 d : 1; 16 u16 g : 1; // 为1就是4K为单位定义上限（上限1，管理内存4K），为0则以一个字节为单位 17 u16 base2 : 8; // 段的对应的内存实际地址high 18} __attribute__((packed)); 19 20#define GDT_ENTRY_INIT(flags, base, limit)	\ 21	{	\ 22	.">
+<meta name="theme-color" content="#FFFFFF"><meta property="og:title" content="gdt/idt/ldt/tss/tgd" />
+<meta property="og:description" content="" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="/docs/linux/linux-kernel/arch/x86/gdt-idt-ldt-tss-tgd/" />
+<title>gdt/idt/ldt/tss/tgd | 技术的路上奔跑</title>
+<link rel="manifest" href="../../../../../../manifest.json">
+<link rel="icon" href="../../../../../../favicon.png" type="image/x-icon">
+<link rel="stylesheet" href="../../../../../../book.min.33a48f5432973b8ff9a82679d9e45d67f2c15d4399bd2829269455cfe390b5e8.css" integrity="sha256-M6SPVDKXO4/5qCZ52eRdZ/LBXUOZvSgpJpRVz&#43;OQteg=">
+<script defer src="../../../../../../en.search.min.ffb26c0b822eb80e169fe51ff5a5fe446b7ea107731835d986761125ea031367.js" integrity="sha256-/7JsC4IuuA4Wn&#43;Uf9aX&#43;RGt&#43;oQdzGDXZhnYRJeoDE2c="></script>
+
+<script defer src="../../../../../../sw.min.6f6f90fcb8eb1c49ec389838e6b801d0de19430b8e516902f8d75c3c8bd98739.js" integrity="sha256-b2&#43;Q/LjrHEnsOJg45rgB0N4ZQwuOUWkC&#43;NdcPIvZhzk="></script>
+<link rel="alternate" type="application/rss+xml" href="../../../../../../docs/linux/linux-kernel/arch/x86/gdt-idt-ldt-tss-tgd/index.xml" title="技术的路上奔跑" />
+<!--
+Made with Book Theme
+https://github.com/alex-shpak/hugo-book
+-->
+
+<link rel="stylesheet" href="../../../../../../katex/katex.min.css">
+<script src="../../../../../../katex/katex.min.js"></script>
+<script src="../../../../../../katex/auto-render.min.js"></script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    renderMathInElement(document.body, {
+      delimiters: [
+        { left: "$$", right: "$$", display: true },
+        { left: "$", right: "$", display: false }
+      ]
+    });
+  });
+</script>
+
+
+
+<script src="../../../../../../lib/plantuml-encoder.min.js" integrity="sha256-Qsk2KRBCN5qVZX7B+8+2IvQl1Aqc723qV1tBCQaVoqo=" crossorigin="anonymous"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+  let plantumlPrefix = "language-plantuml";
+  Array.prototype.forEach.call(document.querySelectorAll("[class^=" + plantumlPrefix + "]"), function(code){
+    let image = document.createElement("IMG");
+    image.loading = 'lazy'; 
+    image.src = 'https://www.plantuml.com/plantuml/svg/~1' + plantumlEncoder.encode(code.innerText);
+    code.style.display = 'none';
+    code.parentNode.style = 'text-align: center; margin: 0; padding: 0; background-color: transparent;';
+
+    
+    
+    let div = document.createElement("DIV");
+    div.className = "post-img-view";
+    let a = document.createElement("A");
+    a.setAttribute("data-fancybox", "gallery");
+    a.setAttribute("href", image.src);
+    a.appendChild(image);
+    div.appendChild(a);
+    code.parentNode.insertBefore(div, code);
+    
+  });
+});
+</script>
+
+
+
+<script src="../../../../../../lib/fancybox/jquery.min.js"></script>
+<link rel="stylesheet" href="../../../../../../lib/fancybox/jquery.fancybox.min.css" />
+<script src="../../../../../../lib/fancybox/jquery.fancybox.min.js"></script>
+
+
+  
+</head>
+<body dir="ltr">
+  <input type="checkbox" class="hidden toggle" id="menu-control" />
+  <input type="checkbox" class="hidden toggle" id="toc-control" />
+  <main class="container flex">
+    <aside class="book-menu">
+      <div class="book-menu-content">
+        
+  <nav>
+<h2 class="book-brand">
+  <a class="flex align-center" href="../../../../../../"><span>技术的路上奔跑</span>
+  </a>
+</h2>
+
+
+<div class="book-search">
+  <input type="text" id="book-search-input" placeholder="Search" aria-label="Search" maxlength="64" data-hotkeys="s/" />
+  <div class="book-search-spinner hidden"></div>
+  <ul id="book-search-results"></ul>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <ul>
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-076945525d27fc883dc64d169725123d" class="toggle"  />
+    <label for="section-076945525d27fc883dc64d169725123d" class="flex justify-between">
+      <a href="../../../../../../docs/c&#43;&#43;/" class="">C&#43;&#43;源码分析记录</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/c&#43;&#43;/macro/" class="">预定义宏</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/c&#43;&#43;/move/" class="">std::move</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/c&#43;&#43;/shared_ptr/" class="">std::shared_ptr</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-6ae1a891fb3a3f71d71273fc61b29b76" class="toggle" checked />
+    <label for="section-6ae1a891fb3a3f71d71273fc61b29b76" class="flex justify-between">
+      <a role="button" class="">linux</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-3a06e930057f0966216e8ee296319246" class="toggle" checked />
+    <label for="section-3a06e930057f0966216e8ee296319246" class="flex justify-between">
+      <a href="../../../../../../docs/linux/linux-kernel/" class="">linux内核源码分析记录</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/linux/linux-kernel/compile-thinking/" class="">编译思想</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-fe3499b386047030cefed47c8171acfe" class="toggle"  />
+    <label for="section-fe3499b386047030cefed47c8171acfe" class="flex justify-between">
+      <a role="button" class="">数据结构</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/linux/linux-kernel/data-structures/container_of/" class="">container_of() 根据成员地址找其所在结构体</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/linux/linux-kernel/data-structures/atomic/" class="">atomic 原子变量</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/linux/linux-kernel/data-structures/hashtable/" class="">hashtable 哈希表</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/linux/linux-kernel/data-structures/kfifo/" class="">kfifo 无锁循环队列</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/linux/linux-kernel/data-structures/list/" class="">list 链表</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/linux/linux-kernel/data-structures/rbtree/" class="">rbtree 红黑树</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/linux/linux-kernel/data-structures/rcu/" class="">RCU Read-Copy-Update</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-61e0ef8b04de577fbdc7b126d08efe69" class="toggle"  />
+    <label for="section-61e0ef8b04de577fbdc7b126d08efe69" class="flex justify-between">
+      <a role="button" class="">/drivers/ 驱动部分</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-ae532a140ecd7bf2d7c22e0b1a16962f" class="toggle"  />
+    <label for="section-ae532a140ecd7bf2d7c22e0b1a16962f" class="flex justify-between">
+      <a role="button" class="">net/ 网卡驱动部分</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/linux/linux-kernel/drivers/net/common/" class="">通用网络驱动开发知识</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/linux/linux-kernel/drivers/net/igb/" class="">Igb</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/linux/linux-kernel/drivers/keyboard/" class="">键盘驱动</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-2e9314dfe8a7648843991b528610d749" class="toggle"  />
+    <label for="section-2e9314dfe8a7648843991b528610d749" class="flex justify-between">
+      <a role="button" class="">/net/ 网络部分</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/linux/linux-kernel/net/common/" class="">网络数据包处理流程</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-fc939877a55e0f79c88a1c64432710ef" class="toggle"  />
+    <label for="section-fc939877a55e0f79c88a1c64432710ef" class="flex justify-between">
+      <a role="button" class="">socket</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/linux/linux-kernel/net/socket/socket/" class="">socket总述</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/linux/linux-kernel/net/socket/sendmsg/" class="">sendmsg</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/linux/linux-kernel/net/socket/recvmsg/" class="">recvmsg</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/linux/linux-kernel/net/iptables/" class="">Iptables</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-0a7f1c84540241f1c6f1800de49a7720" class="toggle"  />
+    <label for="section-0a7f1c84540241f1c6f1800de49a7720" class="flex justify-between">
+      <a role="button" class="">ipv4/ ipv4的处理部分</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/linux/linux-kernel/net/ipv4/ipv4/" class="">Ipv4</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/linux/linux-kernel/net/ipv4/tcp/" class="">tcp</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/linux/linux-kernel/net/ipv4/udp/" class="">udp</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-108538e770a9cc3fc0b35a5067536d07" class="toggle"  />
+    <label for="section-108538e770a9cc3fc0b35a5067536d07" class="flex justify-between">
+      <a role="button" class="">ipv6/ ipv6的处理部分</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/linux/linux-kernel/net/ipv6/inet6/" class="">Inet6</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-82fca42832e0f5862765245480c6d50a" class="toggle"  />
+    <label for="section-82fca42832e0f5862765245480c6d50a" class="flex justify-between">
+      <a role="button" class="">unix/ unix的处理部分</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/linux/linux-kernel/net/unix/unix/" class="">Unix</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/linux/linux-kernel/net/bridge/" class="">linux网桥</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/linux/linux-kernel/net/epoll/" class="">Epoll</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/linux/linux-kernel/net/poll/" class="">Poll</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/linux/linux-kernel/net/select/" class="">Select</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/linux/linux-kernel/net/sk_buff/" class="">sk_buff 内核中数据包结构体</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-ccd466ff3139a06e35e5768247dedcda" class="toggle" checked />
+    <label for="section-ccd466ff3139a06e35e5768247dedcda" class="flex justify-between">
+      <a role="button" class="">/arch/ cpu体系架构</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-f796c2cc14778d5a798d7af8ab5b83b3" class="toggle"  />
+    <label for="section-f796c2cc14778d5a798d7af8ab5b83b3" class="flex justify-between">
+      <a href="../../../../../../docs/linux/linux-kernel/arch/common/" class="">公共处理方式</a>
+    </label>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-17eb2a36dc4fa094b5493959ccab63bc" class="toggle" checked />
+    <label for="section-17eb2a36dc4fa094b5493959ccab63bc" class="flex justify-between">
+      <a role="button" class="">x86/ x86体系</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/linux/linux-kernel/arch/x86/boot/" class="">x86启动过程</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/linux/linux-kernel/arch/x86/register/" class="">特殊寄存器</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/linux/linux-kernel/arch/x86/gdt-idt-ldt-tss-tgd/" class="active">gdt/idt/ldt/tss/tgd</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/linux/linux-kernel/arch/x86/timer/" class="">定时器设定</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/linux/linux-kernel/arch/x86/early-printk/" class="">早期日志输出</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-c0c473dcbf34f130a01d125d9e77f9a9" class="toggle"  />
+    <label for="section-c0c473dcbf34f130a01d125d9e77f9a9" class="flex justify-between">
+      <a role="button" class="">/fs/ 文件部分</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/linux/linux-kernel/fs/common/" class="">文件系统总述</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/linux/linux-kernel/fs/open/" class="">open系统调用</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/linux/linux-kernel/fs/inotify/" class="">Inotify</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-2f4734425ea4bf70ec20a77f7fe621dd" class="toggle"  />
+    <label for="section-2f4734425ea4bf70ec20a77f7fe621dd" class="flex justify-between">
+      <a role="button" class="">/kernel/ 内核运行主要代码</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-eb76a8b10e091e71a1250b7c433d77db" class="toggle"  />
+    <label for="section-eb76a8b10e091e71a1250b7c433d77db" class="flex justify-between">
+      <a role="button" class="">/kernel/lockng/ 锁相关</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/linux/linux-kernel/kernel/locking/bit_spinlock/" class="">bit_spinlock</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/linux/linux-kernel/kernel/locking/qspinlock/" class="">qspinlock</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-b5a08711df6a5e37561d8b68c9439067" class="toggle"  />
+    <label for="section-b5a08711df6a5e37561d8b68c9439067" class="flex justify-between">
+      <a href="../../../../../../docs/linux/linux-kernel/kernel/sched/" class="">/kernel/sched/ 进程调度</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/linux/linux-kernel/kernel/sched/schedule/" class="">主调度器</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-1e39884438084c2c1fc67e916eb2b208" class="toggle"  />
+    <label for="section-1e39884438084c2c1fc67e916eb2b208" class="flex justify-between">
+      <a href="../../../../../../docs/linux/linux-kernel/kernel/cgroup/" class="">/kernel/cgroup/ cgroup处理</a>
+    </label>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-f1341bef3dd7f66ab15601ff5c2bb167" class="toggle"  />
+    <label for="section-f1341bef3dd7f66ab15601ff5c2bb167" class="flex justify-between">
+      <a href="../../../../../../docs/linux/linux-kernel/kernel/watchdog/" class="">/kernel/watchdog* 看门狗</a>
+    </label>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/linux/linux-kernel/kernel/timer/" class="">内核计时和定时器</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/linux/linux-kernel/kernel/time/" class="">时间系统</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-9e5b7eb3577a3bb9311b9512acca784c" class="toggle"  />
+    <label for="section-9e5b7eb3577a3bb9311b9512acca784c" class="flex justify-between">
+      <a role="button" class="">中断</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/linux/linux-kernel/intterupt/common/" class="">上半部和下半部</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-7136deee92473c69f24df09271c02b70" class="toggle"  />
+    <label for="section-7136deee92473c69f24df09271c02b70" class="flex justify-between">
+      <a role="button" class="">/mm/ 内存管理</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/linux/linux-kernel/mm/kmem_cache/" class="">kmem_cache</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/linux/linux-kernel/public-micro/" class="">公共宏的一些定义</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-89208b0ad894e0bedeaaff6a9f182258" class="toggle"  />
+    <label for="section-89208b0ad894e0bedeaaff6a9f182258" class="flex justify-between">
+      <a role="button" class="">调试技术</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-4ae4ec450d01e14f8d498fceca77e47f" class="toggle"  />
+    <label for="section-4ae4ec450d01e14f8d498fceca77e47f" class="flex justify-between">
+      <a role="button" class="">proc目录内容详解</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/linux/debug/proc/diskstats/" class="">/proc/diskstats 磁盘信息</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/linux/debug/ftrace/" class="">ftrace</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/linux/debug/systemtap/" class="">systemtap</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-d7ea361bf72968532bcfe65fe25e5cd9" class="toggle"  />
+    <label for="section-d7ea361bf72968532bcfe65fe25e5cd9" class="flex justify-between">
+      <a role="button" class="">内核问题排查记录</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-da8cfb336c9632e4b8d863855abae391" class="toggle"  />
+    <label for="section-da8cfb336c9632e4b8d863855abae391" class="flex justify-between">
+      <a role="button" class="">宕机vmcore分析</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/linux/kernel-troubleshooting/crash/01-netfilter-driver-crash/" class="">1. netfilter驱动使用sk错误引发宕机</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/linux/kernel-troubleshooting/crash/02-hung-task-crash/" class="">2. Kernel panic - not syncing: hung_task: blocked tasks</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/linux/kernel-troubleshooting/knowledge/" class="">知识性说明</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-81ac4d0ce2be51263b8d525fd8e2f1f6" class="toggle"  />
+    <label for="section-81ac4d0ce2be51263b8d525fd8e2f1f6" class="flex justify-between">
+      <a href="../../../../../../docs/glibc/" class="">glibc源码分析记录</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-1a3b279e0f293c5c3a083f9323ca8ab2" class="toggle"  />
+    <label for="section-1a3b279e0f293c5c3a083f9323ca8ab2" class="flex justify-between">
+      <a role="button" class="">nss: Name Service Switch</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-12c635147ca4f050649e8f9130f1ba3c" class="toggle"  />
+    <label for="section-12c635147ca4f050649e8f9130f1ba3c" class="flex justify-between">
+      <a role="button" class="">hosts dns解析服务</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/glibc/nss/hosts/dns/" class="">dns 根据/etc/resolv.conf发包处理</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/glibc/nss/hosts/files/" class="">files 读取/etc/hosts文件</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-e66e2e478c81786f553bd82d3931b216" class="toggle"  />
+    <label for="section-e66e2e478c81786f553bd82d3931b216" class="flex justify-between">
+      <a href="../../../../../../docs/mysql/" class="">mysql源码分析记录</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/mysql/compile/" class="">编译和调试方法</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-f8bd884eebd2f3fa4437f5c30e95d87b" class="toggle"  />
+    <label for="section-f8bd884eebd2f3fa4437f5c30e95d87b" class="flex justify-between">
+      <a href="../../../../../../docs/openssl/" class="">openssl源码分析记录</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-79f5d582b25e0ba116147e70d7c37d9b" class="toggle"  />
+    <label for="section-79f5d582b25e0ba116147e70d7c37d9b" class="flex justify-between">
+      <a role="button" class="">crypto 加解密库</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/openssl/crypto/X509/" class="">X509证书</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-b0d378e2e51e9e43c0fd54b7f68d5d64" class="toggle"  />
+    <label for="section-b0d378e2e51e9e43c0fd54b7f68d5d64" class="flex justify-between">
+      <a role="button" class="">ssl ssl协议相关</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/openssl/ssl/certificate/" class="">Certificate</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/openssl/ssl/certificateVerify/" class="">Certificate Verify</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-ad6c2bf4e759ec71c24d3649b1af28e6" class="toggle"  />
+    <label for="section-ad6c2bf4e759ec71c24d3649b1af28e6" class="flex justify-between">
+      <a role="button" class="">引擎开发</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/openssl/engines/rsa/" class="">rsa普密ukey</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-2b0f9c71b96dae88f32ac3cee96b20d0" class="toggle"  />
+    <label for="section-2b0f9c71b96dae88f32ac3cee96b20d0" class="flex justify-between">
+      <a role="button" class="">systemd源码分析记录</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/systemd/dns/" class="">dns 根据/etc/resolv.conf发包处理</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-f55a7674027409a03b8a5abb4bc297a8" class="toggle"  />
+    <label for="section-f55a7674027409a03b8a5abb4bc297a8" class="flex justify-between">
+      <a role="button" class="">nginx与openresty源码分析记录</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-31add6f61f1172621b97f8a589c1d0b2" class="toggle"  />
+    <label for="section-31add6f61f1172621b97f8a589c1d0b2" class="flex justify-between">
+      <a href="../../../../../../docs/nginx/nginx/" class="">nginx</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/nginx/nginx/common/" class="">nginx结构综述</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-fff5261d3f813bb84c350c416cb2fb96" class="toggle"  />
+    <label for="section-fff5261d3f813bb84c350c416cb2fb96" class="flex justify-between">
+      <a href="../../../../../../docs/nginx/nginx/http/" class="">http模块</a>
+    </label>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-f4402e173ff6e0baf39c7dcabe4cc055" class="toggle"  />
+    <label for="section-f4402e173ff6e0baf39c7dcabe4cc055" class="flex justify-between">
+      <a role="button" class="">stream模块</a>
+    </label>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-17591ec0ca9929e17ca9b0e68c7f4109" class="toggle"  />
+    <label for="section-17591ec0ca9929e17ca9b0e68c7f4109" class="flex justify-between">
+      <a href="../../../../../../docs/nginx/openresty/" class="">openresty扩展组件</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-ac6c60f4cffbffe56d10067a0daed9b7" class="toggle"  />
+    <label for="section-ac6c60f4cffbffe56d10067a0daed9b7" class="flex justify-between">
+      <a href="../../../../../../docs/nginx/openresty/stream/" class="">https://github.com/openresty/stream-lua-nginx-module</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/nginx/openresty/stream/socket-tcp/" class="">ngx_stream_lua_socket_tcp.c</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-da0768733ed83a1a185c822afd62afca" class="toggle"  />
+    <label for="section-da0768733ed83a1a185c822afd62afca" class="flex justify-between">
+      <a role="button" class="">考试准备</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-73f081c9d6184c17d75a11eb0c89f950" class="toggle"  />
+    <label for="section-73f081c9d6184c17d75a11eb0c89f950" class="flex justify-between">
+      <a role="button" class="">系统架构师</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-3678bd996217536cb45684f08acbf2d5" class="toggle"  />
+    <label for="section-3678bd996217536cb45684f08acbf2d5" class="flex justify-between">
+      <a role="button" class="">大并发架构</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/examination/system-architect/large-concurrency/common/" class="">前言和综述</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/examination/system-architect/large-concurrency/reliability/" class="">可靠性</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/examination/system-architect/large-concurrency/proctical-scene/" class="">实践场景</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-e78103f8358bcc8897b2665157a6ac17" class="toggle"  />
+    <label for="section-e78103f8358bcc8897b2665157a6ac17" class="flex justify-between">
+      <a role="button" class="">读书和学习笔记</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/examination/system-architect/book-study/reliability/" class="">可靠性设计</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/examination/system-architect/book-study/designing-data-intensive-application/" class="">数据密集型应用系统设计</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>系统工程</span>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-bc467201b327634cf4794420f221e449" class="toggle"  />
+    <label for="section-bc467201b327634cf4794420f221e449" class="flex justify-between">
+      <a href="../../../../../../docs/ctf/" class="">ctf知识总结</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-5c98ee620834c5b46fb9c98c912f3a58" class="toggle"  />
+    <label for="section-5c98ee620834c5b46fb9c98c912f3a58" class="flex justify-between">
+      <a role="button" class="">知识性总结</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-efb38f77116c50bfef7a34437bcb0d09" class="toggle"  />
+    <label for="section-efb38f77116c50bfef7a34437bcb0d09" class="flex justify-between">
+      <a role="button" class="">加解密编码等算法</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/ctf/knowledge/encoder-decoder/algorithm/" class="">hash和编码算法列表</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-048232ff144b12ee355b2a18ecb86c32" class="toggle"  />
+    <label for="section-048232ff144b12ee355b2a18ecb86c32" class="flex justify-between">
+      <a role="button" class="">压缩和解压缩</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/ctf/knowledge/compress/zip/" class="">zip</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-287675e4fff40951adcbf3f3bc57df6d" class="toggle"  />
+    <label for="section-287675e4fff40951adcbf3f3bc57df6d" class="flex justify-between">
+      <a role="button" class="">文件相关</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/ctf/knowledge/file/file-struct/" class="">文件格式</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-521980a8aaa52145eac6f7bd8ae2a51e" class="toggle"  />
+    <label for="section-521980a8aaa52145eac6f7bd8ae2a51e" class="flex justify-between">
+      <a role="button" class="">buuoj.cn的题目</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-dab01071fb6c7505b5567d9327443dcd" class="toggle"  />
+    <label for="section-dab01071fb6c7505b5567d9327443dcd" class="flex justify-between">
+      <a role="button" class="">misc</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/ctf/buuctf/misc/%E9%9D%A2%E5%85%B7%E4%B8%8B%E7%9A%84flag/" class="">面具下的flag</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-8bb89e37bc8ac94ed7933c2c15518f8c" class="toggle"  />
+    <label for="section-8bb89e37bc8ac94ed7933c2c15518f8c" class="flex justify-between">
+      <a role="button" class="">AI相关</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/ai/keywords/" class="">名词解释和学习大纲</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-1cc51252e9449a6be453972b2b6526e1" class="toggle"  />
+    <label for="section-1cc51252e9449a6be453972b2b6526e1" class="flex justify-between">
+      <a role="button" class="">计算机视觉</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/ai/cv/minst/" class="">minst手写数字识别——神经网络实战笔记</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-20038bcc21ca3d914920842c4a32533d" class="toggle"  />
+    <label for="section-20038bcc21ca3d914920842c4a32533d" class="flex justify-between">
+      <a href="../../../../../../docs/leetcode/" class="">LeetCode刷题思路总结</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-e557ddd3240c9349f7b073a0a626b78b" class="toggle"  />
+    <label for="section-e557ddd3240c9349f7b073a0a626b78b" class="flex justify-between">
+      <a role="button" class="">简单</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/simple/leetcode1/" class="">1. Two Sum</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/simple/leetcode9/" class="">9. Palindrome Number</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/simple/leetcode13/" class="">13. Roman to Integer</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/simple/leetcode20/" class="">20. Valid Parentheses</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/simple/leetcode101/" class="">101. Symmetric Tree</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/simple/leetcode706/" class="">706. Design HashMap</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/simple/leetcode1694/" class="">1694. Reformat Phone Number</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/simple/leetcode2399/" class="">2399. Check Distances Between Same Letters</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/simple/leetcode2413/" class="">2413. Smallest Even Multiple</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/simple/leetcode2418/" class="">2418. Sort the People</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/simple/leetcode2441/" class="">2441. Largest Positive Integer That Exists With Its Negative</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/simple/leetcode2446/" class="">2446. Determine if Two Events Have Conflict</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/simple/leetcode2455/" class="">2455. Average Value of Even Numbers That Are Divisible by Three</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/simple/leetcode2460/" class="">2460. Apply Operations to an Array</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/simple/leetcode2469/" class="">2469. Convert the Temperature</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/simple/leetcode2475/" class="">2475. Number of Unequal Triplets in Array</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/simple/leetcode2485/" class="">2485. Find the Pivot Integer</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/simple/leetcode2490/" class="">2490. Circular Sentence</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/simple/leetcode2500/" class="">2500. Delete Greatest Value in Each Row</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/simple/leetcode2515/" class="">2515. Shortest Distance to Target String in a Circular Array</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/simple/leetcode2520/" class="">2520. Count the Digits That Divide a Number</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/simple/leetcode2529/" class="">2529. Maximum Count of Positive Integer and Negative Integer</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/simple/leetcode2535/" class="">2535. Difference Between Element Sum and Digit Sum of an Array</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/simple/leetcode2562/" class="">2562. Find the Array Concatenation Value</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/simple/leetcode2570/" class="">2570. Merge Two 2D Arrays by Summing Values</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/simple/leetcode2574/" class="">2574. Left and Right Sum Differences</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/simple/leetcode2582/" class="">2582. Pass the Pillow</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/simple/leetcode2595/" class="">2595. Number of Even and Odd Bits</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/simple/leetcode2600/" class="">2600. K Items With the Maximum Sum</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/simple/leetcode2609/" class="">2609. Find the Longest Balanced Substring of a Binary String</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/simple/leetcode2614/" class="">2614. Prime In Diagonal</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/simple/leetcode2643/" class="">2643. Row With Maximum Ones</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/simple/leetcode2644/" class="">2644. Find the Maximum Divisibility Score</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/simple/leetcode2682/" class="">2682. Find the Losers of the Circular Game</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/simple/leetcode2710/" class="">2710. Remove Trailing Zeros From a String</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/simple/leetcode2716/" class="">2716. Minimize String Length</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/simple/leetcode2717/" class="">2717. Semi-Ordered Permutation</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/simple/leetcode2733/" class="">2733. Neither Minimum nor Maximum</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/simple/leetcode2739/" class="">2739. Total Distance Traveled</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/simple/leetcode2859/" class="">2859. Sum of Values at Indices With K Set Bits</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/simple/leetcode2860/" class="">2860. Happy Students</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-dbe51e7e4a89495069ffe18bd5d28a03" class="toggle"  />
+    <label for="section-dbe51e7e4a89495069ffe18bd5d28a03" class="flex justify-between">
+      <a role="button" class="">中等</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode3/" class="">3. Longest Substring Without Repeating Characters</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode5/" class="">5. Longest Palindromic Substring</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode6/" class="">6. ZigZag Conversion</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode7/" class="">7. Reverse Integer</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode8/" class="">8. String to Integer (atoi)</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode11/" class="">11. Container With Most Water</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode12/" class="">12. Integer to Roman</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode18/" class="">18. 4Sum</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode155/" class="">155. Min Stack</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode322/" class="">322. Coin Change</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode658/" class="">658. Find K Closest Elements</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode948/" class="">948. Bag of Tokens</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode1169/" class="">1169. Invalid Transactions</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode1352/" class="">1352. Product of the Last K Numbers</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode2400/" class="">2400. Number of Ways to Reach a Position After Exactly k Steps</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode2401/" class="">2401. Longest Nice Subarray</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode2414/" class="">2414. Length of the Longest Alphabetical Continuous Substring</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode2415/" class="">2415. Reverse Odd Levels of Binary Tree</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode2419/" class="">2419. Longest Subarray With Maximum Bitwise AND</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode2420/" class="">2420. Find All Good Indices</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode2442/" class="">2442. Count Number of Distinct Integers After Reverse Operations</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode2443/" class="">2443. Sum of Number and Its Reverse</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode2447/" class="">2447. Number of Subarrays With GCD Equal to K</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode2456/" class="">2456. Most Popular Video Creator</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode2457/" class="">2457. Minimum Addition to Make Integer Beautiful</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode2461/" class="">2461. Maximum Sum of Distinct Subarrays With Length K</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode2462/" class="">2462. Total Cost to Hire K Workers</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode2476/" class="">2476. Closest Nodes Queries in a Binary Search Tree</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode2486/" class="">2486. Append Characters to String to Make Subsequence</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode2487/" class="">2487. Remove Nodes From Linked List</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode2491/" class="">2491. Circular Sentence</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode2492/" class="">2492. Circular Sentence</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode2501/" class="">2501. Longest Square Streak in an Array</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode2502/" class="">2502. Longest Square Streak in an Array</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode2516/" class="">2516. Take K of Each Character From Left and Right</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode2517/" class="">2517. Maximum Tastiness of Candy Basket</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode2521/" class="">2521. Distinct Prime Factors of Product of Array</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode2522/" class="">2522. Partition String Into Substrings With Values at Most K</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode2523/" class="">2523. Closest Prime Numbers in Range</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode2530/" class="">2530. Maximum Count of Positive Integer and Negative Integer</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode2531/" class="">2531. Make Number of Distinct Characters Equal</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode2536/" class="">2536. Increment Submatrices by One</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode2537/" class="">2537. Count the Number of Good Subarrays</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode2563/" class="">2563. Count the Number of Fair Pairs</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode2564/" class="">2564. Substring XOR Queries</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode2571/" class="">2571. Minimum Operations to Reduce an Integer to 0</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode2572/" class="">2572. Count the Number of Square-Free Subsets</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode2575/" class="">2575. Find the Divisibility Array of a String</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode2576/" class="">2576. Find the Maximum Number of Marked Indices</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode2583/" class="">2583. Kth Largest Sum in a Binary Tree</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode2596/" class="">2596. Check Knight Tour Configuration</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode2597/" class="">2597. The Number of Beautiful Subsets</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode2598/" class="">2598. Smallest Missing Non-negative Integer After Operations</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode2601/" class="">2601. Prime Subtraction Operation</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode2602/" class="">2602. Minimum Operations to Make All Array Elements Equal</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode2610/" class="">2610. Convert an Array Into a 2D Array With Conditions</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode2611/" class="">2611. Mice and Cheese</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode2615/" class="">2615. Sum of Distances</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode2645/" class="">2645. Find the Maximum Divisibility Score</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode2683/" class="">2683. Neighboring Bitwise XOR</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode2684/" class="">2684. Maximum Number of Moves in a Grid</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode2685/" class="">2685. Count the Number of Complete Components</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode2711/" class="">2711. Difference of Number of Distinct Values on Diagonals</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode2712/" class="">2712. Minimum Cost to Make All Characters Equal</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode2718/" class="">2718. Sum of Matrix After Queries</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode2734/" class="">2734. Lexicographically Smallest String After Substring Operation</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode2735/" class="">2735. Collecting Chocolates</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode2740/" class="">2740. Find the Value of the Partition</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/medium/leetcode2741/" class="">2741. Special Permutations</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-42eecace07f2c55adbf8c2fda3b6b016" class="toggle"  />
+    <label for="section-42eecace07f2c55adbf8c2fda3b6b016" class="flex justify-between">
+      <a role="button" class="">困难</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/hard/leetcode4/" class="">4. Median of Two Sorted Arrays</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/hard/leetcode10/" class="">10. Regular Expression Matching</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/hard/leetcode41/" class="">41. First Missing Positive</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/hard/leetcode327/" class="">327. Count of Range Sum</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/hard/leetcode440/" class="">440. K-th Smallest in Lexicographical Order</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/hard/leetcode736/" class="">736. Parse Lisp Expression</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/hard/leetcode864/" class="">864. Shortest Path to Get All Keys</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/hard/leetcode2444/" class="">2444. Count Subarrays With Fixed Bounds</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/hard/leetcode2448/" class="">2448. Minimum Cost to Make Array Equal</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/hard/leetcode2488/" class="">2488. Count Subarrays With Median K</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/hard/leetcode2518/" class="">2518. Number of Great Partitions</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/hard/leetcode2573/" class="">2573. Count the Number of Square-Free Subsets</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/hard/leetcode2577/" class="">2577. 在网格图中访问一个格子的最少时间</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/hard/leetcode2584/" class="">2584. Split the Array to Make Coprime Products</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/hard/leetcode2612/" class="">2612. Minimum Reverse Operations</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/hard/leetcode2646/" class="">2646. Minimize the Total Price of the Trips</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/hard/leetcode2713/" class="">2713. Maximum Strictly Increasing Cells in a Matrix</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/hard/leetcode2719/" class="">2719. Count of Integers</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/leetcode/hard/leetcode2742/" class="">2742. Painting the Walls</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-010cc3a6dda69f98986133a7094047b7" class="toggle"  />
+    <label for="section-010cc3a6dda69f98986133a7094047b7" class="flex justify-between">
+      <a href="../../../../../../docs/books/" class="">读书笔记</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-4ed26bb92a4c971f4b8276bfc9e49be9" class="toggle"  />
+    <label for="section-4ed26bb92a4c971f4b8276bfc9e49be9" class="flex justify-between">
+      <a role="button" class="">社交相关</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../../docs/books/social/the-art-of-communication/" class="">沟通的艺术与处世智慧 -- 【美】戴尔*卡耐基</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+
+
+
+
+
+
+
+
+
+
+  
+<ul>
+  
+  <li>
+    <a href="../../../../../../posts/"  >
+        Blog
+      </a>
+  </li>
+  
+  <li>
+    <a href="https://github.com/githubwyb"  target="_blank" rel="noopener">
+        Github
+      </a>
+  </li>
+  
+</ul>
+
+
+
+
+
+
+</nav>
+
+
+
+
+  <script>(function(){var e=document.querySelector("aside .book-menu-content");addEventListener("beforeunload",function(){localStorage.setItem("menu.scrollTop",e.scrollTop)}),e.scrollTop=localStorage.getItem("menu.scrollTop")})()</script>
+
+
+ 
+      </div>
+    </aside>
+
+    <div class="book-page">
+      <header class="book-header">
+        
+  <div class="flex align-center justify-between">
+  <label for="menu-control">
+    <img src="../../../../../../svg/menu.svg" class="book-icon" alt="Menu" />
+  </label>
+
+  <strong>gdt/idt/ldt/tss/tgd</strong>
+
+  <label for="toc-control">
+    
+    <img src="../../../../../../svg/toc.svg" class="book-icon" alt="Table of Contents" />
+    
+  </label>
+</div>
+
+
+  
+  <aside class="hidden clearfix">
+    
+  
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#介绍">介绍</a>
+      <ul>
+        <li><a href="#1-相关结构的cpu手册">1. 相关结构的cpu手册</a></li>
+      </ul>
+    </li>
+    <li><a href="#一数据结构">一、数据结构</a></li>
+    <li><a href="#二配置">二、配置</a>
+      <ul>
+        <li><a href="#1-gdt分布配置每个cpu都有一个">1. GDT分布配置，每个cpu都有一个</a></li>
+        <li><a href="#2-idt分布配置">2. IDT分布配置</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+
+
+  </aside>
+  
+ 
+      </header>
+
+      
+      
+  <article class="markdown"><h1 id="介绍">
+  介绍
+  <a class="anchor" href="#%e4%bb%8b%e7%bb%8d">#</a>
+</h1>
+<ul>
+<li>GDT，IDT都是全局的。LDT是局部的（在GDT中有它的描述符）</li>
+<li>GDT用来存储描述符（门或非门）；系统中几个CPU,就有几个GDT</li>
+<li>IDT整个系统只有一个</li>
+<li>系统启动时候需要初始化GDT和IDT。LDT和进程相关，并不一定必有</li>
+<li>TSS: Task-State Segment，任务状态段，保存任务状态信息的系统段</li>
+<li>TSS只能存在于GDT中</li>
+<li>Task-Gate Descriptor，任务门描述符，用来间接的宝玉引用任务。可以放到GDT、LDT、IDT中，里面的TSS段选择指向GDT的TSS描述符</li>
+</ul>
+<h2 id="1-相关结构的cpu手册">
+  1. 相关结构的cpu手册
+  <a class="anchor" href="#1-%e7%9b%b8%e5%85%b3%e7%bb%93%e6%9e%84%e7%9a%84cpu%e6%89%8b%e5%86%8c">#</a>
+</h2>
+<ul>
+<li>IDT结构</li>
+</ul>
+<img src="imgs/2022-10-24-01.png" />
+<ul>
+<li>下图为32位TSS结构</li>
+</ul>
+<img src="imgs/2022-10-24-03.png" />
+<ul>
+<li>下图为64位TSS或LDT结构</li>
+</ul>
+<img src="imgs/2022-10-24-02.png" />
+<h1 id="一数据结构">
+  一、数据结构
+  <a class="anchor" href="#%e4%b8%80%e6%95%b0%e6%8d%ae%e7%bb%93%e6%9e%84">#</a>
+</h1>
+<div class="highlight"><pre tabindex="0" style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  1</span><span><span style="color:#09f;font-style:italic">// arch/x86/include/asm/desc_defs.h
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  2</span><span><span style="color:#09f;font-style:italic">// gdt结构
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  3</span><span><span style="color:#09f;font-style:italic"></span><span style="color:#09f;font-style:italic">/* 8 byte segment descriptor */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  4</span><span><span style="color:#069;font-weight:bold">struct</span> <span style="color:#0a8;font-weight:bold">desc_struct</span> {
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  5</span><span>    u16 limit0;         <span style="color:#09f;font-style:italic">// 段管理的内存上限low
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  6</span><span><span style="color:#09f;font-style:italic"></span>    u16 base0;          <span style="color:#09f;font-style:italic">// 段的对应的内存实际地址low
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  7</span><span><span style="color:#09f;font-style:italic"></span>    u16 <span style="color:#99f">base1</span> : <span style="color:#f60">8</span>;      <span style="color:#09f;font-style:italic">// 段的对应的内存实际地址mid
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  8</span><span><span style="color:#09f;font-style:italic"></span>    u16 <span style="color:#99f">type</span> : <span style="color:#f60">4</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  9</span><span>    u16 <span style="color:#99f">s</span> : <span style="color:#f60">1</span>;          <span style="color:#09f;font-style:italic">// 系统段为1，普通段为0
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 10</span><span><span style="color:#09f;font-style:italic"></span>    u16 <span style="color:#99f">dpl</span> : <span style="color:#f60">2</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 11</span><span>    u16 <span style="color:#99f">p</span> : <span style="color:#f60">1</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 12</span><span>    u16 <span style="color:#99f">limit1</span> : <span style="color:#f60">4</span>;     <span style="color:#09f;font-style:italic">// 段管理的内存上限low
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 13</span><span><span style="color:#09f;font-style:italic"></span>    u16 <span style="color:#99f">avl</span> : <span style="color:#f60">1</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 14</span><span>    u16 <span style="color:#99f">l</span> : <span style="color:#f60">1</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 15</span><span>    u16 <span style="color:#99f">d</span> : <span style="color:#f60">1</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 16</span><span>    u16 <span style="color:#99f">g</span> : <span style="color:#f60">1</span>;          <span style="color:#09f;font-style:italic">// 为1就是4K为单位定义上限（上限1，管理内存4K），为0则以一个字节为单位
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 17</span><span><span style="color:#09f;font-style:italic"></span>    u16 <span style="color:#99f">base2</span> : <span style="color:#f60">8</span>;      <span style="color:#09f;font-style:italic">// 段的对应的内存实际地址high
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 18</span><span><span style="color:#09f;font-style:italic"></span>} __attribute__((packed));
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 19</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 20</span><span><span style="color:#099">#define GDT_ENTRY_INIT(flags, base, limit)			\
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 21</span><span><span style="color:#099">	{							\
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 22</span><span><span style="color:#099">		.limit0		= (u16) (limit),		\
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 23</span><span><span style="color:#099">		.limit1		= ((limit) &gt;&gt; 16) &amp; 0x0F,	\
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 24</span><span><span style="color:#099">		.base0		= (u16) (base),			\
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 25</span><span><span style="color:#099">		.base1		= ((base) &gt;&gt; 16) &amp; 0xFF,	\
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 26</span><span><span style="color:#099">		.base2		= ((base) &gt;&gt; 24) &amp; 0xFF,	\
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 27</span><span><span style="color:#099">		.type		= (flags &amp; 0x0f),		\
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 28</span><span><span style="color:#099">		.s		= (flags &gt;&gt; 4) &amp; 0x01,		\
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 29</span><span><span style="color:#099">		.dpl		= (flags &gt;&gt; 5) &amp; 0x03,		\
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 30</span><span><span style="color:#099">		.p		= (flags &gt;&gt; 7) &amp; 0x01,		\
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 31</span><span><span style="color:#099">		.avl		= (flags &gt;&gt; 12) &amp; 0x01,		\
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 32</span><span><span style="color:#099">		.l		= (flags &gt;&gt; 13) &amp; 0x01,		\
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 33</span><span><span style="color:#099">		.d		= (flags &gt;&gt; 14) &amp; 0x01,		\
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 34</span><span><span style="color:#099">		.g		= (flags &gt;&gt; 15) &amp; 0x01,		\
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 35</span><span><span style="color:#099">	}
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 36</span><span><span style="color:#099"></span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 37</span><span><span style="color:#069;font-weight:bold">enum</span> {
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 38</span><span>	GATE_INTERRUPT <span style="color:#555">=</span> <span style="color:#f60">0xE</span>,
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 39</span><span>	GATE_TRAP <span style="color:#555">=</span> <span style="color:#f60">0xF</span>,
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 40</span><span>	GATE_CALL <span style="color:#555">=</span> <span style="color:#f60">0xC</span>,
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 41</span><span>	GATE_TASK <span style="color:#555">=</span> <span style="color:#f60">0x5</span>,
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 42</span><span>};
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 43</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 44</span><span><span style="color:#069;font-weight:bold">enum</span> {
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 45</span><span>	DESC_TSS <span style="color:#555">=</span> <span style="color:#f60">0x9</span>,
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 46</span><span>	DESC_LDT <span style="color:#555">=</span> <span style="color:#f60">0x2</span>,
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 47</span><span>	DESCTYPE_S <span style="color:#555">=</span> <span style="color:#f60">0x10</span>,	<span style="color:#09f;font-style:italic">/* !system */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 48</span><span>};
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 49</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 50</span><span><span style="color:#09f;font-style:italic">/* LDT or TSS descriptor in the GDT. */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 51</span><span><span style="color:#069;font-weight:bold">struct</span> <span style="color:#0a8;font-weight:bold">ldttss_desc</span> {
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 52</span><span>	u16	limit0;
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 53</span><span>	u16	base0;
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 54</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 55</span><span>	u16	<span style="color:#99f">base1</span> : <span style="color:#f60">8</span>, <span style="color:#99f">type</span> : <span style="color:#f60">5</span>, <span style="color:#99f">dpl</span> : <span style="color:#f60">2</span>, <span style="color:#99f">p</span> : <span style="color:#f60">1</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 56</span><span>	u16	<span style="color:#99f">limit1</span> : <span style="color:#f60">4</span>, <span style="color:#99f">zero0</span> : <span style="color:#f60">3</span>, <span style="color:#99f">g</span> : <span style="color:#f60">1</span>, <span style="color:#99f">base2</span> : <span style="color:#f60">8</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 57</span><span><span style="color:#099">#ifdef CONFIG_X86_64
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 58</span><span><span style="color:#099"></span>	u32	base3;
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 59</span><span>	u32	zero1;
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 60</span><span><span style="color:#099">#endif
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 61</span><span><span style="color:#099"></span>} __attribute__((packed));
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 62</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 63</span><span><span style="color:#069;font-weight:bold">typedef</span> <span style="color:#069;font-weight:bold">struct</span> <span style="color:#0a8;font-weight:bold">ldttss_desc</span> ldt_desc;
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 64</span><span><span style="color:#069;font-weight:bold">typedef</span> <span style="color:#069;font-weight:bold">struct</span> <span style="color:#0a8;font-weight:bold">ldttss_desc</span> tss_desc;
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 65</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 66</span><span><span style="color:#069;font-weight:bold">struct</span> <span style="color:#0a8;font-weight:bold">idt_bits</span> {
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 67</span><span>    u16 <span style="color:#99f">ist</span> : <span style="color:#f60">3</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 68</span><span>    u16 <span style="color:#99f">zero</span> : <span style="color:#f60">5</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 69</span><span>    u16 <span style="color:#99f">type</span> : <span style="color:#f60">5</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 70</span><span>    u16 <span style="color:#99f">dpl</span> : <span style="color:#f60">2</span>;    <span style="color:#09f;font-style:italic">// Descriptor Privilege Level
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 71</span><span><span style="color:#09f;font-style:italic"></span>    u16 <span style="color:#99f">p</span> : <span style="color:#f60">1</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 72</span><span>} __attribute__((packed));
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 73</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 74</span><span><span style="color:#069;font-weight:bold">struct</span> <span style="color:#0a8;font-weight:bold">idt_data</span> {
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 75</span><span>	<span style="color:#078;font-weight:bold">unsigned</span> <span style="color:#078;font-weight:bold">int</span>	vector;
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 76</span><span>	<span style="color:#078;font-weight:bold">unsigned</span> <span style="color:#078;font-weight:bold">int</span>	segment;
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 77</span><span>	<span style="color:#069;font-weight:bold">struct</span> <span style="color:#0a8;font-weight:bold">idt_bits</span>	bits;
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 78</span><span>	<span style="color:#069;font-weight:bold">const</span> <span style="color:#078;font-weight:bold">void</span>	<span style="color:#555">*</span>addr;
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 79</span><span>};
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 80</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 81</span><span><span style="color:#09f;font-style:italic">// idt结构
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 82</span><span><span style="color:#09f;font-style:italic"></span><span style="color:#069;font-weight:bold">struct</span> <span style="color:#0a8;font-weight:bold">gate_struct</span> {
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 83</span><span>    u16 offset_low;         <span style="color:#09f;font-style:italic">// 函数在段内的偏移地址low
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 84</span><span><span style="color:#09f;font-style:italic"></span>    u16 segment;            <span style="color:#09f;font-style:italic">// 段配置对应的偏移，比如第2号段，就是 2 * 8，一个段配置8个字节
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 85</span><span><span style="color:#09f;font-style:italic"></span>    <span style="color:#069;font-weight:bold">struct</span> <span style="color:#0a8;font-weight:bold">idt_bits</span> bits;
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 86</span><span>    u16 offset_middle;      <span style="color:#09f;font-style:italic">// 函数在段内的偏移地址mid
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 87</span><span><span style="color:#09f;font-style:italic"></span><span style="color:#099">#ifdef CONFIG_X86_64
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 88</span><span><span style="color:#099"></span>	u32		offset_high;
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 89</span><span>	u32		reserved;
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 90</span><span><span style="color:#099">#endif
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 91</span><span><span style="color:#099"></span>} __attribute__((packed));
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 92</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 93</span><span><span style="color:#069;font-weight:bold">typedef</span> <span style="color:#069;font-weight:bold">struct</span> <span style="color:#0a8;font-weight:bold">gate_struct</span> gate_desc;
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 94</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 95</span><span>...
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 96</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 97</span><span><span style="color:#099">#endif </span><span style="color:#09f;font-style:italic">/* !__ASSEMBLY__ */</span><span style="color:#099">
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 98</span><span><span style="color:#099"></span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 99</span><span><span style="color:#09f;font-style:italic">/* Boot IDT definitions */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">100</span><span><span style="color:#099">#define	BOOT_IDT_ENTRIES	32
+</span></span></span></code></pre></div><h1 id="二配置">
+  二、配置
+  <a class="anchor" href="#%e4%ba%8c%e9%85%8d%e7%bd%ae">#</a>
+</h1>
+<h2 id="1-gdt分布配置每个cpu都有一个">
+  1. GDT分布配置，每个cpu都有一个
+  <a class="anchor" href="#1-gdt%e5%88%86%e5%b8%83%e9%85%8d%e7%bd%ae%e6%af%8f%e4%b8%aacpu%e9%83%bd%e6%9c%89%e4%b8%80%e4%b8%aa">#</a>
+</h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span><span style="color:#09f;font-style:italic">// arch/x86/include/asm/segment.h
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span><span><span style="color:#09f;font-style:italic"></span><span style="color:#09f;font-style:italic">/*
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span><span style="color:#09f;font-style:italic"> * Number of entries in the GDT table:
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span><span><span style="color:#09f;font-style:italic"> */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span><span><span style="color:#099">#define GDT_ENTRIES			32
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span><span><span style="color:#099"></span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span><span><span style="color:#09f;font-style:italic">// arch/x86/include/asm/desc.h
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span><span style="color:#09f;font-style:italic"></span><span style="color:#069;font-weight:bold">struct</span> <span style="color:#0a8;font-weight:bold">gdt_page</span> {
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span><span>	<span style="color:#069;font-weight:bold">struct</span> <span style="color:#0a8;font-weight:bold">desc_struct</span> gdt[GDT_ENTRIES];
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span><span>} __attribute__((aligned(PAGE_SIZE)));
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span><span style="color:#09f;font-style:italic">// arch/x86/kernel/cpu/common.c
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span><span style="color:#09f;font-style:italic"></span>DEFINE_PER_CPU_PAGE_ALIGNED(<span style="color:#069;font-weight:bold">struct</span> <span style="color:#0a8;font-weight:bold">gdt_page</span>, gdt_page) <span style="color:#555">=</span> { .gdt <span style="color:#555">=</span> {
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span><span style="color:#099">#ifdef CONFIG_X86_64
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span><span><span style="color:#099"></span>	<span style="color:#09f;font-style:italic">/*
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span><span><span style="color:#09f;font-style:italic">	 * We need valid kernel segments for data and code in long mode too
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span><span><span style="color:#09f;font-style:italic">	 * IRET will check the segment types  kkeil 2000/10/28
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span><span><span style="color:#09f;font-style:italic">	 * Also sysret mandates a special GDT layout
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span><span><span style="color:#09f;font-style:italic">	 *
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span><span><span style="color:#09f;font-style:italic">	 * TLS descriptors are currently at a different place compared to i386.
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21</span><span><span style="color:#09f;font-style:italic">	 * Hopefully nobody expects them at a fixed place (Wine?)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22</span><span><span style="color:#09f;font-style:italic">	 */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23</span><span>	[GDT_ENTRY_KERNEL32_CS]		<span style="color:#555">=</span> GDT_ENTRY_INIT(<span style="color:#f60">0xc09b</span>, <span style="color:#f60">0</span>, <span style="color:#f60">0xfffff</span>),
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24</span><span>	[GDT_ENTRY_KERNEL_CS]		<span style="color:#555">=</span> GDT_ENTRY_INIT(<span style="color:#f60">0xa09b</span>, <span style="color:#f60">0</span>, <span style="color:#f60">0xfffff</span>),       <span style="color:#09f;font-style:italic">// kernel代码段
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25</span><span><span style="color:#09f;font-style:italic"></span>	[GDT_ENTRY_KERNEL_DS]		<span style="color:#555">=</span> GDT_ENTRY_INIT(<span style="color:#f60">0xc093</span>, <span style="color:#f60">0</span>, <span style="color:#f60">0xfffff</span>),       <span style="color:#09f;font-style:italic">// kernel数据段
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26</span><span><span style="color:#09f;font-style:italic"></span>	[GDT_ENTRY_DEFAULT_USER32_CS]	<span style="color:#555">=</span> GDT_ENTRY_INIT(<span style="color:#f60">0xc0fb</span>, <span style="color:#f60">0</span>, <span style="color:#f60">0xfffff</span>),
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27</span><span>	[GDT_ENTRY_DEFAULT_USER_DS]	<span style="color:#555">=</span> GDT_ENTRY_INIT(<span style="color:#f60">0xc0f3</span>, <span style="color:#f60">0</span>, <span style="color:#f60">0xfffff</span>),
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28</span><span>	[GDT_ENTRY_DEFAULT_USER_CS]	<span style="color:#555">=</span> GDT_ENTRY_INIT(<span style="color:#f60">0xa0fb</span>, <span style="color:#f60">0</span>, <span style="color:#f60">0xfffff</span>),
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29</span><span><span style="color:#099">#else
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">30</span><span><span style="color:#099"></span>	[GDT_ENTRY_KERNEL_CS]		<span style="color:#555">=</span> GDT_ENTRY_INIT(<span style="color:#f60">0xc09a</span>, <span style="color:#f60">0</span>, <span style="color:#f60">0xfffff</span>),       <span style="color:#09f;font-style:italic">// kernel代码段
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">31</span><span><span style="color:#09f;font-style:italic"></span>	[GDT_ENTRY_KERNEL_DS]		<span style="color:#555">=</span> GDT_ENTRY_INIT(<span style="color:#f60">0xc092</span>, <span style="color:#f60">0</span>, <span style="color:#f60">0xfffff</span>),       <span style="color:#09f;font-style:italic">// kernel数据段
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">32</span><span><span style="color:#09f;font-style:italic"></span>	[GDT_ENTRY_DEFAULT_USER_CS]	<span style="color:#555">=</span> GDT_ENTRY_INIT(<span style="color:#f60">0xc0fa</span>, <span style="color:#f60">0</span>, <span style="color:#f60">0xfffff</span>),
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">33</span><span>	[GDT_ENTRY_DEFAULT_USER_DS]	<span style="color:#555">=</span> GDT_ENTRY_INIT(<span style="color:#f60">0xc0f2</span>, <span style="color:#f60">0</span>, <span style="color:#f60">0xfffff</span>),
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">34</span><span>	<span style="color:#09f;font-style:italic">/*
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">35</span><span><span style="color:#09f;font-style:italic">	 * Segments used for calling PnP BIOS have byte granularity.
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">36</span><span><span style="color:#09f;font-style:italic">	 * They code segments and data segments have fixed 64k limits,
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">37</span><span><span style="color:#09f;font-style:italic">	 * the transfer segment sizes are set at run time.
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">38</span><span><span style="color:#09f;font-style:italic">	 */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">39</span><span>	<span style="color:#09f;font-style:italic">/* 32-bit code */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">40</span><span>	[GDT_ENTRY_PNPBIOS_CS32]	<span style="color:#555">=</span> GDT_ENTRY_INIT(<span style="color:#f60">0x409a</span>, <span style="color:#f60">0</span>, <span style="color:#f60">0xffff</span>),
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">41</span><span>	<span style="color:#09f;font-style:italic">/* 16-bit code */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">42</span><span>	[GDT_ENTRY_PNPBIOS_CS16]	<span style="color:#555">=</span> GDT_ENTRY_INIT(<span style="color:#f60">0x009a</span>, <span style="color:#f60">0</span>, <span style="color:#f60">0xffff</span>),
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">43</span><span>	<span style="color:#09f;font-style:italic">/* 16-bit data */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">44</span><span>	[GDT_ENTRY_PNPBIOS_DS]		<span style="color:#555">=</span> GDT_ENTRY_INIT(<span style="color:#f60">0x0092</span>, <span style="color:#f60">0</span>, <span style="color:#f60">0xffff</span>),
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">45</span><span>	<span style="color:#09f;font-style:italic">/* 16-bit data */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">46</span><span>	[GDT_ENTRY_PNPBIOS_TS1]		<span style="color:#555">=</span> GDT_ENTRY_INIT(<span style="color:#f60">0x0092</span>, <span style="color:#f60">0</span>, <span style="color:#f60">0</span>),
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">47</span><span>	<span style="color:#09f;font-style:italic">/* 16-bit data */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">48</span><span>	[GDT_ENTRY_PNPBIOS_TS2]		<span style="color:#555">=</span> GDT_ENTRY_INIT(<span style="color:#f60">0x0092</span>, <span style="color:#f60">0</span>, <span style="color:#f60">0</span>),
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">49</span><span>	<span style="color:#09f;font-style:italic">/*
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">50</span><span><span style="color:#09f;font-style:italic">	 * The APM segments have byte granularity and their bases
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">51</span><span><span style="color:#09f;font-style:italic">	 * are set at run time.  All have 64k limits.
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">52</span><span><span style="color:#09f;font-style:italic">	 */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">53</span><span>	<span style="color:#09f;font-style:italic">/* 32-bit code */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">54</span><span>	[GDT_ENTRY_APMBIOS_BASE]	<span style="color:#555">=</span> GDT_ENTRY_INIT(<span style="color:#f60">0x409a</span>, <span style="color:#f60">0</span>, <span style="color:#f60">0xffff</span>),
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">55</span><span>	<span style="color:#09f;font-style:italic">/* 16-bit code */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">56</span><span>	[GDT_ENTRY_APMBIOS_BASE<span style="color:#555">+</span><span style="color:#f60">1</span>]	<span style="color:#555">=</span> GDT_ENTRY_INIT(<span style="color:#f60">0x009a</span>, <span style="color:#f60">0</span>, <span style="color:#f60">0xffff</span>),
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">57</span><span>	<span style="color:#09f;font-style:italic">/* data */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">58</span><span>	[GDT_ENTRY_APMBIOS_BASE<span style="color:#555">+</span><span style="color:#f60">2</span>]	<span style="color:#555">=</span> GDT_ENTRY_INIT(<span style="color:#f60">0x4092</span>, <span style="color:#f60">0</span>, <span style="color:#f60">0xffff</span>),
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">59</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">60</span><span>	[GDT_ENTRY_ESPFIX_SS]		<span style="color:#555">=</span> GDT_ENTRY_INIT(<span style="color:#f60">0xc092</span>, <span style="color:#f60">0</span>, <span style="color:#f60">0xfffff</span>),
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">61</span><span>	[GDT_ENTRY_PERCPU]		<span style="color:#555">=</span> GDT_ENTRY_INIT(<span style="color:#f60">0xc092</span>, <span style="color:#f60">0</span>, <span style="color:#f60">0xfffff</span>),
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">62</span><span><span style="color:#099">#endif
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">63</span><span><span style="color:#099"></span>} };
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">64</span><span>EXPORT_PER_CPU_SYMBOL_GPL(gdt_page);
+</span></span></code></pre></div><ul>
+<li>段分布情况</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  1</span><span><span style="color:#099">#ifdef CONFIG_X86_32
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  2</span><span><span style="color:#099"></span><span style="color:#09f;font-style:italic">// arch/x86/include/asm/segment.h
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  3</span><span><span style="color:#09f;font-style:italic"></span><span style="color:#09f;font-style:italic">/*
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  4</span><span><span style="color:#09f;font-style:italic"> * The layout of the per-CPU GDT under Linux:
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  5</span><span><span style="color:#09f;font-style:italic"> *
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  6</span><span><span style="color:#09f;font-style:italic"> *   0 - null								&lt;=== cacheline #1
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  7</span><span><span style="color:#09f;font-style:italic"> *   1 - reserved
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  8</span><span><span style="color:#09f;font-style:italic"> *   2 - reserved
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  9</span><span><span style="color:#09f;font-style:italic"> *   3 - reserved
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 10</span><span><span style="color:#09f;font-style:italic"> *
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 11</span><span><span style="color:#09f;font-style:italic"> *   4 - unused								&lt;=== cacheline #2
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 12</span><span><span style="color:#09f;font-style:italic"> *   5 - unused
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 13</span><span><span style="color:#09f;font-style:italic"> *
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 14</span><span><span style="color:#09f;font-style:italic"> *  ------- start of TLS (Thread-Local Storage) segments:
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 15</span><span><span style="color:#09f;font-style:italic"> *
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 16</span><span><span style="color:#09f;font-style:italic"> *   6 - TLS segment #1			[ glibc&#39;s TLS segment ]
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 17</span><span><span style="color:#09f;font-style:italic"> *   7 - TLS segment #2			[ Wine&#39;s %fs Win32 segment ]
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 18</span><span><span style="color:#09f;font-style:italic"> *   8 - TLS segment #3							&lt;=== cacheline #3
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 19</span><span><span style="color:#09f;font-style:italic"> *   9 - reserved
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 20</span><span><span style="color:#09f;font-style:italic"> *  10 - reserved
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 21</span><span><span style="color:#09f;font-style:italic"> *  11 - reserved
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 22</span><span><span style="color:#09f;font-style:italic"> *
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 23</span><span><span style="color:#09f;font-style:italic"> *  ------- start of kernel segments:
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 24</span><span><span style="color:#09f;font-style:italic"> *
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 25</span><span><span style="color:#09f;font-style:italic"> *  12 - kernel code segment						&lt;=== cacheline #4
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 26</span><span><span style="color:#09f;font-style:italic"> *  13 - kernel data segment
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 27</span><span><span style="color:#09f;font-style:italic"> *  14 - default user CS
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 28</span><span><span style="color:#09f;font-style:italic"> *  15 - default user DS
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 29</span><span><span style="color:#09f;font-style:italic"> *  16 - TSS								&lt;=== cacheline #5
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 30</span><span><span style="color:#09f;font-style:italic"> *  17 - LDT
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 31</span><span><span style="color:#09f;font-style:italic"> *  18 - PNPBIOS support (16-&gt;32 gate)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 32</span><span><span style="color:#09f;font-style:italic"> *  19 - PNPBIOS support
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 33</span><span><span style="color:#09f;font-style:italic"> *  20 - PNPBIOS support						&lt;=== cacheline #6
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 34</span><span><span style="color:#09f;font-style:italic"> *  21 - PNPBIOS support
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 35</span><span><span style="color:#09f;font-style:italic"> *  22 - PNPBIOS support
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 36</span><span><span style="color:#09f;font-style:italic"> *  23 - APM BIOS support
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 37</span><span><span style="color:#09f;font-style:italic"> *  24 - APM BIOS support						&lt;=== cacheline #7
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 38</span><span><span style="color:#09f;font-style:italic"> *  25 - APM BIOS support
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 39</span><span><span style="color:#09f;font-style:italic"> *
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 40</span><span><span style="color:#09f;font-style:italic"> *  26 - ESPFIX small SS
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 41</span><span><span style="color:#09f;font-style:italic"> *  27 - per-cpu			[ offset to per-cpu data area ]
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 42</span><span><span style="color:#09f;font-style:italic"> *  28 - unused
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 43</span><span><span style="color:#09f;font-style:italic"> *  29 - unused
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 44</span><span><span style="color:#09f;font-style:italic"> *  30 - unused
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 45</span><span><span style="color:#09f;font-style:italic"> *  31 - TSS for double fault handler
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 46</span><span><span style="color:#09f;font-style:italic"> */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 47</span><span><span style="color:#099">#define GDT_ENTRY_TLS_MIN		6
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 48</span><span><span style="color:#099">#define GDT_ENTRY_TLS_MAX 		(GDT_ENTRY_TLS_MIN + GDT_ENTRY_TLS_ENTRIES - 1)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 49</span><span><span style="color:#099"></span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 50</span><span><span style="color:#099">#define GDT_ENTRY_KERNEL_CS		12
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 51</span><span><span style="color:#099">#define GDT_ENTRY_KERNEL_DS		13
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 52</span><span><span style="color:#099">#define GDT_ENTRY_DEFAULT_USER_CS	14
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 53</span><span><span style="color:#099">#define GDT_ENTRY_DEFAULT_USER_DS	15
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 54</span><span><span style="color:#099">#define GDT_ENTRY_TSS			16
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 55</span><span><span style="color:#099">#define GDT_ENTRY_LDT			17
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 56</span><span><span style="color:#099">#define GDT_ENTRY_PNPBIOS_CS32		18
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 57</span><span><span style="color:#099">#define GDT_ENTRY_PNPBIOS_CS16		19
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 58</span><span><span style="color:#099">#define GDT_ENTRY_PNPBIOS_DS		20
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 59</span><span><span style="color:#099">#define GDT_ENTRY_PNPBIOS_TS1		21
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 60</span><span><span style="color:#099">#define GDT_ENTRY_PNPBIOS_TS2		22
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 61</span><span><span style="color:#099">#define GDT_ENTRY_APMBIOS_BASE		23
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 62</span><span><span style="color:#099"></span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 63</span><span><span style="color:#099">#define GDT_ENTRY_ESPFIX_SS		26
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 64</span><span><span style="color:#099">#define GDT_ENTRY_PERCPU		27
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 65</span><span><span style="color:#099"></span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 66</span><span><span style="color:#099">#define GDT_ENTRY_DOUBLEFAULT_TSS	31
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 67</span><span><span style="color:#099"></span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 68</span><span><span style="color:#09f;font-style:italic">/*
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 69</span><span><span style="color:#09f;font-style:italic"> * Number of entries in the GDT table:
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 70</span><span><span style="color:#09f;font-style:italic"> */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 71</span><span><span style="color:#099">#define GDT_ENTRIES			32
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 72</span><span><span style="color:#099"></span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 73</span><span><span style="color:#09f;font-style:italic">/*
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 74</span><span><span style="color:#09f;font-style:italic"> * Segment selector values corresponding to the above entries:
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 75</span><span><span style="color:#09f;font-style:italic"> */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 76</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 77</span><span><span style="color:#099">#define __KERNEL_CS			(GDT_ENTRY_KERNEL_CS*8)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 78</span><span><span style="color:#099">#define __KERNEL_DS			(GDT_ENTRY_KERNEL_DS*8)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 79</span><span><span style="color:#099">#define __USER_DS			(GDT_ENTRY_DEFAULT_USER_DS*8 + 3)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 80</span><span><span style="color:#099">#define __USER_CS			(GDT_ENTRY_DEFAULT_USER_CS*8 + 3)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 81</span><span><span style="color:#099">#define __ESPFIX_SS			(GDT_ENTRY_ESPFIX_SS*8)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 82</span><span><span style="color:#099"></span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 83</span><span><span style="color:#09f;font-style:italic">/* segment for calling fn: */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 84</span><span><span style="color:#099">#define PNP_CS32			(GDT_ENTRY_PNPBIOS_CS32*8)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 85</span><span><span style="color:#099"></span><span style="color:#09f;font-style:italic">/* code segment for BIOS: */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 86</span><span><span style="color:#099">#define PNP_CS16			(GDT_ENTRY_PNPBIOS_CS16*8)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 87</span><span><span style="color:#099"></span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 88</span><span><span style="color:#09f;font-style:italic">/* &#34;Is this PNP code selector (PNP_CS32 or PNP_CS16)?&#34; */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 89</span><span><span style="color:#099">#define SEGMENT_IS_PNP_CODE(x)		(((x) &amp; 0xf4) == PNP_CS32)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 90</span><span><span style="color:#099"></span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 91</span><span><span style="color:#09f;font-style:italic">/* data segment for BIOS: */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 92</span><span><span style="color:#099">#define PNP_DS				(GDT_ENTRY_PNPBIOS_DS*8)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 93</span><span><span style="color:#099"></span><span style="color:#09f;font-style:italic">/* transfer data segment: */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 94</span><span><span style="color:#099">#define PNP_TS1				(GDT_ENTRY_PNPBIOS_TS1*8)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 95</span><span><span style="color:#099"></span><span style="color:#09f;font-style:italic">/* another data segment: */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 96</span><span><span style="color:#099">#define PNP_TS2				(GDT_ENTRY_PNPBIOS_TS2*8)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 97</span><span><span style="color:#099"></span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 98</span><span><span style="color:#099">#ifdef CONFIG_SMP
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 99</span><span><span style="color:#099"># define __KERNEL_PERCPU		(GDT_ENTRY_PERCPU*8)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">100</span><span><span style="color:#099">#else
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">101</span><span><span style="color:#099"># define __KERNEL_PERCPU		0
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">102</span><span><span style="color:#099">#endif
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">103</span><span><span style="color:#099"></span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">104</span><span><span style="color:#099">#else </span><span style="color:#09f;font-style:italic">/* 64-bit: */</span><span style="color:#099">
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">105</span><span><span style="color:#099"></span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">106</span><span><span style="color:#099">#include</span> <span style="color:#099">&lt;asm/cache.h&gt;</span><span style="color:#099">
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">107</span><span><span style="color:#099"></span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">108</span><span><span style="color:#099">#define GDT_ENTRY_KERNEL32_CS		1
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">109</span><span><span style="color:#099">#define GDT_ENTRY_KERNEL_CS		2
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">110</span><span><span style="color:#099">#define GDT_ENTRY_KERNEL_DS		3
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">111</span><span><span style="color:#099"></span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">112</span><span><span style="color:#09f;font-style:italic">/*
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">113</span><span><span style="color:#09f;font-style:italic"> * We cannot use the same code segment descriptor for user and kernel mode,
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">114</span><span><span style="color:#09f;font-style:italic"> * not even in long flat mode, because of different DPL.
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">115</span><span><span style="color:#09f;font-style:italic"> *
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">116</span><span><span style="color:#09f;font-style:italic"> * GDT layout to get 64-bit SYSCALL/SYSRET support right. SYSRET hardcodes
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">117</span><span><span style="color:#09f;font-style:italic"> * selectors:
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">118</span><span><span style="color:#09f;font-style:italic"> *
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">119</span><span><span style="color:#09f;font-style:italic"> *   if returning to 32-bit userspace: cs = STAR.SYSRET_CS,
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">120</span><span><span style="color:#09f;font-style:italic"> *   if returning to 64-bit userspace: cs = STAR.SYSRET_CS+16,
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">121</span><span><span style="color:#09f;font-style:italic"> *
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">122</span><span><span style="color:#09f;font-style:italic"> * ss = STAR.SYSRET_CS+8 (in either case)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">123</span><span><span style="color:#09f;font-style:italic"> *
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">124</span><span><span style="color:#09f;font-style:italic"> * thus USER_DS should be between 32-bit and 64-bit code selectors:
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">125</span><span><span style="color:#09f;font-style:italic"> */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">126</span><span><span style="color:#099">#define GDT_ENTRY_DEFAULT_USER32_CS	4
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">127</span><span><span style="color:#099">#define GDT_ENTRY_DEFAULT_USER_DS	5
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">128</span><span><span style="color:#099">#define GDT_ENTRY_DEFAULT_USER_CS	6
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">129</span><span><span style="color:#099"></span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">130</span><span><span style="color:#09f;font-style:italic">/* Needs two entries */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">131</span><span><span style="color:#099">#define GDT_ENTRY_TSS			8
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">132</span><span><span style="color:#099"></span><span style="color:#09f;font-style:italic">/* Needs two entries */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">133</span><span><span style="color:#099">#define GDT_ENTRY_LDT			10
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">134</span><span><span style="color:#099"></span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">135</span><span><span style="color:#099">#define GDT_ENTRY_TLS_MIN		12
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">136</span><span><span style="color:#099">#define GDT_ENTRY_TLS_MAX		14
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">137</span><span><span style="color:#099"></span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">138</span><span><span style="color:#099">#define GDT_ENTRY_CPUNODE		15
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">139</span><span><span style="color:#099"></span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">140</span><span><span style="color:#09f;font-style:italic">/*
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">141</span><span><span style="color:#09f;font-style:italic"> * Number of entries in the GDT table:
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">142</span><span><span style="color:#09f;font-style:italic"> */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">143</span><span><span style="color:#099">#define GDT_ENTRIES			16
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">144</span><span><span style="color:#099"></span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">145</span><span><span style="color:#09f;font-style:italic">/*
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">146</span><span><span style="color:#09f;font-style:italic"> * Segment selector values corresponding to the above entries:
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">147</span><span><span style="color:#09f;font-style:italic"> *
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">148</span><span><span style="color:#09f;font-style:italic"> * Note, selectors also need to have a correct RPL,
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">149</span><span><span style="color:#09f;font-style:italic"> * expressed with the +3 value for user-space selectors:
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">150</span><span><span style="color:#09f;font-style:italic"> */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">151</span><span><span style="color:#099">#define __KERNEL32_CS			(GDT_ENTRY_KERNEL32_CS*8)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">152</span><span><span style="color:#099">#define __KERNEL_CS			(GDT_ENTRY_KERNEL_CS*8)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">153</span><span><span style="color:#099">#define __KERNEL_DS			(GDT_ENTRY_KERNEL_DS*8)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">154</span><span><span style="color:#099">#define __USER32_CS			(GDT_ENTRY_DEFAULT_USER32_CS*8 + 3)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">155</span><span><span style="color:#099">#define __USER_DS			(GDT_ENTRY_DEFAULT_USER_DS*8 + 3)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">156</span><span><span style="color:#099">#define __USER32_DS			__USER_DS
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">157</span><span><span style="color:#099">#define __USER_CS			(GDT_ENTRY_DEFAULT_USER_CS*8 + 3)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">158</span><span><span style="color:#099">#define __CPUNODE_SEG			(GDT_ENTRY_CPUNODE*8 + 3)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">159</span><span><span style="color:#099"></span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">160</span><span><span style="color:#099">#endif
+</span></span></span></code></pre></div><h2 id="2-idt分布配置">
+  2. IDT分布配置
+  <a class="anchor" href="#2-idt%e5%88%86%e5%b8%83%e9%85%8d%e7%bd%ae">#</a>
+</h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span><span style="color:#09f;font-style:italic">// arch/x86/kernel/idt.c
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span><span><span style="color:#09f;font-style:italic"></span><span style="color:#09f;font-style:italic">/*
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span><span style="color:#09f;font-style:italic"> * The default IDT entries which are set up in trap_init() before
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span><span><span style="color:#09f;font-style:italic"> * cpu_init() is invoked. Interrupt stacks cannot be used at that point and
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span><span><span style="color:#09f;font-style:italic"> * the traps which use them are reinitialized with IST after cpu_init() has
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span><span><span style="color:#09f;font-style:italic"> * set up TSS.
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span><span><span style="color:#09f;font-style:italic"> */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span><span style="color:#069;font-weight:bold">static</span> <span style="color:#069;font-weight:bold">const</span> __initconst <span style="color:#069;font-weight:bold">struct</span> <span style="color:#0a8;font-weight:bold">idt_data</span> def_idts[] <span style="color:#555">=</span> {
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span><span>	INTG(X86_TRAP_DE,		asm_exc_divide_error),
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span><span>	ISTG(X86_TRAP_NMI,		asm_exc_nmi, IST_INDEX_NMI),
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span><span>	INTG(X86_TRAP_BR,		asm_exc_bounds),
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span>	INTG(X86_TRAP_UD,		asm_exc_invalid_op),
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span>	INTG(X86_TRAP_NM,		asm_exc_device_not_available),
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span>	INTG(X86_TRAP_OLD_MF,		asm_exc_coproc_segment_overrun),
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span><span>	INTG(X86_TRAP_TS,		asm_exc_invalid_tss),
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span><span>	INTG(X86_TRAP_NP,		asm_exc_segment_not_present),
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span><span>	INTG(X86_TRAP_SS,		asm_exc_stack_segment),
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span><span>	INTG(X86_TRAP_GP,		asm_exc_general_protection),
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span><span>	INTG(X86_TRAP_SPURIOUS,		asm_exc_spurious_interrupt_bug),
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span><span>	INTG(X86_TRAP_MF,		asm_exc_coprocessor_error),
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21</span><span>	INTG(X86_TRAP_AC,		asm_exc_alignment_check),
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22</span><span>	INTG(X86_TRAP_XF,		asm_exc_simd_coprocessor_error),
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24</span><span><span style="color:#099">#ifdef CONFIG_X86_32
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25</span><span><span style="color:#099"></span>	TSKG(X86_TRAP_DF,		GDT_ENTRY_DOUBLEFAULT_TSS),
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26</span><span><span style="color:#099">#else
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27</span><span><span style="color:#099"></span>	ISTG(X86_TRAP_DF,		asm_exc_double_fault, IST_INDEX_DF),
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28</span><span><span style="color:#099">#endif
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29</span><span><span style="color:#099"></span>	ISTG(X86_TRAP_DB,		asm_exc_debug, IST_INDEX_DB),
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">30</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">31</span><span><span style="color:#099">#ifdef CONFIG_X86_MCE
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">32</span><span><span style="color:#099"></span>	ISTG(X86_TRAP_MC,		asm_exc_machine_check, IST_INDEX_MCE),
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">33</span><span><span style="color:#099">#endif
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">34</span><span><span style="color:#099"></span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">35</span><span><span style="color:#099">#ifdef CONFIG_X86_KERNEL_IBT
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">36</span><span><span style="color:#099"></span>	INTG(X86_TRAP_CP,		asm_exc_control_protection),
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">37</span><span><span style="color:#099">#endif
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">38</span><span><span style="color:#099"></span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">39</span><span><span style="color:#099">#ifdef CONFIG_AMD_MEM_ENCRYPT
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">40</span><span><span style="color:#099"></span>	ISTG(X86_TRAP_VC,		asm_exc_vmm_communication, IST_INDEX_VC),
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">41</span><span><span style="color:#099">#endif
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">42</span><span><span style="color:#099"></span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">43</span><span>	SYSG(X86_TRAP_OF,		asm_exc_overflow),
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">44</span><span><span style="color:#099">#if defined(CONFIG_IA32_EMULATION)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">45</span><span><span style="color:#099"></span>	SYSG(IA32_SYSCALL_VECTOR,	entry_INT80_compat),
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">46</span><span><span style="color:#099">#elif defined(CONFIG_X86_32)
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">47</span><span><span style="color:#099"></span>	SYSG(IA32_SYSCALL_VECTOR,	entry_INT80_32),
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">48</span><span><span style="color:#099">#endif
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">49</span><span><span style="color:#099"></span>};
+</span></span></code></pre></div></article>
+ 
+      
+
+      <footer class="book-footer">
+        
+  <div class="flex flex-wrap justify-between">
+
+
+
+
+
+</div>
+
+
+
+  <script>(function(){function e(e){const t=window.getSelection(),n=document.createRange();n.selectNodeContents(e),t.removeAllRanges(),t.addRange(n)}document.querySelectorAll("pre code").forEach(t=>{t.addEventListener("click",function(){if(window.getSelection().toString())return;e(t.parentElement),navigator.clipboard&&navigator.clipboard.writeText(t.parentElement.textContent)})})})()</script>
+
+
+ 
+        
+      </footer>
+
+      
+  
+  <div class="book-comments">
+
+</div>
+  
+ 
+
+      <label for="menu-control" class="hidden book-menu-overlay"></label>
+    </div>
+
+    
+    <aside class="book-toc">
+      <div class="book-toc-content">
+        
+  
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#介绍">介绍</a>
+      <ul>
+        <li><a href="#1-相关结构的cpu手册">1. 相关结构的cpu手册</a></li>
+      </ul>
+    </li>
+    <li><a href="#一数据结构">一、数据结构</a></li>
+    <li><a href="#二配置">二、配置</a>
+      <ul>
+        <li><a href="#1-gdt分布配置每个cpu都有一个">1. GDT分布配置，每个cpu都有一个</a></li>
+        <li><a href="#2-idt分布配置">2. IDT分布配置</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+
+ 
+      </div>
+    </aside>
+    
+  </main>
+
+  
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+

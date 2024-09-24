@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>unix/ unix的处理部分 on 技术的路上奔跑</title>
+    <link>/docs/linux/linux-kernel/net/unix/</link>
+    <description>Recent content in unix/ unix的处理部分 on 技术的路上奔跑</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language><atom:link href="/docs/linux/linux-kernel/net/unix/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title></title>
+      <link>/docs/linux/linux-kernel/net/unix/unix/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux/linux-kernel/net/unix/unix/</guid>
+      <description>一、socket创建 # 定义unix的操作集，当socket调用pf-&amp;gt;create会调用到unix_create 1// net/unix/af_unix.c 2static const struct net_proto_family unix_family_ops = { 3	.family = PF_UNIX, 4	.create = unix_create, 5	.owner	= THIS_MODULE, 6}; 7 8// net/unix/af_unix.c 9static int unix_create(struct net *net, struct socket *sock, int protocol, 10	int kern) 11{ 12	struct sock *sk; 13 14	if (protocol &amp;amp;&amp;amp; protocol != PF_UNIX) 15	return -EPROTONOSUPPORT; 16 17	sock-&amp;gt;state = SS_UNCONNECTED; 18 19	switch (sock-&amp;gt;type) { 20	case SOCK_STREAM: 21	sock-&amp;gt;ops = &amp;amp;unix_stream_ops; 22	break; 23	/* 24	*	Believe it or not BSD has AF_UNIX, SOCK_RAW though 25	*	nothing uses it.</description>
+    </item>
+    
+  </channel>
+</rss>

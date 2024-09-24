@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>数据结构 on 技术的路上奔跑</title>
+    <link>/docs/linux/linux-kernel/data-structures/</link>
+    <description>Recent content in 数据结构 on 技术的路上奔跑</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language><atom:link href="/docs/linux/linux-kernel/data-structures/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>container_of() 根据成员地址找其所在结构体</title>
+      <link>/docs/linux/linux-kernel/data-structures/container_of/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux/linux-kernel/data-structures/container_of/</guid>
+      <description>一、源码 # 1// include/linux/kernel.h 2 3/** 4 * container_of - cast a member of a structure out to the containing structure 5 * @ptr:	the pointer to the member. 6 * @type:	the type of the container struct this is embedded in. 7 * @member:	the name of the member within the struct. 8 * 9 */ 10#define container_of(ptr, type, member) ({	\ 11	void *__mptr = (void *)(ptr);	\ 12	BUILD_BUG_ON_MSG(!</description>
+    </item>
+    
+    <item>
+      <title>atomic 原子变量</title>
+      <link>/docs/linux/linux-kernel/data-structures/atomic/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux/linux-kernel/data-structures/atomic/</guid>
+      <description> 一、实例用法 # 1. atomic_t的用法 # 1 2atomic_t g_running_hooks = ATOMIC_INIT(0); 3 4int main() { 5 int count; 6 7 atomic_inc(&amp;amp;g_running_hooks); // 加一 8 atomic_dec(&amp;amp;g_running_hooks); // 减一 9 atomic_set_release(&amp;amp;g_running_hooks, 1); // 设置为1 10 atomic_set_release(&amp;amp;g_running_hooks, 0); // 设置为0 11 count = atomic_read_acquire(&amp;amp;g_running_hooks); // 读取值 12} </description>
+    </item>
+    
+    <item>
+      <title>hashtable 哈希表</title>
+      <link>/docs/linux/linux-kernel/data-structures/hashtable/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux/linux-kernel/data-structures/hashtable/</guid>
+      <description>一、前言 # 内核里面实现哈希表很简单粗暴，使用一个数组作为hash查找，每一个元素里面就是一个链表。
+二、示例 # 1. 内核标准实现 # 1#include &amp;lt;linux/hashtable.h&amp;gt; 2#include &amp;lt;linux/printk.h&amp;gt; 3 4// 定义2^3的hash表，也就是8个桶 5DEFINE_HASHTABLE(test_hash_table, 3); 6 7typedef struct test_hash_node { 8 struct hlist_node list; 9 int key; 10 int value; 11} test_hash_node_t; 12 13void test_hash(void) { 14 test_hash_node_t item[10]; 15 test_hash_node_t *entry; 16 size_t i; 17 int key; 18 19 // DEFINE_HASHTABLE定义的不用初始化 20 // DECLARE_HASHTABLE定义的一定要初始化，默认的table中的first可能没有清零，导致后面遍历崩掉 21 // hash_init(test_hash_table); 22 23 for (i = 0; i &amp;lt; 10; i++) { 24 entry = &amp;amp;item[i]; 25 // 初始化node，也就是将两个指针清零 26 INIT_HLIST_NODE(&amp;amp;entry-&amp;gt;list); 27 28 entry-&amp;gt;key = i; 29 entry-&amp;gt;value = i; 30 // 插入hash表 31 hash_add(test_hash_table, &amp;amp;entry-&amp;gt;list, entry-&amp;gt;key); 32 } 33 34 // 查询 35 key = 5; 36 hash_for_each_possible(test_hash_table, entry, list, key) { 37 if (entry-&amp;gt;key == key) { 38 printk(&amp;#34;key: %d, value: %d\n&amp;#34;, entry-&amp;gt;key, entry-&amp;gt;value); 39 } 40 } 41 42 // 遍历所有的key 43 hash_for_each(test_hash_table, i, entry, list) { 44 printk(&amp;#34;hash idx %ld, key: %d, value: %d\n&amp;#34;, i, entry-&amp;gt;key, entry-&amp;gt;value); 45 } 46} 2.</description>
+    </item>
+    
+    <item>
+      <title>kfifo 无锁循环队列</title>
+      <link>/docs/linux/linux-kernel/data-structures/kfifo/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux/linux-kernel/data-structures/kfifo/</guid>
+      <description>一、提供的接口 # 1. 定义相关 # 声明和初始化 1// include/linux/kfifo.h 2/** 3 * DECLARE_KFIFO - macro to declare a fifo object 4 * @fifo: name of the declared fifo 5 * @type: type of the fifo elements 6 * @size: the number of elements in the fifo, this must be a power of 2 7 */ 8#define DECLARE_KFIFO(fifo, type, size) STRUCT_KFIFO(type, size) fifo 9 10/** 11 * INIT_KFIFO - Initialize a fifo declared by DECLARE_KFIFO 12 * @fifo: name of the declared fifo datatype 13 */ 14#define INIT_KFIFO(fifo) \ 15(void)({ \ 16 typeof(&amp;amp;(fifo)) __tmp = &amp;amp;(fifo); \ 17 struct __kfifo *__kfifo = &amp;amp;__tmp-&amp;gt;kfifo; \ 18 __kfifo-&amp;gt;in = 0; \ 19 __kfifo-&amp;gt;out = 0; \ 20 __kfifo-&amp;gt;mask = __is_kfifo_ptr(__tmp) ?</description>
+    </item>
+    
+    <item>
+      <title>list 链表</title>
+      <link>/docs/linux/linux-kernel/data-structures/list/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux/linux-kernel/data-structures/list/</guid>
+      <description>一、前言 # 内核里面链表的实现有很多种
+名称 用途 定义 list_head 双向链表 include/linux/types.h hlist_head &amp;amp; hlist_node 带头节点的双向链表 include/linux/types.h hlist_bl_head &amp;amp; hlist_bl_node 带自旋锁和头节点的双向链表 include/linux/list_bl.h hlist_nulls_head &amp;amp; hlist_nulls_node 使用ptr最后一位代表end的双向链表 include/linux/list_nulls.h 二、使用实例 # 1. 在链表中间插入 # 1void test() { 2	// 按照到期时间排序插入 3 struct TIMER *node; 4 struct TIMER *prev = NULL; // 记录要插入的节点前一个的节点 5 6 hlist_for_each_entry(node, &amp;amp;s_timer_list, entry) { 7 if (node-&amp;gt;expires &amp;gt; timer-&amp;gt;expires) { 8 break; 9 } 10 prev = node; 11 } 12 if (prev == NULL) { 13 // 没有前一个节点，说明要插入到第一个 14 // 1.</description>
+    </item>
+    
+    <item>
+      <title>rbtree 红黑树</title>
+      <link>/docs/linux/linux-kernel/data-structures/rbtree/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux/linux-kernel/data-structures/rbtree/</guid>
+      <description>1// include/linux/rbtree.h 2struct rb_node { 3	unsigned long __rb_parent_color; 4	struct rb_node *rb_right; 5	struct rb_node *rb_left; 6} __attribute__((aligned(sizeof(long)))); 先参考 地址对齐 了解为什么可以使用__rb_parent_color的低两位作为颜色 </description>
+    </item>
+    
+    <item>
+      <title>RCU Read-Copy-Update</title>
+      <link>/docs/linux/linux-kernel/data-structures/rcu/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux/linux-kernel/data-structures/rcu/</guid>
+      <description> 一文带你深入解析Linux内核-RCU机制（超详细~） Linux 内核：RCU机制与使用
+一、原理 # 对一块数据要写入时，先拷贝一份，更新数据完成后，再更新到原数据结构 保证要么读取老数据，要么读取新数据，不会出现读取一半的情况 写的时候锁住，等待读，应对写少读多的场景 二、关键思想 # 复制后更新数据 延迟回收内存，当没有老数据结构引用的读者时，才回收内存 </description>
+    </item>
+    
+  </channel>
+</rss>

@@ -1,0 +1,5580 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. 基本概念 # 可靠性工程（Reliability Engineering）: 是在产品寿命周期全过程（论证、方案、工程研制、生产和使用）中同产品故障作斗争的一门学科 1.1. 可靠性: 产品在规定的条件下、规定的时间内完成规定的功能的能力，即业界所说的三规。是产品的一种固有属性 # 1) 规定的条件：产品的运行环境 # 环境条件：温度，湿度，压力，振动，冲击，电磁场，电磁辐射等等 工作条件：工作应力，系统负载，业务模型，人员操作等等 2) 规定的时间：产品的生命周期 # 工作时间：时长（小时）、频次（次数）、距离（公里），例如交换机寿命20年，手机寿命5年，手机划盖工作寿命6万次，汽车寿命30万公里 非工作时间：待机状态，储存状态等 3) 规定的功能：产品的技术性指标 # 指产品标准或产品技术条件中所规定的各项技术性能（技术指标） 1.2. 故障（Fault）：系统内的对象实体相对正常状态的偏离（站在这个对象的外部来看）的一种静态状态。例如进程挂死，硬盘坏道，CPU降频，网络丢包，文件系统只读，配置文件丢失等等 # 偏离的表现形式称之为故障模式 = 故障对象（主语）&#43; 故障表现（谓语） 故障对象：保证系统运行以及提供业务能力的物理（硬盘、网卡等等）或者逻辑实体（进程、文件、数据等），可以是一个单一实体，也可以是多个单一实体组成的综合实体（主机、集群、站点等），其本质是系统的组成成分，类似于一座房子的墙面，房梁、房檐、砖头、瓦片；也类似于一个人的四肢、眼睛、耳朵、嘴巴等 故障表现：偏离于正常状态的表达，一般是动词、形容词来表示，比如只读、退出、掉电、卡慢、崩溃、坏道、高温、泄漏、过载、损坏、丢失、抢占、重启、失败、空间满等等 系统是由软件和硬件构成的，所以系统的故障对象就是软件和硬件，其中硬件包含主机（主机本身如主板、机箱等；以及主机上的硬件部件如硬盘、网卡、CPU、电源、风扇、内存、PCIE接口等等）以及网络设备（用于主机之间的连接，例如交换机、路由器、光纤网线、网卡/光模块等），软件包含操作系统（内核、驱动、系统服务等）、系统业务软件（包含进程、服务、容器、虚拟机、数据、文件、开源中间件等等） 故障被激活（Active）的时候会产生错误（Error），未被激活的故障就是休眠的/静默的（Dormant） 故障来源： 对象实体内部自然产生的：例如软件缺陷，硬件的自然损坏等。也叫作内源性故障 对象实体外部交互产生的：例如配置类故障（配置项不正确），误操作类故障（误删文件）、交互类故障等、也叫作外源性故障 1.3. 错误（Error）：是故障被激活后的一种动态状态，也是会直接导致业务失效的某种状态（State）。典型的错误如消息发送超时（网络丢包被激活导致的），请求无响应（对端进程挂死被激活导致的），配置文件读失败（配置文件丢失被激活导致的），硬盘写超时（硬盘坏道被激活导致的），硬盘读写慢（硬盘坏道被激活导致的）等等 # 激活：业务操作路径经过了某个存在故障的对象实体，从而导致该对象实体的某个故障被激活（也就是说故障只有被激活才会对系统产生影响，静默故障是无害的） 错误检测：当某个错误信息或者错误信号（Error message or Error signal）未被感知到，该错误就叫做静默错误（Latent Error），例如未感知到超时等 错误未被检测或者检测到而未有容错处理的话，就会产生业务失效（中断、性能下降等） 错误模式：类似于故障模式，区别是错误对象通常是业务操作而不是系统内部组件，错误表现和故障表现基本上是一样的 1.4. 失效（Failure）：系统当前的业务偏离正常业务（Correct Service ）的事件 # 偏离的表现：未按照规格要求实现或者规格要求本身不完整，通常称之为业务中断（Service Outage） 偏离正常业务的表现形式称之为失效模式（Failure Mode） = 失效对象 &#43; 失效表现 失效对象：与故障对象不同的是，失效是基于外部客户业务的角度进行描述的，因此失效对象主要为客户的业务类型/模型或者抽象表达，所以描述为业务（数据面-用户业务）、数据（数据面-用户数据）、控制台（管控面）、扩容（运维面）、升级（运维面）、更换（运维面）等等诸如此类 失效表现：相对于故障表现而言，会更加聚焦一些，一般也是动词、形容词来表达，主要有中断，卡慢，超时，丢失/错误，失败等 失效的行为规律： 持续性失效：一直失效直到人为恢复 间歇性/周期性失效：周期性或者无规律隔段时间出现一次然后自我恢复 偶然性失效：偶然出现一次然后自我恢复 失效对客户业务不同的影响程度的等级叫做失效严重程度（ Failure Severities ），也叫失效严酷度 失效对象对于客户而言就有重要性之分（不同的业务类型有着不同的重要性，比如说数据面业务重要性要大于管控面业务），同时对象本身还隐含着范围的概念（主要是指影响的用户数量，比如是影响了所有用户，还是影响了少部分用户，影响的用户数据范围等） 失效表现的角度来看也会有所区分，从两个维度来看，一是失效表现本身对客户的影响大小（比如数据丢失就是业务中断要影响大，中断要比卡慢影响大等等），二是失效表现的关键特征（包括持续时间例如时间越长对客户影响越大、出现次数例如次数越多则对客户影响越大） 在其他条件同等下，业务越重要、影响用户越多、影响越深、持续时间越长、发生次数越多则严重程度越高 可以是部分业务失效也可以是全部业务失效。部分失效也叫作降级工作状态，表现为业务降速，业务受限，应急状态等 失效是在系统的边界处体现出来的非正常的输出表现 1.">
+<meta name="theme-color" content="#FFFFFF"><meta property="og:title" content="可靠性设计" />
+<meta property="og:description" content="1. 基本概念 # 可靠性工程（Reliability Engineering）: 是在产品寿命周期全过程（论证、方案、工程研制、生产和使用）中同产品故障作斗争的一门学科 1.1. 可靠性: 产品在规定的条件下、规定的时间内完成规定的功能的能力，即业界所说的三规。是产品的一种固有属性 # 1) 规定的条件：产品的运行环境 # 环境条件：温度，湿度，压力，振动，冲击，电磁场，电磁辐射等等 工作条件：工作应力，系统负载，业务模型，人员操作等等 2) 规定的时间：产品的生命周期 # 工作时间：时长（小时）、频次（次数）、距离（公里），例如交换机寿命20年，手机寿命5年，手机划盖工作寿命6万次，汽车寿命30万公里 非工作时间：待机状态，储存状态等 3) 规定的功能：产品的技术性指标 # 指产品标准或产品技术条件中所规定的各项技术性能（技术指标） 1.2. 故障（Fault）：系统内的对象实体相对正常状态的偏离（站在这个对象的外部来看）的一种静态状态。例如进程挂死，硬盘坏道，CPU降频，网络丢包，文件系统只读，配置文件丢失等等 # 偏离的表现形式称之为故障模式 = 故障对象（主语）&#43; 故障表现（谓语） 故障对象：保证系统运行以及提供业务能力的物理（硬盘、网卡等等）或者逻辑实体（进程、文件、数据等），可以是一个单一实体，也可以是多个单一实体组成的综合实体（主机、集群、站点等），其本质是系统的组成成分，类似于一座房子的墙面，房梁、房檐、砖头、瓦片；也类似于一个人的四肢、眼睛、耳朵、嘴巴等 故障表现：偏离于正常状态的表达，一般是动词、形容词来表示，比如只读、退出、掉电、卡慢、崩溃、坏道、高温、泄漏、过载、损坏、丢失、抢占、重启、失败、空间满等等 系统是由软件和硬件构成的，所以系统的故障对象就是软件和硬件，其中硬件包含主机（主机本身如主板、机箱等；以及主机上的硬件部件如硬盘、网卡、CPU、电源、风扇、内存、PCIE接口等等）以及网络设备（用于主机之间的连接，例如交换机、路由器、光纤网线、网卡/光模块等），软件包含操作系统（内核、驱动、系统服务等）、系统业务软件（包含进程、服务、容器、虚拟机、数据、文件、开源中间件等等） 故障被激活（Active）的时候会产生错误（Error），未被激活的故障就是休眠的/静默的（Dormant） 故障来源： 对象实体内部自然产生的：例如软件缺陷，硬件的自然损坏等。也叫作内源性故障 对象实体外部交互产生的：例如配置类故障（配置项不正确），误操作类故障（误删文件）、交互类故障等、也叫作外源性故障 1.3. 错误（Error）：是故障被激活后的一种动态状态，也是会直接导致业务失效的某种状态（State）。典型的错误如消息发送超时（网络丢包被激活导致的），请求无响应（对端进程挂死被激活导致的），配置文件读失败（配置文件丢失被激活导致的），硬盘写超时（硬盘坏道被激活导致的），硬盘读写慢（硬盘坏道被激活导致的）等等 # 激活：业务操作路径经过了某个存在故障的对象实体，从而导致该对象实体的某个故障被激活（也就是说故障只有被激活才会对系统产生影响，静默故障是无害的） 错误检测：当某个错误信息或者错误信号（Error message or Error signal）未被感知到，该错误就叫做静默错误（Latent Error），例如未感知到超时等 错误未被检测或者检测到而未有容错处理的话，就会产生业务失效（中断、性能下降等） 错误模式：类似于故障模式，区别是错误对象通常是业务操作而不是系统内部组件，错误表现和故障表现基本上是一样的 1.4. 失效（Failure）：系统当前的业务偏离正常业务（Correct Service ）的事件 # 偏离的表现：未按照规格要求实现或者规格要求本身不完整，通常称之为业务中断（Service Outage） 偏离正常业务的表现形式称之为失效模式（Failure Mode） = 失效对象 &#43; 失效表现 失效对象：与故障对象不同的是，失效是基于外部客户业务的角度进行描述的，因此失效对象主要为客户的业务类型/模型或者抽象表达，所以描述为业务（数据面-用户业务）、数据（数据面-用户数据）、控制台（管控面）、扩容（运维面）、升级（运维面）、更换（运维面）等等诸如此类 失效表现：相对于故障表现而言，会更加聚焦一些，一般也是动词、形容词来表达，主要有中断，卡慢，超时，丢失/错误，失败等 失效的行为规律： 持续性失效：一直失效直到人为恢复 间歇性/周期性失效：周期性或者无规律隔段时间出现一次然后自我恢复 偶然性失效：偶然出现一次然后自我恢复 失效对客户业务不同的影响程度的等级叫做失效严重程度（ Failure Severities ），也叫失效严酷度 失效对象对于客户而言就有重要性之分（不同的业务类型有着不同的重要性，比如说数据面业务重要性要大于管控面业务），同时对象本身还隐含着范围的概念（主要是指影响的用户数量，比如是影响了所有用户，还是影响了少部分用户，影响的用户数据范围等） 失效表现的角度来看也会有所区分，从两个维度来看，一是失效表现本身对客户的影响大小（比如数据丢失就是业务中断要影响大，中断要比卡慢影响大等等），二是失效表现的关键特征（包括持续时间例如时间越长对客户影响越大、出现次数例如次数越多则对客户影响越大） 在其他条件同等下，业务越重要、影响用户越多、影响越深、持续时间越长、发生次数越多则严重程度越高 可以是部分业务失效也可以是全部业务失效。部分失效也叫作降级工作状态，表现为业务降速，业务受限，应急状态等 失效是在系统的边界处体现出来的非正常的输出表现 1." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="/docs/examination/system-architect/book-study/reliability/" /><meta property="article:section" content="docs" />
+
+<meta property="article:modified_time" content="2024-09-24T16:54:53+08:00" />
+<title>可靠性设计 | 技术的路上奔跑</title>
+<link rel="manifest" href="../../../../../manifest.json">
+<link rel="icon" href="../../../../../favicon.png" type="image/x-icon">
+<link rel="stylesheet" href="../../../../../book.min.33a48f5432973b8ff9a82679d9e45d67f2c15d4399bd2829269455cfe390b5e8.css" integrity="sha256-M6SPVDKXO4/5qCZ52eRdZ/LBXUOZvSgpJpRVz&#43;OQteg=">
+<script defer src="../../../../../en.search.min.ffb26c0b822eb80e169fe51ff5a5fe446b7ea107731835d986761125ea031367.js" integrity="sha256-/7JsC4IuuA4Wn&#43;Uf9aX&#43;RGt&#43;oQdzGDXZhnYRJeoDE2c="></script>
+
+<script defer src="../../../../../sw.min.6f6f90fcb8eb1c49ec389838e6b801d0de19430b8e516902f8d75c3c8bd98739.js" integrity="sha256-b2&#43;Q/LjrHEnsOJg45rgB0N4ZQwuOUWkC&#43;NdcPIvZhzk="></script>
+<!--
+Made with Book Theme
+https://github.com/alex-shpak/hugo-book
+-->
+
+<link rel="stylesheet" href="../../../../../katex/katex.min.css">
+<script src="../../../../../katex/katex.min.js"></script>
+<script src="../../../../../katex/auto-render.min.js"></script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    renderMathInElement(document.body, {
+      delimiters: [
+        { left: "$$", right: "$$", display: true },
+        { left: "$", right: "$", display: false }
+      ]
+    });
+  });
+</script>
+
+
+
+<script src="../../../../../lib/plantuml-encoder.min.js" integrity="sha256-Qsk2KRBCN5qVZX7B+8+2IvQl1Aqc723qV1tBCQaVoqo=" crossorigin="anonymous"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+  let plantumlPrefix = "language-plantuml";
+  Array.prototype.forEach.call(document.querySelectorAll("[class^=" + plantumlPrefix + "]"), function(code){
+    let image = document.createElement("IMG");
+    image.loading = 'lazy'; 
+    image.src = 'https://www.plantuml.com/plantuml/svg/~1' + plantumlEncoder.encode(code.innerText);
+    code.style.display = 'none';
+    code.parentNode.style = 'text-align: center; margin: 0; padding: 0; background-color: transparent;';
+
+    
+    
+    let div = document.createElement("DIV");
+    div.className = "post-img-view";
+    let a = document.createElement("A");
+    a.setAttribute("data-fancybox", "gallery");
+    a.setAttribute("href", image.src);
+    a.appendChild(image);
+    div.appendChild(a);
+    code.parentNode.insertBefore(div, code);
+    
+  });
+});
+</script>
+
+
+
+<script src="../../../../../lib/fancybox/jquery.min.js"></script>
+<link rel="stylesheet" href="../../../../../lib/fancybox/jquery.fancybox.min.css" />
+<script src="../../../../../lib/fancybox/jquery.fancybox.min.js"></script>
+
+
+  
+</head>
+<body dir="ltr">
+  <input type="checkbox" class="hidden toggle" id="menu-control" />
+  <input type="checkbox" class="hidden toggle" id="toc-control" />
+  <main class="container flex">
+    <aside class="book-menu">
+      <div class="book-menu-content">
+        
+  <nav>
+<h2 class="book-brand">
+  <a class="flex align-center" href="../../../../../"><span>技术的路上奔跑</span>
+  </a>
+</h2>
+
+
+<div class="book-search">
+  <input type="text" id="book-search-input" placeholder="Search" aria-label="Search" maxlength="64" data-hotkeys="s/" />
+  <div class="book-search-spinner hidden"></div>
+  <ul id="book-search-results"></ul>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <ul>
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-076945525d27fc883dc64d169725123d" class="toggle"  />
+    <label for="section-076945525d27fc883dc64d169725123d" class="flex justify-between">
+      <a href="../../../../../docs/c&#43;&#43;/" class="">C&#43;&#43;源码分析记录</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/c&#43;&#43;/macro/" class="">预定义宏</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/c&#43;&#43;/move/" class="">std::move</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/c&#43;&#43;/shared_ptr/" class="">std::shared_ptr</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-6ae1a891fb3a3f71d71273fc61b29b76" class="toggle"  />
+    <label for="section-6ae1a891fb3a3f71d71273fc61b29b76" class="flex justify-between">
+      <a role="button" class="">linux</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-3a06e930057f0966216e8ee296319246" class="toggle"  />
+    <label for="section-3a06e930057f0966216e8ee296319246" class="flex justify-between">
+      <a href="../../../../../docs/linux/linux-kernel/" class="">linux内核源码分析记录</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/compile-thinking/" class="">编译思想</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-fe3499b386047030cefed47c8171acfe" class="toggle"  />
+    <label for="section-fe3499b386047030cefed47c8171acfe" class="flex justify-between">
+      <a role="button" class="">数据结构</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/data-structures/container_of/" class="">container_of() 根据成员地址找其所在结构体</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/data-structures/atomic/" class="">atomic 原子变量</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/data-structures/hashtable/" class="">hashtable 哈希表</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/data-structures/kfifo/" class="">kfifo 无锁循环队列</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/data-structures/list/" class="">list 链表</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/data-structures/rbtree/" class="">rbtree 红黑树</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/data-structures/rcu/" class="">RCU Read-Copy-Update</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-61e0ef8b04de577fbdc7b126d08efe69" class="toggle"  />
+    <label for="section-61e0ef8b04de577fbdc7b126d08efe69" class="flex justify-between">
+      <a role="button" class="">/drivers/ 驱动部分</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-ae532a140ecd7bf2d7c22e0b1a16962f" class="toggle"  />
+    <label for="section-ae532a140ecd7bf2d7c22e0b1a16962f" class="flex justify-between">
+      <a role="button" class="">net/ 网卡驱动部分</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/drivers/net/common/" class="">通用网络驱动开发知识</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/drivers/net/igb/" class="">Igb</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/drivers/keyboard/" class="">键盘驱动</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-2e9314dfe8a7648843991b528610d749" class="toggle"  />
+    <label for="section-2e9314dfe8a7648843991b528610d749" class="flex justify-between">
+      <a role="button" class="">/net/ 网络部分</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/net/common/" class="">网络数据包处理流程</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-fc939877a55e0f79c88a1c64432710ef" class="toggle"  />
+    <label for="section-fc939877a55e0f79c88a1c64432710ef" class="flex justify-between">
+      <a role="button" class="">socket</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/net/socket/socket/" class="">socket总述</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/net/socket/sendmsg/" class="">sendmsg</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/net/socket/recvmsg/" class="">recvmsg</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/net/iptables/" class="">Iptables</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-0a7f1c84540241f1c6f1800de49a7720" class="toggle"  />
+    <label for="section-0a7f1c84540241f1c6f1800de49a7720" class="flex justify-between">
+      <a role="button" class="">ipv4/ ipv4的处理部分</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/net/ipv4/ipv4/" class="">Ipv4</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/net/ipv4/tcp/" class="">tcp</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/net/ipv4/udp/" class="">udp</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-108538e770a9cc3fc0b35a5067536d07" class="toggle"  />
+    <label for="section-108538e770a9cc3fc0b35a5067536d07" class="flex justify-between">
+      <a role="button" class="">ipv6/ ipv6的处理部分</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/net/ipv6/inet6/" class="">Inet6</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-82fca42832e0f5862765245480c6d50a" class="toggle"  />
+    <label for="section-82fca42832e0f5862765245480c6d50a" class="flex justify-between">
+      <a role="button" class="">unix/ unix的处理部分</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/net/unix/unix/" class="">Unix</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/net/bridge/" class="">linux网桥</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/net/epoll/" class="">Epoll</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/net/poll/" class="">Poll</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/net/select/" class="">Select</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/net/sk_buff/" class="">sk_buff 内核中数据包结构体</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-ccd466ff3139a06e35e5768247dedcda" class="toggle"  />
+    <label for="section-ccd466ff3139a06e35e5768247dedcda" class="flex justify-between">
+      <a role="button" class="">/arch/ cpu体系架构</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-f796c2cc14778d5a798d7af8ab5b83b3" class="toggle"  />
+    <label for="section-f796c2cc14778d5a798d7af8ab5b83b3" class="flex justify-between">
+      <a href="../../../../../docs/linux/linux-kernel/arch/common/" class="">公共处理方式</a>
+    </label>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-17eb2a36dc4fa094b5493959ccab63bc" class="toggle"  />
+    <label for="section-17eb2a36dc4fa094b5493959ccab63bc" class="flex justify-between">
+      <a role="button" class="">x86/ x86体系</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/arch/x86/boot/" class="">x86启动过程</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/arch/x86/register/" class="">特殊寄存器</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/arch/x86/gdt-idt-ldt-tss-tgd/" class="">gdt/idt/ldt/tss/tgd</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/arch/x86/timer/" class="">定时器设定</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/arch/x86/early-printk/" class="">早期日志输出</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-c0c473dcbf34f130a01d125d9e77f9a9" class="toggle"  />
+    <label for="section-c0c473dcbf34f130a01d125d9e77f9a9" class="flex justify-between">
+      <a role="button" class="">/fs/ 文件部分</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/fs/common/" class="">文件系统总述</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/fs/open/" class="">open系统调用</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/fs/inotify/" class="">Inotify</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-2f4734425ea4bf70ec20a77f7fe621dd" class="toggle"  />
+    <label for="section-2f4734425ea4bf70ec20a77f7fe621dd" class="flex justify-between">
+      <a role="button" class="">/kernel/ 内核运行主要代码</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-eb76a8b10e091e71a1250b7c433d77db" class="toggle"  />
+    <label for="section-eb76a8b10e091e71a1250b7c433d77db" class="flex justify-between">
+      <a role="button" class="">/kernel/lockng/ 锁相关</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/kernel/locking/bit_spinlock/" class="">bit_spinlock</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/kernel/locking/qspinlock/" class="">qspinlock</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-b5a08711df6a5e37561d8b68c9439067" class="toggle"  />
+    <label for="section-b5a08711df6a5e37561d8b68c9439067" class="flex justify-between">
+      <a href="../../../../../docs/linux/linux-kernel/kernel/sched/" class="">/kernel/sched/ 进程调度</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/kernel/sched/schedule/" class="">主调度器</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-1e39884438084c2c1fc67e916eb2b208" class="toggle"  />
+    <label for="section-1e39884438084c2c1fc67e916eb2b208" class="flex justify-between">
+      <a href="../../../../../docs/linux/linux-kernel/kernel/cgroup/" class="">/kernel/cgroup/ cgroup处理</a>
+    </label>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-f1341bef3dd7f66ab15601ff5c2bb167" class="toggle"  />
+    <label for="section-f1341bef3dd7f66ab15601ff5c2bb167" class="flex justify-between">
+      <a href="../../../../../docs/linux/linux-kernel/kernel/watchdog/" class="">/kernel/watchdog* 看门狗</a>
+    </label>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/kernel/timer/" class="">内核计时和定时器</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/kernel/time/" class="">时间系统</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-9e5b7eb3577a3bb9311b9512acca784c" class="toggle"  />
+    <label for="section-9e5b7eb3577a3bb9311b9512acca784c" class="flex justify-between">
+      <a role="button" class="">中断</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/intterupt/common/" class="">上半部和下半部</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-7136deee92473c69f24df09271c02b70" class="toggle"  />
+    <label for="section-7136deee92473c69f24df09271c02b70" class="flex justify-between">
+      <a role="button" class="">/mm/ 内存管理</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/mm/kmem_cache/" class="">kmem_cache</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/public-micro/" class="">公共宏的一些定义</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-89208b0ad894e0bedeaaff6a9f182258" class="toggle"  />
+    <label for="section-89208b0ad894e0bedeaaff6a9f182258" class="flex justify-between">
+      <a role="button" class="">调试技术</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-4ae4ec450d01e14f8d498fceca77e47f" class="toggle"  />
+    <label for="section-4ae4ec450d01e14f8d498fceca77e47f" class="flex justify-between">
+      <a role="button" class="">proc目录内容详解</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/debug/proc/diskstats/" class="">/proc/diskstats 磁盘信息</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/debug/ftrace/" class="">ftrace</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/debug/systemtap/" class="">systemtap</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-d7ea361bf72968532bcfe65fe25e5cd9" class="toggle"  />
+    <label for="section-d7ea361bf72968532bcfe65fe25e5cd9" class="flex justify-between">
+      <a role="button" class="">内核问题排查记录</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-da8cfb336c9632e4b8d863855abae391" class="toggle"  />
+    <label for="section-da8cfb336c9632e4b8d863855abae391" class="flex justify-between">
+      <a role="button" class="">宕机vmcore分析</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/kernel-troubleshooting/crash/01-netfilter-driver-crash/" class="">1. netfilter驱动使用sk错误引发宕机</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/kernel-troubleshooting/crash/02-hung-task-crash/" class="">2. Kernel panic - not syncing: hung_task: blocked tasks</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/kernel-troubleshooting/knowledge/" class="">知识性说明</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-81ac4d0ce2be51263b8d525fd8e2f1f6" class="toggle"  />
+    <label for="section-81ac4d0ce2be51263b8d525fd8e2f1f6" class="flex justify-between">
+      <a href="../../../../../docs/glibc/" class="">glibc源码分析记录</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-1a3b279e0f293c5c3a083f9323ca8ab2" class="toggle"  />
+    <label for="section-1a3b279e0f293c5c3a083f9323ca8ab2" class="flex justify-between">
+      <a role="button" class="">nss: Name Service Switch</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-12c635147ca4f050649e8f9130f1ba3c" class="toggle"  />
+    <label for="section-12c635147ca4f050649e8f9130f1ba3c" class="flex justify-between">
+      <a role="button" class="">hosts dns解析服务</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/glibc/nss/hosts/dns/" class="">dns 根据/etc/resolv.conf发包处理</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/glibc/nss/hosts/files/" class="">files 读取/etc/hosts文件</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-e66e2e478c81786f553bd82d3931b216" class="toggle"  />
+    <label for="section-e66e2e478c81786f553bd82d3931b216" class="flex justify-between">
+      <a href="../../../../../docs/mysql/" class="">mysql源码分析记录</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/mysql/compile/" class="">编译和调试方法</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-f8bd884eebd2f3fa4437f5c30e95d87b" class="toggle"  />
+    <label for="section-f8bd884eebd2f3fa4437f5c30e95d87b" class="flex justify-between">
+      <a href="../../../../../docs/openssl/" class="">openssl源码分析记录</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-79f5d582b25e0ba116147e70d7c37d9b" class="toggle"  />
+    <label for="section-79f5d582b25e0ba116147e70d7c37d9b" class="flex justify-between">
+      <a role="button" class="">crypto 加解密库</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/openssl/crypto/X509/" class="">X509证书</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-b0d378e2e51e9e43c0fd54b7f68d5d64" class="toggle"  />
+    <label for="section-b0d378e2e51e9e43c0fd54b7f68d5d64" class="flex justify-between">
+      <a role="button" class="">ssl ssl协议相关</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/openssl/ssl/certificate/" class="">Certificate</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/openssl/ssl/certificateVerify/" class="">Certificate Verify</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-ad6c2bf4e759ec71c24d3649b1af28e6" class="toggle"  />
+    <label for="section-ad6c2bf4e759ec71c24d3649b1af28e6" class="flex justify-between">
+      <a role="button" class="">引擎开发</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/openssl/engines/rsa/" class="">rsa普密ukey</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-2b0f9c71b96dae88f32ac3cee96b20d0" class="toggle"  />
+    <label for="section-2b0f9c71b96dae88f32ac3cee96b20d0" class="flex justify-between">
+      <a role="button" class="">systemd源码分析记录</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/systemd/dns/" class="">dns 根据/etc/resolv.conf发包处理</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-f55a7674027409a03b8a5abb4bc297a8" class="toggle"  />
+    <label for="section-f55a7674027409a03b8a5abb4bc297a8" class="flex justify-between">
+      <a role="button" class="">nginx与openresty源码分析记录</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-31add6f61f1172621b97f8a589c1d0b2" class="toggle"  />
+    <label for="section-31add6f61f1172621b97f8a589c1d0b2" class="flex justify-between">
+      <a href="../../../../../docs/nginx/nginx/" class="">nginx</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/nginx/nginx/common/" class="">nginx结构综述</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-fff5261d3f813bb84c350c416cb2fb96" class="toggle"  />
+    <label for="section-fff5261d3f813bb84c350c416cb2fb96" class="flex justify-between">
+      <a href="../../../../../docs/nginx/nginx/http/" class="">http模块</a>
+    </label>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-f4402e173ff6e0baf39c7dcabe4cc055" class="toggle"  />
+    <label for="section-f4402e173ff6e0baf39c7dcabe4cc055" class="flex justify-between">
+      <a role="button" class="">stream模块</a>
+    </label>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-17591ec0ca9929e17ca9b0e68c7f4109" class="toggle"  />
+    <label for="section-17591ec0ca9929e17ca9b0e68c7f4109" class="flex justify-between">
+      <a href="../../../../../docs/nginx/openresty/" class="">openresty扩展组件</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-ac6c60f4cffbffe56d10067a0daed9b7" class="toggle"  />
+    <label for="section-ac6c60f4cffbffe56d10067a0daed9b7" class="flex justify-between">
+      <a href="../../../../../docs/nginx/openresty/stream/" class="">https://github.com/openresty/stream-lua-nginx-module</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/nginx/openresty/stream/socket-tcp/" class="">ngx_stream_lua_socket_tcp.c</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-da0768733ed83a1a185c822afd62afca" class="toggle" checked />
+    <label for="section-da0768733ed83a1a185c822afd62afca" class="flex justify-between">
+      <a role="button" class="">考试准备</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-73f081c9d6184c17d75a11eb0c89f950" class="toggle" checked />
+    <label for="section-73f081c9d6184c17d75a11eb0c89f950" class="flex justify-between">
+      <a role="button" class="">系统架构师</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-3678bd996217536cb45684f08acbf2d5" class="toggle"  />
+    <label for="section-3678bd996217536cb45684f08acbf2d5" class="flex justify-between">
+      <a role="button" class="">大并发架构</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/examination/system-architect/large-concurrency/common/" class="">前言和综述</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/examination/system-architect/large-concurrency/reliability/" class="">可靠性</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/examination/system-architect/large-concurrency/proctical-scene/" class="">实践场景</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-e78103f8358bcc8897b2665157a6ac17" class="toggle" checked />
+    <label for="section-e78103f8358bcc8897b2665157a6ac17" class="flex justify-between">
+      <a role="button" class="">读书和学习笔记</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/examination/system-architect/book-study/reliability/" class="active">可靠性设计</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/examination/system-architect/book-study/designing-data-intensive-application/" class="">数据密集型应用系统设计</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>系统工程</span>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-bc467201b327634cf4794420f221e449" class="toggle"  />
+    <label for="section-bc467201b327634cf4794420f221e449" class="flex justify-between">
+      <a href="../../../../../docs/ctf/" class="">ctf知识总结</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-5c98ee620834c5b46fb9c98c912f3a58" class="toggle"  />
+    <label for="section-5c98ee620834c5b46fb9c98c912f3a58" class="flex justify-between">
+      <a role="button" class="">知识性总结</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-efb38f77116c50bfef7a34437bcb0d09" class="toggle"  />
+    <label for="section-efb38f77116c50bfef7a34437bcb0d09" class="flex justify-between">
+      <a role="button" class="">加解密编码等算法</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/ctf/knowledge/encoder-decoder/algorithm/" class="">hash和编码算法列表</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-048232ff144b12ee355b2a18ecb86c32" class="toggle"  />
+    <label for="section-048232ff144b12ee355b2a18ecb86c32" class="flex justify-between">
+      <a role="button" class="">压缩和解压缩</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/ctf/knowledge/compress/zip/" class="">zip</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-287675e4fff40951adcbf3f3bc57df6d" class="toggle"  />
+    <label for="section-287675e4fff40951adcbf3f3bc57df6d" class="flex justify-between">
+      <a role="button" class="">文件相关</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/ctf/knowledge/file/file-struct/" class="">文件格式</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-521980a8aaa52145eac6f7bd8ae2a51e" class="toggle"  />
+    <label for="section-521980a8aaa52145eac6f7bd8ae2a51e" class="flex justify-between">
+      <a role="button" class="">buuoj.cn的题目</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-dab01071fb6c7505b5567d9327443dcd" class="toggle"  />
+    <label for="section-dab01071fb6c7505b5567d9327443dcd" class="flex justify-between">
+      <a role="button" class="">misc</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/ctf/buuctf/misc/%E9%9D%A2%E5%85%B7%E4%B8%8B%E7%9A%84flag/" class="">面具下的flag</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-8bb89e37bc8ac94ed7933c2c15518f8c" class="toggle"  />
+    <label for="section-8bb89e37bc8ac94ed7933c2c15518f8c" class="flex justify-between">
+      <a role="button" class="">AI相关</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/ai/keywords/" class="">名词解释和学习大纲</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-1cc51252e9449a6be453972b2b6526e1" class="toggle"  />
+    <label for="section-1cc51252e9449a6be453972b2b6526e1" class="flex justify-between">
+      <a role="button" class="">计算机视觉</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/ai/cv/minst/" class="">minst手写数字识别——神经网络实战笔记</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-20038bcc21ca3d914920842c4a32533d" class="toggle"  />
+    <label for="section-20038bcc21ca3d914920842c4a32533d" class="flex justify-between">
+      <a href="../../../../../docs/leetcode/" class="">LeetCode刷题思路总结</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-e557ddd3240c9349f7b073a0a626b78b" class="toggle"  />
+    <label for="section-e557ddd3240c9349f7b073a0a626b78b" class="flex justify-between">
+      <a role="button" class="">简单</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode1/" class="">1. Two Sum</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode9/" class="">9. Palindrome Number</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode13/" class="">13. Roman to Integer</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode20/" class="">20. Valid Parentheses</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode101/" class="">101. Symmetric Tree</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode706/" class="">706. Design HashMap</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode1694/" class="">1694. Reformat Phone Number</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2399/" class="">2399. Check Distances Between Same Letters</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2413/" class="">2413. Smallest Even Multiple</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2418/" class="">2418. Sort the People</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2441/" class="">2441. Largest Positive Integer That Exists With Its Negative</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2446/" class="">2446. Determine if Two Events Have Conflict</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2455/" class="">2455. Average Value of Even Numbers That Are Divisible by Three</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2460/" class="">2460. Apply Operations to an Array</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2469/" class="">2469. Convert the Temperature</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2475/" class="">2475. Number of Unequal Triplets in Array</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2485/" class="">2485. Find the Pivot Integer</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2490/" class="">2490. Circular Sentence</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2500/" class="">2500. Delete Greatest Value in Each Row</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2515/" class="">2515. Shortest Distance to Target String in a Circular Array</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2520/" class="">2520. Count the Digits That Divide a Number</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2529/" class="">2529. Maximum Count of Positive Integer and Negative Integer</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2535/" class="">2535. Difference Between Element Sum and Digit Sum of an Array</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2562/" class="">2562. Find the Array Concatenation Value</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2570/" class="">2570. Merge Two 2D Arrays by Summing Values</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2574/" class="">2574. Left and Right Sum Differences</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2582/" class="">2582. Pass the Pillow</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2595/" class="">2595. Number of Even and Odd Bits</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2600/" class="">2600. K Items With the Maximum Sum</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2609/" class="">2609. Find the Longest Balanced Substring of a Binary String</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2614/" class="">2614. Prime In Diagonal</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2643/" class="">2643. Row With Maximum Ones</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2644/" class="">2644. Find the Maximum Divisibility Score</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2682/" class="">2682. Find the Losers of the Circular Game</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2710/" class="">2710. Remove Trailing Zeros From a String</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2716/" class="">2716. Minimize String Length</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2717/" class="">2717. Semi-Ordered Permutation</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2733/" class="">2733. Neither Minimum nor Maximum</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2739/" class="">2739. Total Distance Traveled</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2859/" class="">2859. Sum of Values at Indices With K Set Bits</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2860/" class="">2860. Happy Students</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-dbe51e7e4a89495069ffe18bd5d28a03" class="toggle"  />
+    <label for="section-dbe51e7e4a89495069ffe18bd5d28a03" class="flex justify-between">
+      <a role="button" class="">中等</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode3/" class="">3. Longest Substring Without Repeating Characters</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode5/" class="">5. Longest Palindromic Substring</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode6/" class="">6. ZigZag Conversion</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode7/" class="">7. Reverse Integer</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode8/" class="">8. String to Integer (atoi)</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode11/" class="">11. Container With Most Water</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode12/" class="">12. Integer to Roman</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode18/" class="">18. 4Sum</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode155/" class="">155. Min Stack</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode322/" class="">322. Coin Change</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode658/" class="">658. Find K Closest Elements</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode948/" class="">948. Bag of Tokens</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode1169/" class="">1169. Invalid Transactions</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode1352/" class="">1352. Product of the Last K Numbers</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2400/" class="">2400. Number of Ways to Reach a Position After Exactly k Steps</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2401/" class="">2401. Longest Nice Subarray</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2414/" class="">2414. Length of the Longest Alphabetical Continuous Substring</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2415/" class="">2415. Reverse Odd Levels of Binary Tree</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2419/" class="">2419. Longest Subarray With Maximum Bitwise AND</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2420/" class="">2420. Find All Good Indices</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2442/" class="">2442. Count Number of Distinct Integers After Reverse Operations</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2443/" class="">2443. Sum of Number and Its Reverse</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2447/" class="">2447. Number of Subarrays With GCD Equal to K</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2456/" class="">2456. Most Popular Video Creator</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2457/" class="">2457. Minimum Addition to Make Integer Beautiful</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2461/" class="">2461. Maximum Sum of Distinct Subarrays With Length K</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2462/" class="">2462. Total Cost to Hire K Workers</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2476/" class="">2476. Closest Nodes Queries in a Binary Search Tree</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2486/" class="">2486. Append Characters to String to Make Subsequence</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2487/" class="">2487. Remove Nodes From Linked List</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2491/" class="">2491. Circular Sentence</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2492/" class="">2492. Circular Sentence</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2501/" class="">2501. Longest Square Streak in an Array</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2502/" class="">2502. Longest Square Streak in an Array</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2516/" class="">2516. Take K of Each Character From Left and Right</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2517/" class="">2517. Maximum Tastiness of Candy Basket</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2521/" class="">2521. Distinct Prime Factors of Product of Array</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2522/" class="">2522. Partition String Into Substrings With Values at Most K</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2523/" class="">2523. Closest Prime Numbers in Range</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2530/" class="">2530. Maximum Count of Positive Integer and Negative Integer</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2531/" class="">2531. Make Number of Distinct Characters Equal</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2536/" class="">2536. Increment Submatrices by One</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2537/" class="">2537. Count the Number of Good Subarrays</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2563/" class="">2563. Count the Number of Fair Pairs</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2564/" class="">2564. Substring XOR Queries</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2571/" class="">2571. Minimum Operations to Reduce an Integer to 0</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2572/" class="">2572. Count the Number of Square-Free Subsets</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2575/" class="">2575. Find the Divisibility Array of a String</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2576/" class="">2576. Find the Maximum Number of Marked Indices</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2583/" class="">2583. Kth Largest Sum in a Binary Tree</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2596/" class="">2596. Check Knight Tour Configuration</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2597/" class="">2597. The Number of Beautiful Subsets</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2598/" class="">2598. Smallest Missing Non-negative Integer After Operations</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2601/" class="">2601. Prime Subtraction Operation</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2602/" class="">2602. Minimum Operations to Make All Array Elements Equal</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2610/" class="">2610. Convert an Array Into a 2D Array With Conditions</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2611/" class="">2611. Mice and Cheese</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2615/" class="">2615. Sum of Distances</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2645/" class="">2645. Find the Maximum Divisibility Score</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2683/" class="">2683. Neighboring Bitwise XOR</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2684/" class="">2684. Maximum Number of Moves in a Grid</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2685/" class="">2685. Count the Number of Complete Components</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2711/" class="">2711. Difference of Number of Distinct Values on Diagonals</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2712/" class="">2712. Minimum Cost to Make All Characters Equal</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2718/" class="">2718. Sum of Matrix After Queries</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2734/" class="">2734. Lexicographically Smallest String After Substring Operation</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2735/" class="">2735. Collecting Chocolates</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2740/" class="">2740. Find the Value of the Partition</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2741/" class="">2741. Special Permutations</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-42eecace07f2c55adbf8c2fda3b6b016" class="toggle"  />
+    <label for="section-42eecace07f2c55adbf8c2fda3b6b016" class="flex justify-between">
+      <a role="button" class="">困难</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/hard/leetcode4/" class="">4. Median of Two Sorted Arrays</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/hard/leetcode10/" class="">10. Regular Expression Matching</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/hard/leetcode41/" class="">41. First Missing Positive</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/hard/leetcode327/" class="">327. Count of Range Sum</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/hard/leetcode440/" class="">440. K-th Smallest in Lexicographical Order</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/hard/leetcode736/" class="">736. Parse Lisp Expression</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/hard/leetcode864/" class="">864. Shortest Path to Get All Keys</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/hard/leetcode2444/" class="">2444. Count Subarrays With Fixed Bounds</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/hard/leetcode2448/" class="">2448. Minimum Cost to Make Array Equal</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/hard/leetcode2488/" class="">2488. Count Subarrays With Median K</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/hard/leetcode2518/" class="">2518. Number of Great Partitions</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/hard/leetcode2573/" class="">2573. Count the Number of Square-Free Subsets</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/hard/leetcode2577/" class="">2577. 在网格图中访问一个格子的最少时间</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/hard/leetcode2584/" class="">2584. Split the Array to Make Coprime Products</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/hard/leetcode2612/" class="">2612. Minimum Reverse Operations</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/hard/leetcode2646/" class="">2646. Minimize the Total Price of the Trips</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/hard/leetcode2713/" class="">2713. Maximum Strictly Increasing Cells in a Matrix</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/hard/leetcode2719/" class="">2719. Count of Integers</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/hard/leetcode2742/" class="">2742. Painting the Walls</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-010cc3a6dda69f98986133a7094047b7" class="toggle"  />
+    <label for="section-010cc3a6dda69f98986133a7094047b7" class="flex justify-between">
+      <a href="../../../../../docs/books/" class="">读书笔记</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-4ed26bb92a4c971f4b8276bfc9e49be9" class="toggle"  />
+    <label for="section-4ed26bb92a4c971f4b8276bfc9e49be9" class="flex justify-between">
+      <a role="button" class="">社交相关</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/books/social/the-art-of-communication/" class="">沟通的艺术与处世智慧 -- 【美】戴尔*卡耐基</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+
+
+
+
+
+
+
+
+
+
+  
+<ul>
+  
+  <li>
+    <a href="../../../../../posts/"  >
+        Blog
+      </a>
+  </li>
+  
+  <li>
+    <a href="https://github.com/githubwyb"  target="_blank" rel="noopener">
+        Github
+      </a>
+  </li>
+  
+</ul>
+
+
+
+
+
+
+</nav>
+
+
+
+
+  <script>(function(){var e=document.querySelector("aside .book-menu-content");addEventListener("beforeunload",function(){localStorage.setItem("menu.scrollTop",e.scrollTop)}),e.scrollTop=localStorage.getItem("menu.scrollTop")})()</script>
+
+
+ 
+      </div>
+    </aside>
+
+    <div class="book-page">
+      <header class="book-header">
+        
+  <div class="flex align-center justify-between">
+  <label for="menu-control">
+    <img src="../../../../../svg/menu.svg" class="book-icon" alt="Menu" />
+  </label>
+
+  <strong>可靠性设计</strong>
+
+  <label for="toc-control">
+    
+    <img src="../../../../../svg/toc.svg" class="book-icon" alt="Table of Contents" />
+    
+  </label>
+</div>
+
+
+  
+  <aside class="hidden clearfix">
+    
+  
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#1-基本概念">1. 基本概念</a>
+      <ul>
+        <li><a href="#11-可靠性-产品在规定的条件下规定的时间内完成规定的功能的能力即业界所说的三规是产品的一种固有属性">1.1. 可靠性: 产品在规定的条件下、规定的时间内完成规定的功能的能力，即业界所说的三规。是产品的一种固有属性</a>
+          <ul>
+            <li><a href="#1-规定的条件产品的运行环境">1) 规定的条件：产品的运行环境</a></li>
+            <li><a href="#2-规定的时间产品的生命周期">2) 规定的时间：产品的生命周期</a></li>
+            <li><a href="#3-规定的功能产品的技术性指标">3) 规定的功能：产品的技术性指标</a></li>
+          </ul>
+        </li>
+        <li><a href="#12-故障fault系统内的对象实体相对正常状态的偏离站在这个对象的外部来看的一种静态状态例如进程挂死硬盘坏道cpu降频网络丢包文件系统只读配置文件丢失等等">1.2. 故障（Fault）：系统内的对象实体相对正常状态的偏离（站在这个对象的外部来看）的一种静态状态。例如进程挂死，硬盘坏道，CPU降频，网络丢包，文件系统只读，配置文件丢失等等</a></li>
+        <li><a href="#13-错误error是故障被激活后的一种动态状态也是会直接导致业务失效的某种状态state典型的错误如消息发送超时网络丢包被激活导致的请求无响应对端进程挂死被激活导致的配置文件读失败配置文件丢失被激活导致的硬盘写超时硬盘坏道被激活导致的硬盘读写慢硬盘坏道被激活导致的等等">1.3. 错误（Error）：是故障被激活后的一种动态状态，也是会直接导致业务失效的某种状态（State）。典型的错误如消息发送超时（网络丢包被激活导致的），请求无响应（对端进程挂死被激活导致的），配置文件读失败（配置文件丢失被激活导致的），硬盘写超时（硬盘坏道被激活导致的），硬盘读写慢（硬盘坏道被激活导致的）等等</a></li>
+        <li><a href="#14-失效failure系统当前的业务偏离正常业务correct-service-的事件">1.4. 失效（Failure）：系统当前的业务偏离正常业务（Correct Service ）的事件</a></li>
+        <li><a href="#15-mtbfmean-time-between-failure平均失效间隔时间">1.5. MTBF（Mean Time Between Failure）平均失效间隔时间</a></li>
+        <li><a href="#16-mttfmean-time-to-failure平均无故障工作时间">1.6. MTTF（Mean Time To Failure）平均无故障工作时间</a></li>
+      </ul>
+    </li>
+    <li><a href="#2-度量体系">2. 度量体系</a>
+      <ul>
+        <li><a href="#21-业务零中断">2.1. 业务零中断</a></li>
+        <li><a href="#22-数据零丢失">2.2. 数据零丢失</a></li>
+        <li><a href="#23-抗百倍过载">2.3. 抗百倍过载</a></li>
+        <li><a href="#24-故障秒级检测与自愈">2.4. 故障秒级检测与自愈</a></li>
+        <li><a href="#25-事故分钟级恢复">2.5. 事故分钟级恢复</a></li>
+        <li><a href="#26-测试指标">2.6. 测试指标</a></li>
+      </ul>
+    </li>
+    <li><a href="#3-系统可靠性设计">3. 系统可靠性设计</a>
+      <ul>
+        <li><a href="#31-故障预防">3.1. 故障预防</a>
+          <ul>
+            <li><a href="#1-人因差错">1) 人因差错</a></li>
+            <li><a href="#2-高危操作">2) 高危操作</a></li>
+            <li><a href="#3-失效检查导致后续失败的条件尽早检查在入口检查">3) 失效检查：导致后续失败的条件，尽早检查，在入口检查</a></li>
+          </ul>
+        </li>
+        <li><a href="#32-故障检测定位">3.2. 故障检测&amp;定位</a>
+          <ul>
+            <li><a href="#1-故障检测将系统内的故障通过业务程序本身或者公共程序感知出来">1) 故障检测：将系统内的故障通过业务程序本身或者公共程序感知出来</a></li>
+            <li><a href="#2-故障定位故障发生的位置">2) 故障定位：故障发生的位置</a></li>
+          </ul>
+        </li>
+        <li><a href="#33-故障隔离在软件模块硬件部件网络冗余部署的情况下隔离机制才有效">3.3. 故障隔离：在软件模块，硬件部件、网络冗余部署的情况下，隔离机制才有效。</a></li>
+        <li><a href="#34-故障上报需要用户介入处理的故障才要上报告警">3.4. 故障上报：需要用户介入处理的故障才要上报告警</a></li>
+        <li><a href="#35-故障恢复修复">3.5. 故障恢复&amp;修复</a>
+          <ul>
+            <li><a href="#1-业务恢复用户业务的恢复包括自动和手动两种方式">1) 业务恢复：用户业务的恢复，包括自动和手动两种方式</a></li>
+            <li><a href="#2-故障修复故障本身的恢复也可能会直接产生业务恢复">2) 故障修复：故障本身的恢复，也可能会直接产生业务恢复</a></li>
+          </ul>
+        </li>
+        <li><a href="#36-冗余设计">3.6. 冗余设计</a>
+          <ul>
+            <li><a href="#1-主机冗余">1) 主机冗余</a></li>
+            <li><a href="#2-网络冗余">2) 网络冗余</a></li>
+          </ul>
+        </li>
+        <li><a href="#37-故障管理">3.7. 故障管理</a>
+          <ul>
+            <li><a href="#1-总体框架">1) 总体框架</a></li>
+            <li><a href="#2-故障隔离">2) 故障隔离</a></li>
+            <li><a href="#3-过载保护">3) 过载保护</a>
+              <ul>
+                <li><a href="#1-熔断">(1) 熔断</a></li>
+                <li><a href="#2-限流">(2) 限流</a></li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+    <li><a href="#4-特性可靠性设计">4. 特性可靠性设计</a>
+      <ul>
+        <li><a href="#41-fmea-failure-mode-and-effects-analysis失效模式及后果">4.1. FMEA （Failure Mode and Effects Analysis）失效模式及后果</a>
+          <ul>
+            <li><a href="#1-行动优先级-ap-action-priority">1) 行动优先级 AP Action Priority</a></li>
+            <li><a href="#2-总体步骤">2) 总体步骤</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+    <li><a href="#知识补充">知识补充</a>
+      <ul>
+        <li><a href="#1-内存错误">1. 内存错误</a></li>
+        <li><a href="#2-网络">2. 网络</a>
+          <ul>
+            <li><a href="#21-bond网络模式">2.1. Bond网络模式</a></li>
+          </ul>
+        </li>
+        <li><a href="#3-主机">3. 主机</a>
+          <ul>
+            <li><a href="#31-bmcbaseboard-management-controller-板级控制管理器">3.1. BMC（Baseboard Management Controller） 板级控制管理器</a></li>
+          </ul>
+        </li>
+        <li><a href="#4-可靠性">4. 可靠性</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+
+
+  </aside>
+  
+ 
+      </header>
+
+      
+      
+  <article class="markdown"><h1 id="1-基本概念">
+  1. 基本概念
+  <a class="anchor" href="#1-%e5%9f%ba%e6%9c%ac%e6%a6%82%e5%bf%b5">#</a>
+</h1>
+<ul>
+<li>可靠性工程（Reliability Engineering）: 是在产品寿命周期全过程（论证、方案、工程研制、生产和使用）中同产品故障作斗争的一门学科</li>
+</ul>
+<h2 id="11-可靠性-产品在规定的条件下规定的时间内完成规定的功能的能力即业界所说的三规是产品的一种固有属性">
+  1.1. 可靠性: 产品在规定的条件下、规定的时间内完成规定的功能的能力，即业界所说的三规。是产品的一种固有属性
+  <a class="anchor" href="#11-%e5%8f%af%e9%9d%a0%e6%80%a7-%e4%ba%a7%e5%93%81%e5%9c%a8%e8%a7%84%e5%ae%9a%e7%9a%84%e6%9d%a1%e4%bb%b6%e4%b8%8b%e8%a7%84%e5%ae%9a%e7%9a%84%e6%97%b6%e9%97%b4%e5%86%85%e5%ae%8c%e6%88%90%e8%a7%84%e5%ae%9a%e7%9a%84%e5%8a%9f%e8%83%bd%e7%9a%84%e8%83%bd%e5%8a%9b%e5%8d%b3%e4%b8%9a%e7%95%8c%e6%89%80%e8%af%b4%e7%9a%84%e4%b8%89%e8%a7%84%e6%98%af%e4%ba%a7%e5%93%81%e7%9a%84%e4%b8%80%e7%a7%8d%e5%9b%ba%e6%9c%89%e5%b1%9e%e6%80%a7">#</a>
+</h2>
+<h3 id="1-规定的条件产品的运行环境">
+  1) 规定的条件：产品的运行环境
+  <a class="anchor" href="#1-%e8%a7%84%e5%ae%9a%e7%9a%84%e6%9d%a1%e4%bb%b6%e4%ba%a7%e5%93%81%e7%9a%84%e8%bf%90%e8%a1%8c%e7%8e%af%e5%a2%83">#</a>
+</h3>
+<ul>
+<li>环境条件：温度，湿度，压力，振动，冲击，电磁场，电磁辐射等等</li>
+<li>工作条件：工作应力，系统负载，业务模型，人员操作等等</li>
+</ul>
+<h3 id="2-规定的时间产品的生命周期">
+  2) 规定的时间：产品的生命周期
+  <a class="anchor" href="#2-%e8%a7%84%e5%ae%9a%e7%9a%84%e6%97%b6%e9%97%b4%e4%ba%a7%e5%93%81%e7%9a%84%e7%94%9f%e5%91%bd%e5%91%a8%e6%9c%9f">#</a>
+</h3>
+<ul>
+<li>工作时间：时长（小时）、频次（次数）、距离（公里），例如交换机寿命20年，手机寿命5年，手机划盖工作寿命6万次，汽车寿命30万公里</li>
+<li>非工作时间：待机状态，储存状态等</li>
+</ul>
+<h3 id="3-规定的功能产品的技术性指标">
+  3) 规定的功能：产品的技术性指标
+  <a class="anchor" href="#3-%e8%a7%84%e5%ae%9a%e7%9a%84%e5%8a%9f%e8%83%bd%e4%ba%a7%e5%93%81%e7%9a%84%e6%8a%80%e6%9c%af%e6%80%a7%e6%8c%87%e6%a0%87">#</a>
+</h3>
+<ul>
+<li>指产品标准或产品技术条件中所规定的各项技术性能（技术指标）</li>
+</ul>
+<h2 id="12-故障fault系统内的对象实体相对正常状态的偏离站在这个对象的外部来看的一种静态状态例如进程挂死硬盘坏道cpu降频网络丢包文件系统只读配置文件丢失等等">
+  1.2. 故障（Fault）：系统内的对象实体相对正常状态的偏离（站在这个对象的外部来看）的一种静态状态。例如进程挂死，硬盘坏道，CPU降频，网络丢包，文件系统只读，配置文件丢失等等
+  <a class="anchor" href="#12-%e6%95%85%e9%9a%9cfault%e7%b3%bb%e7%bb%9f%e5%86%85%e7%9a%84%e5%af%b9%e8%b1%a1%e5%ae%9e%e4%bd%93%e7%9b%b8%e5%af%b9%e6%ad%a3%e5%b8%b8%e7%8a%b6%e6%80%81%e7%9a%84%e5%81%8f%e7%a6%bb%e7%ab%99%e5%9c%a8%e8%bf%99%e4%b8%aa%e5%af%b9%e8%b1%a1%e7%9a%84%e5%a4%96%e9%83%a8%e6%9d%a5%e7%9c%8b%e7%9a%84%e4%b8%80%e7%a7%8d%e9%9d%99%e6%80%81%e7%8a%b6%e6%80%81%e4%be%8b%e5%a6%82%e8%bf%9b%e7%a8%8b%e6%8c%82%e6%ad%bb%e7%a1%ac%e7%9b%98%e5%9d%8f%e9%81%93cpu%e9%99%8d%e9%a2%91%e7%bd%91%e7%bb%9c%e4%b8%a2%e5%8c%85%e6%96%87%e4%bb%b6%e7%b3%bb%e7%bb%9f%e5%8f%aa%e8%af%bb%e9%85%8d%e7%bd%ae%e6%96%87%e4%bb%b6%e4%b8%a2%e5%a4%b1%e7%ad%89%e7%ad%89">#</a>
+</h2>
+<ul>
+<li>偏离的表现形式称之为故障模式 =  故障对象（主语）+ 故障表现（谓语）
+<ul>
+<li>故障对象：保证系统运行以及提供业务能力的物理（硬盘、网卡等等）或者逻辑实体（进程、文件、数据等），可以是一个单一实体，也可以是多个单一实体组成的综合实体（主机、集群、站点等），其本质是系统的组成成分，类似于一座房子的墙面，房梁、房檐、砖头、瓦片；也类似于一个人的四肢、眼睛、耳朵、嘴巴等</li>
+<li>故障表现：偏离于正常状态的表达，一般是动词、形容词来表示，比如只读、退出、掉电、卡慢、崩溃、坏道、高温、泄漏、过载、损坏、丢失、抢占、重启、失败、空间满等等</li>
+<li>系统是由软件和硬件构成的，所以系统的故障对象就是软件和硬件，其中硬件包含主机（主机本身如主板、机箱等；以及主机上的硬件部件如硬盘、网卡、CPU、电源、风扇、内存、PCIE接口等等）以及网络设备（用于主机之间的连接，例如交换机、路由器、光纤网线、网卡/光模块等），软件包含操作系统（内核、驱动、系统服务等）、系统业务软件（包含进程、服务、容器、虚拟机、数据、文件、开源中间件等等）</li>
+</ul>
+</li>
+<li>故障被激活（Active）的时候会产生错误（Error），未被激活的故障就是休眠的/静默的（Dormant）</li>
+<li>故障来源：
+<ul>
+<li>对象实体内部自然产生的：例如软件缺陷，硬件的自然损坏等。也叫作内源性故障</li>
+<li>对象实体外部交互产生的：例如配置类故障（配置项不正确），误操作类故障（误删文件）、交互类故障等、也叫作外源性故障</li>
+</ul>
+</li>
+</ul>
+<h2 id="13-错误error是故障被激活后的一种动态状态也是会直接导致业务失效的某种状态state典型的错误如消息发送超时网络丢包被激活导致的请求无响应对端进程挂死被激活导致的配置文件读失败配置文件丢失被激活导致的硬盘写超时硬盘坏道被激活导致的硬盘读写慢硬盘坏道被激活导致的等等">
+  1.3. 错误（Error）：是故障被激活后的一种动态状态，也是会直接导致业务失效的某种状态（State）。典型的错误如消息发送超时（网络丢包被激活导致的），请求无响应（对端进程挂死被激活导致的），配置文件读失败（配置文件丢失被激活导致的），硬盘写超时（硬盘坏道被激活导致的），硬盘读写慢（硬盘坏道被激活导致的）等等
+  <a class="anchor" href="#13-%e9%94%99%e8%af%aferror%e6%98%af%e6%95%85%e9%9a%9c%e8%a2%ab%e6%bf%80%e6%b4%bb%e5%90%8e%e7%9a%84%e4%b8%80%e7%a7%8d%e5%8a%a8%e6%80%81%e7%8a%b6%e6%80%81%e4%b9%9f%e6%98%af%e4%bc%9a%e7%9b%b4%e6%8e%a5%e5%af%bc%e8%87%b4%e4%b8%9a%e5%8a%a1%e5%a4%b1%e6%95%88%e7%9a%84%e6%9f%90%e7%a7%8d%e7%8a%b6%e6%80%81state%e5%85%b8%e5%9e%8b%e7%9a%84%e9%94%99%e8%af%af%e5%a6%82%e6%b6%88%e6%81%af%e5%8f%91%e9%80%81%e8%b6%85%e6%97%b6%e7%bd%91%e7%bb%9c%e4%b8%a2%e5%8c%85%e8%a2%ab%e6%bf%80%e6%b4%bb%e5%af%bc%e8%87%b4%e7%9a%84%e8%af%b7%e6%b1%82%e6%97%a0%e5%93%8d%e5%ba%94%e5%af%b9%e7%ab%af%e8%bf%9b%e7%a8%8b%e6%8c%82%e6%ad%bb%e8%a2%ab%e6%bf%80%e6%b4%bb%e5%af%bc%e8%87%b4%e7%9a%84%e9%85%8d%e7%bd%ae%e6%96%87%e4%bb%b6%e8%af%bb%e5%a4%b1%e8%b4%a5%e9%85%8d%e7%bd%ae%e6%96%87%e4%bb%b6%e4%b8%a2%e5%a4%b1%e8%a2%ab%e6%bf%80%e6%b4%bb%e5%af%bc%e8%87%b4%e7%9a%84%e7%a1%ac%e7%9b%98%e5%86%99%e8%b6%85%e6%97%b6%e7%a1%ac%e7%9b%98%e5%9d%8f%e9%81%93%e8%a2%ab%e6%bf%80%e6%b4%bb%e5%af%bc%e8%87%b4%e7%9a%84%e7%a1%ac%e7%9b%98%e8%af%bb%e5%86%99%e6%85%a2%e7%a1%ac%e7%9b%98%e5%9d%8f%e9%81%93%e8%a2%ab%e6%bf%80%e6%b4%bb%e5%af%bc%e8%87%b4%e7%9a%84%e7%ad%89%e7%ad%89">#</a>
+</h2>
+<ul>
+<li>激活：业务操作路径经过了某个存在故障的对象实体，从而导致该对象实体的某个故障被激活（也就是说故障只有被激活才会对系统产生影响，静默故障是无害的）</li>
+<li>错误检测：当某个错误信息或者错误信号（Error message or Error signal）未被感知到，该错误就叫做静默错误（Latent Error），例如未感知到超时等</li>
+<li>错误未被检测或者检测到而未有容错处理的话，就会产生业务失效（中断、性能下降等）</li>
+<li>错误模式：类似于故障模式，区别是错误对象通常是业务操作而不是系统内部组件，错误表现和故障表现基本上是一样的</li>
+</ul>
+<h2 id="14-失效failure系统当前的业务偏离正常业务correct-service-的事件">
+  1.4. 失效（Failure）：系统当前的业务偏离正常业务（Correct Service ）的事件
+  <a class="anchor" href="#14-%e5%a4%b1%e6%95%88failure%e7%b3%bb%e7%bb%9f%e5%bd%93%e5%89%8d%e7%9a%84%e4%b8%9a%e5%8a%a1%e5%81%8f%e7%a6%bb%e6%ad%a3%e5%b8%b8%e4%b8%9a%e5%8a%a1correct-service-%e7%9a%84%e4%ba%8b%e4%bb%b6">#</a>
+</h2>
+<ul>
+<li>偏离的表现：未按照规格要求实现或者规格要求本身不完整，通常称之为业务中断（Service Outage）</li>
+<li>偏离正常业务的表现形式称之为失效模式（Failure Mode） = 失效对象  +  失效表现
+<ul>
+<li>失效对象：与故障对象不同的是，失效是基于外部客户业务的角度进行描述的，因此失效对象主要为客户的业务类型/模型或者抽象表达，所以描述为业务（数据面-用户业务）、数据（数据面-用户数据）、控制台（管控面）、扩容（运维面）、升级（运维面）、更换（运维面）等等诸如此类</li>
+<li>失效表现：相对于故障表现而言，会更加聚焦一些，一般也是动词、形容词来表达，主要有中断，卡慢，超时，丢失/错误，失败等</li>
+</ul>
+</li>
+<li>失效的行为规律：
+<ul>
+<li>持续性失效：一直失效直到人为恢复</li>
+<li>间歇性/周期性失效：周期性或者无规律隔段时间出现一次然后自我恢复</li>
+<li>偶然性失效：偶然出现一次然后自我恢复</li>
+</ul>
+</li>
+<li>失效对客户业务不同的影响程度的等级叫做失效严重程度（ Failure Severities ），也叫失效严酷度
+<ul>
+<li>失效对象对于客户而言就有重要性之分（不同的业务类型有着不同的重要性，比如说数据面业务重要性要大于管控面业务），同时对象本身还隐含着范围的概念（主要是指影响的用户数量，比如是影响了所有用户，还是影响了少部分用户，影响的用户数据范围等）</li>
+<li>失效表现的角度来看也会有所区分，从两个维度来看，一是失效表现本身对客户的影响大小（比如数据丢失就是业务中断要影响大，中断要比卡慢影响大等等），二是失效表现的关键特征（包括持续时间例如时间越长对客户影响越大、出现次数例如次数越多则对客户影响越大）</li>
+<li>在其他条件同等下，业务越重要、影响用户越多、影响越深、持续时间越长、发生次数越多则严重程度越高</li>
+</ul>
+</li>
+<li>可以是部分业务失效也可以是全部业务失效。部分失效也叫作降级工作状态，表现为业务降速，业务受限，应急状态等</li>
+<li>失效是在系统的边界处体现出来的非正常的输出表现</li>
+</ul>
+<h2 id="15-mtbfmean-time-between-failure平均失效间隔时间">
+  1.5. MTBF（Mean Time Between Failure）平均失效间隔时间
+  <a class="anchor" href="#15-mtbfmean-time-between-failure%e5%b9%b3%e5%9d%87%e5%a4%b1%e6%95%88%e9%97%b4%e9%9a%94%e6%97%b6%e9%97%b4">#</a>
+</h2>
+<p>$$
+MTBF = \frac{累计工作时间}{累计故障次数}
+$$</p>
+<ul>
+<li>仅适用于可维修产品</li>
+<li>一般大于设计寿命</li>
+</ul>
+<h2 id="16-mttfmean-time-to-failure平均无故障工作时间">
+  1.6. MTTF（Mean Time To Failure）平均无故障工作时间
+  <a class="anchor" href="#16-mttfmean-time-to-failure%e5%b9%b3%e5%9d%87%e6%97%a0%e6%95%85%e9%9a%9c%e5%b7%a5%e4%bd%9c%e6%97%b6%e9%97%b4">#</a>
+</h2>
+<p>$$
+MTTF = \frac{总工作时间}{故障数量}
+$$</p>
+<ul>
+<li>针对不可修产品</li>
+</ul>
+<h1 id="2-度量体系">
+  2. 度量体系
+  <a class="anchor" href="#2-%e5%ba%a6%e9%87%8f%e4%bd%93%e7%b3%bb">#</a>
+</h1>
+<h2 id="21-业务零中断">
+  2.1. 业务零中断
+  <a class="anchor" href="#21-%e4%b8%9a%e5%8a%a1%e9%9b%b6%e4%b8%ad%e6%96%ad">#</a>
+</h2>
+<h2 id="22-数据零丢失">
+  2.2. 数据零丢失
+  <a class="anchor" href="#22-%e6%95%b0%e6%8d%ae%e9%9b%b6%e4%b8%a2%e5%a4%b1">#</a>
+</h2>
+<h2 id="23-抗百倍过载">
+  2.3. 抗百倍过载
+  <a class="anchor" href="#23-%e6%8a%97%e7%99%be%e5%80%8d%e8%bf%87%e8%bd%bd">#</a>
+</h2>
+<h2 id="24-故障秒级检测与自愈">
+  2.4. 故障秒级检测与自愈
+  <a class="anchor" href="#24-%e6%95%85%e9%9a%9c%e7%a7%92%e7%ba%a7%e6%a3%80%e6%b5%8b%e4%b8%8e%e8%87%aa%e6%84%88">#</a>
+</h2>
+<h2 id="25-事故分钟级恢复">
+  2.5. 事故分钟级恢复
+  <a class="anchor" href="#25-%e4%ba%8b%e6%95%85%e5%88%86%e9%92%9f%e7%ba%a7%e6%81%a2%e5%a4%8d">#</a>
+</h2>
+<h2 id="26-测试指标">
+  2.6. 测试指标
+  <a class="anchor" href="#26-%e6%b5%8b%e8%af%95%e6%8c%87%e6%a0%87">#</a>
+</h2>
+<ul>
+<li>故障自动检测率</li>
+<li>故障自动恢复率</li>
+<li>故障自动检测时长、故障自动恢复时长</li>
+<li>故障人工恢复时长</li>
+<li>过载保护评估: 过载倍数下保障正常负载的成功率，如5倍负载保障1倍负载的98%可用</li>
+</ul>
+<h1 id="3-系统可靠性设计">
+  3. 系统可靠性设计
+  <a class="anchor" href="#3-%e7%b3%bb%e7%bb%9f%e5%8f%af%e9%9d%a0%e6%80%a7%e8%ae%be%e8%ae%a1">#</a>
+</h1>
+<h2 id="31-故障预防">
+  3.1. 故障预防
+  <a class="anchor" href="#31-%e6%95%85%e9%9a%9c%e9%a2%84%e9%98%b2">#</a>
+</h2>
+<h3 id="1-人因差错">
+  1) 人因差错
+  <a class="anchor" href="#1-%e4%ba%ba%e5%9b%a0%e5%b7%ae%e9%94%99">#</a>
+</h3>
+<ul>
+<li>防用户出错：例如硬件防用户插反，软件上阻止用户的错误操作（系统不支持的操作），删除操作光标默认在取消键</li>
+<li>防出错影响：例如硬盘插错服务器了，IP地址冲突了</li>
+<li>改错误结果：例如用户配置错了，能够修改正确</li>
+</ul>
+<h3 id="2-高危操作">
+  2) 高危操作
+  <a class="anchor" href="#2-%e9%ab%98%e5%8d%b1%e6%93%8d%e4%bd%9c">#</a>
+</h3>
+<ul>
+<li>风险预警：风险说明，用户确认，必要时输入管理员密码</li>
+</ul>
+<h3 id="3-失效检查导致后续失败的条件尽早检查在入口检查">
+  3) 失效检查：导致后续失败的条件，尽早检查，在入口检查
+  <a class="anchor" href="#3-%e5%a4%b1%e6%95%88%e6%a3%80%e6%9f%a5%e5%af%bc%e8%87%b4%e5%90%8e%e7%bb%ad%e5%a4%b1%e8%b4%a5%e7%9a%84%e6%9d%a1%e4%bb%b6%e5%b0%bd%e6%97%a9%e6%a3%80%e6%9f%a5%e5%9c%a8%e5%85%a5%e5%8f%a3%e6%a3%80%e6%9f%a5">#</a>
+</h3>
+<ul>
+<li>兼容检查：对于不兼容的软件，硬件，运行环境，给用户提示，不允许下一步操作</li>
+<li>失败检查：例如升级前检查，导致升级失败的不让升级；文件复制前的存储空间检查</li>
+</ul>
+<h2 id="32-故障检测定位">
+  3.2. 故障检测&amp;定位
+  <a class="anchor" href="#32-%e6%95%85%e9%9a%9c%e6%a3%80%e6%b5%8b%e5%ae%9a%e4%bd%8d">#</a>
+</h2>
+<h3 id="1-故障检测将系统内的故障通过业务程序本身或者公共程序感知出来">
+  1) 故障检测：将系统内的故障通过业务程序本身或者公共程序感知出来
+  <a class="anchor" href="#1-%e6%95%85%e9%9a%9c%e6%a3%80%e6%b5%8b%e5%b0%86%e7%b3%bb%e7%bb%9f%e5%86%85%e7%9a%84%e6%95%85%e9%9a%9c%e9%80%9a%e8%bf%87%e4%b8%9a%e5%8a%a1%e7%a8%8b%e5%ba%8f%e6%9c%ac%e8%ba%ab%e6%88%96%e8%80%85%e5%85%ac%e5%85%b1%e7%a8%8b%e5%ba%8f%e6%84%9f%e7%9f%a5%e5%87%ba%e6%9d%a5">#</a>
+</h3>
+<ul>
+<li>业务路径上的故障（Error）：业务流程直接感知的会导致业务出现失败的故障，例如消息超时无响应，空间不足，读写错误，发送失败等</li>
+<li>非业务路径的故障（Fault）：业务流程不可直接感知的，但是会潜在的或者直接的导致业务失败的故障，例如进程挂死，网络断开，资源过载、电源损坏，SSD寿命到期等等</li>
+</ul>
+<h3 id="2-故障定位故障发生的位置">
+  2) 故障定位：故障发生的位置
+  <a class="anchor" href="#2-%e6%95%85%e9%9a%9c%e5%ae%9a%e4%bd%8d%e6%95%85%e9%9a%9c%e5%8f%91%e7%94%9f%e7%9a%84%e4%bd%8d%e7%bd%ae">#</a>
+</h3>
+<ul>
+<li>软件故障：定位到可管理单元（FMU），软件模块（进程，服务，文件等等）</li>
+<li>硬件故障：定位到可更换单元（FRU），硬盘，网口，光模块，内存（物理位置信息）</li>
+</ul>
+<h2 id="33-故障隔离在软件模块硬件部件网络冗余部署的情况下隔离机制才有效">
+  3.3. 故障隔离：在软件模块，硬件部件、网络冗余部署的情况下，隔离机制才有效。
+  <a class="anchor" href="#33-%e6%95%85%e9%9a%9c%e9%9a%94%e7%a6%bb%e5%9c%a8%e8%bd%af%e4%bb%b6%e6%a8%a1%e5%9d%97%e7%a1%ac%e4%bb%b6%e9%83%a8%e4%bb%b6%e7%bd%91%e7%bb%9c%e5%86%97%e4%bd%99%e9%83%a8%e7%bd%b2%e7%9a%84%e6%83%85%e5%86%b5%e4%b8%8b%e9%9a%94%e7%a6%bb%e6%9c%ba%e5%88%b6%e6%89%8d%e6%9c%89%e6%95%88">#</a>
+</h2>
+<ul>
+<li>硬件部件：硬件出现整体或者局部的损坏（变慢等），特别是局部的损坏（比如内存有局部损坏，将局部区域隔离，该内存条可以继续使用）价值更大，将该硬件整体或者局部区域（硬件还可以使用）不再使用</li>
+<li>软件模块：软件模块出现整体无法运行或者频繁启停或者运行缓慢，将该软件模块停止运行并从软件模块集群中分离出来</li>
+<li>网络连接：网络连接出现中断，闪断、丢包、延迟等现象，将该网络连接断开或者让软件不使用该网络连接</li>
+</ul>
+<h2 id="34-故障上报需要用户介入处理的故障才要上报告警">
+  3.4. 故障上报：需要用户介入处理的故障才要上报告警
+  <a class="anchor" href="#34-%e6%95%85%e9%9a%9c%e4%b8%8a%e6%8a%a5%e9%9c%80%e8%a6%81%e7%94%a8%e6%88%b7%e4%bb%8b%e5%85%a5%e5%a4%84%e7%90%86%e7%9a%84%e6%95%85%e9%9a%9c%e6%89%8d%e8%a6%81%e4%b8%8a%e6%8a%a5%e5%91%8a%e8%ad%a6">#</a>
+</h2>
+<ul>
+<li>故障预警：当前还未产生影响，但是如果不处理，后续可能产生影响。比如资源过载，容量过载，寿命到期之类的故障</li>
+<li>自动容错：该故障系统有容错措施，未对用户产生业务影响，但是系统无法自动修复该故障本身，需要人工介入恢复，比如进程无法启动，网络断开，硬件损坏等</li>
+<li>业务失效：该故障已经对用户业务造成了影响，系统无法自动恢复该故障，比如数据损坏，主备倒换失败，主备机同时故障</li>
+</ul>
+<h2 id="35-故障恢复修复">
+  3.5. 故障恢复&amp;修复
+  <a class="anchor" href="#35-%e6%95%85%e9%9a%9c%e6%81%a2%e5%a4%8d%e4%bf%ae%e5%a4%8d">#</a>
+</h2>
+<h3 id="1-业务恢复用户业务的恢复包括自动和手动两种方式">
+  1) 业务恢复：用户业务的恢复，包括自动和手动两种方式
+  <a class="anchor" href="#1-%e4%b8%9a%e5%8a%a1%e6%81%a2%e5%a4%8d%e7%94%a8%e6%88%b7%e4%b8%9a%e5%8a%a1%e7%9a%84%e6%81%a2%e5%a4%8d%e5%8c%85%e6%8b%ac%e8%87%aa%e5%8a%a8%e5%92%8c%e6%89%8b%e5%8a%a8%e4%b8%a4%e7%a7%8d%e6%96%b9%e5%bc%8f">#</a>
+</h3>
+<ul>
+<li>软件模块：自动的机制如故障对象自动重启，故障对象自动切换（双机、集群等），发送方自动重试，发送方重新选择发送路径或者发送对象，备份恢复；手动的机制就是应急处理（人工介入）</li>
+<li>硬件模块：自动的机制就是切换到另一个冗余部件上去，或者采用隔离技术将局部硬件故障隔离。手动的机制同软件模块</li>
+</ul>
+<h3 id="2-故障修复故障本身的恢复也可能会直接产生业务恢复">
+  2) 故障修复：故障本身的恢复，也可能会直接产生业务恢复
+  <a class="anchor" href="#2-%e6%95%85%e9%9a%9c%e4%bf%ae%e5%a4%8d%e6%95%85%e9%9a%9c%e6%9c%ac%e8%ba%ab%e7%9a%84%e6%81%a2%e5%a4%8d%e4%b9%9f%e5%8f%af%e8%83%bd%e4%bc%9a%e7%9b%b4%e6%8e%a5%e4%ba%a7%e7%94%9f%e4%b8%9a%e5%8a%a1%e6%81%a2%e5%a4%8d">#</a>
+</h3>
+<ul>
+<li>软件模块：通过备份进行恢复（文件，数据）；升级补丁等</li>
+<li>硬件模块：硬件维修，硬件更换、硬件拔插</li>
+</ul>
+<h2 id="36-冗余设计">
+  3.6. 冗余设计
+  <a class="anchor" href="#36-%e5%86%97%e4%bd%99%e8%ae%be%e8%ae%a1">#</a>
+</h2>
+<ul>
+<li>冗余设计是设备故障自动恢复的条件之一</li>
+<li>软件上的冗余意义不大，同样条件下切换了软件还是会出现问题</li>
+<li>一般冗余是主机冗余和网络冗余</li>
+<li>硬件通过冗余可以提升可靠性，但是软件无法通过冗余提升可靠性</li>
+</ul>
+<h3 id="1-主机冗余">
+  1) 主机冗余
+  <a class="anchor" href="#1-%e4%b8%bb%e6%9c%ba%e5%86%97%e4%bd%99">#</a>
+</h3>
+<ul>
+<li>主机冗余一般是两台主机做主备</li>
+<li>对于主机内部一般是电源、风险、系统盘做冗余，cpu、内存等不做冗余</li>
+<li>主机冗余一般是考虑故障率和成本的平衡</li>
+</ul>
+<h3 id="2-网络冗余">
+  2) 网络冗余
+  <a class="anchor" href="#2-%e7%bd%91%e7%bb%9c%e5%86%97%e4%bd%99">#</a>
+</h3>
+<ul>
+<li>一般是网口、交换机等设备的冗余</li>
+</ul>
+<h2 id="37-故障管理">
+  3.7. 故障管理
+  <a class="anchor" href="#37-%e6%95%85%e9%9a%9c%e7%ae%a1%e7%90%86">#</a>
+</h2>
+<h3 id="1-总体框架">
+  1) 总体框架
+  <a class="anchor" href="#1-%e6%80%bb%e4%bd%93%e6%a1%86%e6%9e%b6">#</a>
+</h3>
+<ul>
+<li>系统可靠性服务不能耦合被管理对象</li>
+<li>可靠性服务需要比被管理服务简单，否则无法保障可靠性</li>
+</ul>
+<h3 id="2-故障隔离">
+  2) 故障隔离
+  <a class="anchor" href="#2-%e6%95%85%e9%9a%9c%e9%9a%94%e7%a6%bb">#</a>
+</h3>
+<ul>
+<li>网络平面隔离
+<ul>
+<li>物理隔离: 不同网络平面采取不同的物理接口</li>
+<li>逻辑隔离: 使用vlan进行隔离，单平面故障不影响其他平面</li>
+</ul>
+</li>
+<li>集群隔离
+<ul>
+<li>每个集群内部故障只影响本集群的问题，不影响其他集群节点</li>
+</ul>
+</li>
+<li>业务平面隔离
+<ul>
+<li>管理面、控制面和数据面隔离，数据面卡死不影响管理面访问</li>
+<li>逃生通道、BMC</li>
+</ul>
+</li>
+<li>数据隔离
+<ul>
+<li>用户数据: 不同数据分布在不同硬盘、不同主机、不同站点等</li>
+<li>系统数据: 配置数据和日志数据放在不同的磁盘分区；配置数据支持备份到第三方系统；元数据和数据放在不同存储介质</li>
+</ul>
+</li>
+<li>资源隔离
+<ul>
+<li>物理隔离: cpu和内存的物理绑定，硬盘分区</li>
+<li>逻辑隔离: QoS控制机制，cgroup机制，目录配额</li>
+</ul>
+</li>
+</ul>
+<h3 id="3-过载保护">
+  3) 过载保护
+  <a class="anchor" href="#3-%e8%bf%87%e8%bd%bd%e4%bf%9d%e6%8a%a4">#</a>
+</h3>
+<h4 id="1-熔断">
+  (1) 熔断
+  <a class="anchor" href="#1-%e7%86%94%e6%96%ad">#</a>
+</h4>
+<ul>
+<li>定义目标服务调用慢或超时的熔断阈值，超过阈值定义熔断机制，隔离服务或者其他跳过机制</li>
+<li>低于阈值后恢复调用</li>
+<li>熔断是防止雪崩，存在关闭、半熔断、开启三种状态</li>
+</ul>
+<h4 id="2-限流">
+  (2) 限流
+  <a class="anchor" href="#2-%e9%99%90%e6%b5%81">#</a>
+</h4>
+<ul>
+<li>限流是在已有的条件下，最大限度发挥系统效能</li>
+<li>限流阈值需要基于现有业务和系统进行确定
+<ul>
+<li>量化限流阈值</li>
+<li>确定限流策略、算法</li>
+<li>被限制流量的处理</li>
+</ul>
+</li>
+<li>限流算法业界推荐【两窗两桶】：固定窗口、滑动窗口、漏桶、令牌桶</li>
+<li>实现原则
+<ul>
+<li>对于进程、服务消耗的资源，需要有约束机制，避免异常超额消耗和超长时间占用</li>
+<li>要实时监控各种资源的占用情况，在达到即将饱和之前，对接入业务量进行控制</li>
+<li>发生过载时建议考虑业务/客户优先级，保证高优先级业务/客户优先获得资源</li>
+<li>控制要尽早，在源头控制，在第一个能识别流量的模块开始控制</li>
+<li>如果一个业务有多个消息，只要第一个消息进入系统了，后面的消息不要被流控掉</li>
+</ul>
+</li>
+</ul>
+<h1 id="4-特性可靠性设计">
+  4. 特性可靠性设计
+  <a class="anchor" href="#4-%e7%89%b9%e6%80%a7%e5%8f%af%e9%9d%a0%e6%80%a7%e8%ae%be%e8%ae%a1">#</a>
+</h1>
+<h2 id="41-fmea-failure-mode-and-effects-analysis失效模式及后果">
+  4.1. FMEA （Failure Mode and Effects Analysis）失效模式及后果
+  <a class="anchor" href="#41-fmea-failure-mode-and-effects-analysis%e5%a4%b1%e6%95%88%e6%a8%a1%e5%bc%8f%e5%8f%8a%e5%90%8e%e6%9e%9c">#</a>
+</h2>
+<p>通过对可能发生的失效模式进行分析与判断其可能造成的后果而产生风险程度的一种量化的定性分析计算方法，并根据风险的大小，采取有针对性的改进，从而了解产品设计能力，达成一种事先预防并实施改进措施进行改进的方法工具</p>
+<h3 id="1-行动优先级-ap-action-priority">
+  1) 行动优先级 AP Action Priority
+  <a class="anchor" href="#1-%e8%a1%8c%e5%8a%a8%e4%bc%98%e5%85%88%e7%ba%a7-ap-action-priority">#</a>
+</h3>
+<p>行动优先级: 评估每一种失效原因的风险等级以便确定实施改建措施的顺序，AP = S * O * D</p>
+<ul>
+<li>严重度S（Severity）：也叫严酷度，假定失效模式出现后造成的潜在后多程度，对客户业务的影响程度</li>
+<li>频度O（Occurrence）</li>
+<li>探测度D（Detection）</li>
+</ul>
+<p>AP分为低中高三个级别</p>
+<h3 id="2-总体步骤">
+  2) 总体步骤
+  <a class="anchor" href="#2-%e6%80%bb%e4%bd%93%e6%ad%a5%e9%aa%a4">#</a>
+</h3>
+<p>功能定义 =&gt; 失效分析 =&gt; 行动排序 =&gt; 改进措施</p>
+<h1 id="知识补充">
+  知识补充
+  <a class="anchor" href="#%e7%9f%a5%e8%af%86%e8%a1%a5%e5%85%85">#</a>
+</h1>
+<h2 id="1-内存错误">
+  1. 内存错误
+  <a class="anchor" href="#1-%e5%86%85%e5%ad%98%e9%94%99%e8%af%af">#</a>
+</h2>
+<ul>
+<li>CE（Correctable Error）：可恢复错误</li>
+<li>UE（Uncorrectable Error）：不可恢复错误</li>
+</ul>
+<h2 id="2-网络">
+  2. 网络
+  <a class="anchor" href="#2-%e7%bd%91%e7%bb%9c">#</a>
+</h2>
+<h3 id="21-bond网络模式">
+  2.1. Bond网络模式
+  <a class="anchor" href="#21-bond%e7%bd%91%e7%bb%9c%e6%a8%a1%e5%bc%8f">#</a>
+</h3>
+<p>将多张网卡虚拟为一张，对外显示为一张，共用ip和mac地址。用于做网络硬件层面的冗余，防止单网口应用的单点故障</p>
+<h2 id="3-主机">
+  3. 主机
+  <a class="anchor" href="#3-%e4%b8%bb%e6%9c%ba">#</a>
+</h2>
+<h3 id="31-bmcbaseboard-management-controller-板级控制管理器">
+  3.1. BMC（Baseboard Management Controller） 板级控制管理器
+  <a class="anchor" href="#31-bmcbaseboard-management-controller-%e6%9d%bf%e7%ba%a7%e6%8e%a7%e5%88%b6%e7%ae%a1%e7%90%86%e5%99%a8">#</a>
+</h3>
+<ul>
+<li>BMC自有硬件接口（LAN/Serial）和软件（Firmware/Linux）；</li>
+<li>遵循 IPMI 协议，对外提供统一的访问接口；</li>
+<li>作为服务器特有模块，提供温度，电压，风扇，总线监控；提供管理接口，便于进行远程管理服务器;</li>
+<li>BMC使用独立的Power，在系统关机时依然处于工作状态.</li>
+</ul>
+<h2 id="4-可靠性">
+  4. 可靠性
+  <a class="anchor" href="#4-%e5%8f%af%e9%9d%a0%e6%80%a7">#</a>
+</h2>
+<ul>
+<li>基本可靠性：是指产品在规定的条件下和规定的时间内，无故障工作的能力</li>
+<li>任务可靠性：是指按要求完成该任务的可能性</li>
+<li>使用可靠性：是指产品在实际的环境中使用时所呈现的可靠性</li>
+<li>固有可靠性：计算机控制系统在制造过程中需要进行材料和元件的选择、设计、制造、组装，环境实验等。由这一过程所决定的可靠性是系统的内在可靠性，称为系统的固有可靠性。系统的固有可靠性决定于生产厂家。</li>
+</ul>
+</article>
+ 
+      
+
+      <footer class="book-footer">
+        
+  <div class="flex flex-wrap justify-between">
+
+
+
+
+
+</div>
+
+
+
+  <script>(function(){function e(e){const t=window.getSelection(),n=document.createRange();n.selectNodeContents(e),t.removeAllRanges(),t.addRange(n)}document.querySelectorAll("pre code").forEach(t=>{t.addEventListener("click",function(){if(window.getSelection().toString())return;e(t.parentElement),navigator.clipboard&&navigator.clipboard.writeText(t.parentElement.textContent)})})})()</script>
+
+
+ 
+        
+      </footer>
+
+      
+  
+  <div class="book-comments">
+
+</div>
+  
+ 
+
+      <label for="menu-control" class="hidden book-menu-overlay"></label>
+    </div>
+
+    
+    <aside class="book-toc">
+      <div class="book-toc-content">
+        
+  
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#1-基本概念">1. 基本概念</a>
+      <ul>
+        <li><a href="#11-可靠性-产品在规定的条件下规定的时间内完成规定的功能的能力即业界所说的三规是产品的一种固有属性">1.1. 可靠性: 产品在规定的条件下、规定的时间内完成规定的功能的能力，即业界所说的三规。是产品的一种固有属性</a>
+          <ul>
+            <li><a href="#1-规定的条件产品的运行环境">1) 规定的条件：产品的运行环境</a></li>
+            <li><a href="#2-规定的时间产品的生命周期">2) 规定的时间：产品的生命周期</a></li>
+            <li><a href="#3-规定的功能产品的技术性指标">3) 规定的功能：产品的技术性指标</a></li>
+          </ul>
+        </li>
+        <li><a href="#12-故障fault系统内的对象实体相对正常状态的偏离站在这个对象的外部来看的一种静态状态例如进程挂死硬盘坏道cpu降频网络丢包文件系统只读配置文件丢失等等">1.2. 故障（Fault）：系统内的对象实体相对正常状态的偏离（站在这个对象的外部来看）的一种静态状态。例如进程挂死，硬盘坏道，CPU降频，网络丢包，文件系统只读，配置文件丢失等等</a></li>
+        <li><a href="#13-错误error是故障被激活后的一种动态状态也是会直接导致业务失效的某种状态state典型的错误如消息发送超时网络丢包被激活导致的请求无响应对端进程挂死被激活导致的配置文件读失败配置文件丢失被激活导致的硬盘写超时硬盘坏道被激活导致的硬盘读写慢硬盘坏道被激活导致的等等">1.3. 错误（Error）：是故障被激活后的一种动态状态，也是会直接导致业务失效的某种状态（State）。典型的错误如消息发送超时（网络丢包被激活导致的），请求无响应（对端进程挂死被激活导致的），配置文件读失败（配置文件丢失被激活导致的），硬盘写超时（硬盘坏道被激活导致的），硬盘读写慢（硬盘坏道被激活导致的）等等</a></li>
+        <li><a href="#14-失效failure系统当前的业务偏离正常业务correct-service-的事件">1.4. 失效（Failure）：系统当前的业务偏离正常业务（Correct Service ）的事件</a></li>
+        <li><a href="#15-mtbfmean-time-between-failure平均失效间隔时间">1.5. MTBF（Mean Time Between Failure）平均失效间隔时间</a></li>
+        <li><a href="#16-mttfmean-time-to-failure平均无故障工作时间">1.6. MTTF（Mean Time To Failure）平均无故障工作时间</a></li>
+      </ul>
+    </li>
+    <li><a href="#2-度量体系">2. 度量体系</a>
+      <ul>
+        <li><a href="#21-业务零中断">2.1. 业务零中断</a></li>
+        <li><a href="#22-数据零丢失">2.2. 数据零丢失</a></li>
+        <li><a href="#23-抗百倍过载">2.3. 抗百倍过载</a></li>
+        <li><a href="#24-故障秒级检测与自愈">2.4. 故障秒级检测与自愈</a></li>
+        <li><a href="#25-事故分钟级恢复">2.5. 事故分钟级恢复</a></li>
+        <li><a href="#26-测试指标">2.6. 测试指标</a></li>
+      </ul>
+    </li>
+    <li><a href="#3-系统可靠性设计">3. 系统可靠性设计</a>
+      <ul>
+        <li><a href="#31-故障预防">3.1. 故障预防</a>
+          <ul>
+            <li><a href="#1-人因差错">1) 人因差错</a></li>
+            <li><a href="#2-高危操作">2) 高危操作</a></li>
+            <li><a href="#3-失效检查导致后续失败的条件尽早检查在入口检查">3) 失效检查：导致后续失败的条件，尽早检查，在入口检查</a></li>
+          </ul>
+        </li>
+        <li><a href="#32-故障检测定位">3.2. 故障检测&amp;定位</a>
+          <ul>
+            <li><a href="#1-故障检测将系统内的故障通过业务程序本身或者公共程序感知出来">1) 故障检测：将系统内的故障通过业务程序本身或者公共程序感知出来</a></li>
+            <li><a href="#2-故障定位故障发生的位置">2) 故障定位：故障发生的位置</a></li>
+          </ul>
+        </li>
+        <li><a href="#33-故障隔离在软件模块硬件部件网络冗余部署的情况下隔离机制才有效">3.3. 故障隔离：在软件模块，硬件部件、网络冗余部署的情况下，隔离机制才有效。</a></li>
+        <li><a href="#34-故障上报需要用户介入处理的故障才要上报告警">3.4. 故障上报：需要用户介入处理的故障才要上报告警</a></li>
+        <li><a href="#35-故障恢复修复">3.5. 故障恢复&amp;修复</a>
+          <ul>
+            <li><a href="#1-业务恢复用户业务的恢复包括自动和手动两种方式">1) 业务恢复：用户业务的恢复，包括自动和手动两种方式</a></li>
+            <li><a href="#2-故障修复故障本身的恢复也可能会直接产生业务恢复">2) 故障修复：故障本身的恢复，也可能会直接产生业务恢复</a></li>
+          </ul>
+        </li>
+        <li><a href="#36-冗余设计">3.6. 冗余设计</a>
+          <ul>
+            <li><a href="#1-主机冗余">1) 主机冗余</a></li>
+            <li><a href="#2-网络冗余">2) 网络冗余</a></li>
+          </ul>
+        </li>
+        <li><a href="#37-故障管理">3.7. 故障管理</a>
+          <ul>
+            <li><a href="#1-总体框架">1) 总体框架</a></li>
+            <li><a href="#2-故障隔离">2) 故障隔离</a></li>
+            <li><a href="#3-过载保护">3) 过载保护</a>
+              <ul>
+                <li><a href="#1-熔断">(1) 熔断</a></li>
+                <li><a href="#2-限流">(2) 限流</a></li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+    <li><a href="#4-特性可靠性设计">4. 特性可靠性设计</a>
+      <ul>
+        <li><a href="#41-fmea-failure-mode-and-effects-analysis失效模式及后果">4.1. FMEA （Failure Mode and Effects Analysis）失效模式及后果</a>
+          <ul>
+            <li><a href="#1-行动优先级-ap-action-priority">1) 行动优先级 AP Action Priority</a></li>
+            <li><a href="#2-总体步骤">2) 总体步骤</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+    <li><a href="#知识补充">知识补充</a>
+      <ul>
+        <li><a href="#1-内存错误">1. 内存错误</a></li>
+        <li><a href="#2-网络">2. 网络</a>
+          <ul>
+            <li><a href="#21-bond网络模式">2.1. Bond网络模式</a></li>
+          </ul>
+        </li>
+        <li><a href="#3-主机">3. 主机</a>
+          <ul>
+            <li><a href="#31-bmcbaseboard-management-controller-板级控制管理器">3.1. BMC（Baseboard Management Controller） 板级控制管理器</a></li>
+          </ul>
+        </li>
+        <li><a href="#4-可靠性">4. 可靠性</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+
+ 
+      </div>
+    </aside>
+    
+  </main>
+
+  
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+

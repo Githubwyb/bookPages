@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>mysql源码分析记录 on 技术的路上奔跑</title>
+    <link>/docs/mysql/</link>
+    <description>Recent content in mysql源码分析记录 on 技术的路上奔跑</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language><atom:link href="/docs/mysql/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>编译和调试方法</title>
+      <link>/docs/mysql/compile/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/mysql/compile/</guid>
+      <description>一、概述 # mysql本身的开源就让我们可以很方便的编译出debug版本进行调试
+二、调试环境准备 # 1. 编译mysql的debug版本 # 预安装软件 1yum install ncurses-devel bison cmake libarchive gcc-toolset-10-gcc gcc-toolset-10-gcc-c++ gcc-toolset-10-binutils libtirpc-devel rpcgen 源码下载地址: https://downloads.mysql.com/archives/get/p/23/file/mysql-8.0.33.tar.gz 需要下载boost库1.73: https://boostorg.jfrog.io/artifactory/main/release/1.73.0/source/boost_1_73_0.tar.bz2 解压boost库到mysql-8.0.33/boost_1_73_0 编译命令 1# -DWITH_BOOST=./boost_1_73_0/ 指定boost库路径 2# -DWITH_DEBUG=1 编译成debug版本 3cmake -B build -DCMAKE_BUILD_TYPE:STRING=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=TRUE -DWITH_BOOST=./boost_1_73_0/ -DWITH_DEBUG=1 4cmake --build build -j 8 执行命令为下面的输出即为成功编译出debug版 1=&amp;gt; ./build/runtime_output_directory/mysqld --version 2/mysql-8.0.33/build/runtime_output_directory/mysqld Ver 8.0.33-debug for Linux on x86_64 (Source distribution) 2. 替换mysqld进行调试 # 编译好之后，需要上传./build/runtime_output_directory/mysqld和./build/runtime_output_directory/lib目录到服务器 1=&amp;gt; cd build 2=&amp;gt; zip -r mysql-8.0.33.zip ./runtime_output_directory/mysqld .</description>
+    </item>
+    
+  </channel>
+</rss>

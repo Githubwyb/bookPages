@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>文件相关 on 技术的路上奔跑</title>
+    <link>/docs/ctf/knowledge/file/</link>
+    <description>Recent content in 文件相关 on 技术的路上奔跑</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language><atom:link href="/docs/ctf/knowledge/file/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>文件格式</title>
+      <link>/docs/ctf/knowledge/file/file-struct/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/ctf/knowledge/file/file-struct/</guid>
+      <description>一、图片 # 1. gif # gif一般开头以GIF89a或GIF87a开头 1=&amp;gt; hexdump -C 篮球.gif | head -n 5 200000000 47 49 46 38 39 61 b4 00 40 01 f6 31 00 1c 18 25 |GIF89a..@..1...%| 300000010 1d 1a 2b 1e 1f 36 21 1c 2c 24 1e 34 28 23 39 36 |..+..6!.,$.4(#96| 400000020 28 39 27 26 43 3c 2d 43 45 37 4d 51 43 56 56 4f |(9&amp;#39;&amp;amp;C&amp;lt;-CE7MQCVVO| 500000030 67 6a 58 6d 78 64 78 77 6d 89 8a 74 89 88 7a 97 |gjXmxdxwm.</description>
+    </item>
+    
+  </channel>
+</rss>

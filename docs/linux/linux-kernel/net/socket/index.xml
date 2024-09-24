@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>socket on 技术的路上奔跑</title>
+    <link>/docs/linux/linux-kernel/net/socket/</link>
+    <description>Recent content in socket on 技术的路上奔跑</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language><atom:link href="/docs/linux/linux-kernel/net/socket/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>socket总述</title>
+      <link>/docs/linux/linux-kernel/net/socket/socket/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux/linux-kernel/net/socket/socket/</guid>
+      <description>一、总述 # 1. socket 相关内核结构体 # @startuml xxx namespace 用户空间 { class fd } namespace 内核空间 { class socket { socket_state	state; struct file	*file; struct sock	*sk; const struct proto_ops	*ops; } enum socket_state { SS_FREE = 0,	/* not allocated	*/ SS_UNCONNECTED,	/* unconnected to any socket	*/ SS_CONNECTING,	/* in process of connecting	*/ SS_CONNECTED,	/* connected to socket	*/ SS_DISCONNECTING	/* in process of disconnecting	*/ } class file {} class sock { struc sock_common __sk_common; } class sock_common { volatile unsigned char skc_state; struct proto	*skc_prot; } note right of sock sk_state =&amp;gt; __sk_common.</description>
+    </item>
+    
+    <item>
+      <title>sendmsg</title>
+      <link>/docs/linux/linux-kernel/net/socket/sendmsg/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux/linux-kernel/net/socket/sendmsg/</guid>
+      <description>一、总述 # sendmsg可以像普通的send一样发送消息，也可以进行fd的转发 做fd的转发需要使用域套接字 二、代码流程 # 入口自然是系统调用的定义 1// net/socket.c 2long __sys_sendmsg(int fd, struct user_msghdr __user *msg, unsigned int flags, 3	bool forbid_cmsg_compat) 4{ 5	int fput_needed, err; 6	struct msghdr msg_sys; 7	struct socket *sock; 8 9	if (forbid_cmsg_compat &amp;amp;&amp;amp; (flags &amp;amp; MSG_CMSG_COMPAT)) 10	return -EINVAL; 11 12 // 根据文件句柄号找sock结构体 13	sock = sockfd_lookup_light(fd, &amp;amp;err, &amp;amp;fput_needed); 14	if (!sock) 15	goto out; 16 17	err = ___sys_sendmsg(sock, msg, &amp;amp;msg_sys, flags, NULL, 0); 18 19	fput_light(sock-&amp;gt;file, fput_needed); 20out: 21	return err; 22} 23 24SYSCALL_DEFINE3(sendmsg, int, fd, struct user_msghdr __user *, msg, unsigned int, flags) 25{ 26	return __sys_sendmsg(fd, msg, flags, true); 27} 继续到发送的地方 1// net/socket.</description>
+    </item>
+    
+    <item>
+      <title>recvmsg</title>
+      <link>/docs/linux/linux-kernel/net/socket/recvmsg/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux/linux-kernel/net/socket/recvmsg/</guid>
+      <description>一、总述 # recvmsg可以像普通的recv一样接收消息，也可以其他进程提供的文件句柄 二、代码流程 # 入口自然是系统调用的定义 1// net/socket.c 2long __sys_recvmsg(int fd, struct user_msghdr __user *msg, unsigned int flags, 3	bool forbid_cmsg_compat) 4{ 5	int fput_needed, err; 6	struct msghdr msg_sys; 7	struct socket *sock; 8 9	if (forbid_cmsg_compat &amp;amp;&amp;amp; (flags &amp;amp; MSG_CMSG_COMPAT)) 10	return -EINVAL; 11 12	sock = sockfd_lookup_light(fd, &amp;amp;err, &amp;amp;fput_needed); 13	if (!sock) 14	goto out; 15 16	err = ___sys_recvmsg(sock, msg, &amp;amp;msg_sys, flags, 0); 17 18	fput_light(sock-&amp;gt;file, fput_needed); 19out: 20	return err; 21} 22 23SYSCALL_DEFINE3(recvmsg, int, fd, struct user_msghdr __user *, msg, 24	unsigned int, flags) 25{ 26	return __sys_recvmsg(fd, msg, flags, true); 27} 继续到接收的地方 1// net/socket.</description>
+    </item>
+    
+  </channel>
+</rss>

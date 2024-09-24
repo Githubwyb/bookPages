@@ -1,0 +1,5269 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="一、堆栈信息 # [28772.702878] BUG: unable to handle kernel paging request at 0000000400080040 [28772.703475] PGD 0 P4D 0 [28772.703614] Oops: 0000 [#1] SMP PTI [28772.703806] CPU: 6 PID: 96951 Comm: sdptun Kdump: loaded Tainted: G W OE 4.19.181 #6 [28772.704255] Hardware name: Bochs Bochs, BIOS 1.13.0-20201211_142035 04/01/2014 [28772.704635] RIP: 0010:tcp_md5_do_lookup&#43;0x15/0x130 [28772.704881] Code: 04 00 00 0f a3 c2 73 01 c3 e9 37 ff ff ff 0f 1f 80 00 00 00 00 66 66 66 66 90 48 8b 87 40 08 00 00 48 85 c0 0f 84 e4 00 00 00 &lt;48&gt; 8b 38 31 c0 48 85 ff 74 62 41 bb 40 00 00 00 49 c7 c2 ff ff ff [28772.">
+<meta name="theme-color" content="#FFFFFF"><meta property="og:title" content="1. netfilter驱动使用sk错误引发宕机" />
+<meta property="og:description" content="一、堆栈信息 # [28772.702878] BUG: unable to handle kernel paging request at 0000000400080040 [28772.703475] PGD 0 P4D 0 [28772.703614] Oops: 0000 [#1] SMP PTI [28772.703806] CPU: 6 PID: 96951 Comm: sdptun Kdump: loaded Tainted: G W OE 4.19.181 #6 [28772.704255] Hardware name: Bochs Bochs, BIOS 1.13.0-20201211_142035 04/01/2014 [28772.704635] RIP: 0010:tcp_md5_do_lookup&#43;0x15/0x130 [28772.704881] Code: 04 00 00 0f a3 c2 73 01 c3 e9 37 ff ff ff 0f 1f 80 00 00 00 00 66 66 66 66 90 48 8b 87 40 08 00 00 48 85 c0 0f 84 e4 00 00 00 &lt;48&gt; 8b 38 31 c0 48 85 ff 74 62 41 bb 40 00 00 00 49 c7 c2 ff ff ff [28772." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="/docs/linux/kernel-troubleshooting/crash/01-netfilter-driver-crash/" /><meta property="article:section" content="docs" />
+
+<meta property="article:modified_time" content="2024-09-24T16:54:53+08:00" />
+<title>1. netfilter驱动使用sk错误引发宕机 | 技术的路上奔跑</title>
+<link rel="manifest" href="../../../../../manifest.json">
+<link rel="icon" href="../../../../../favicon.png" type="image/x-icon">
+<link rel="stylesheet" href="../../../../../book.min.33a48f5432973b8ff9a82679d9e45d67f2c15d4399bd2829269455cfe390b5e8.css" integrity="sha256-M6SPVDKXO4/5qCZ52eRdZ/LBXUOZvSgpJpRVz&#43;OQteg=">
+<script defer src="../../../../../en.search.min.ffb26c0b822eb80e169fe51ff5a5fe446b7ea107731835d986761125ea031367.js" integrity="sha256-/7JsC4IuuA4Wn&#43;Uf9aX&#43;RGt&#43;oQdzGDXZhnYRJeoDE2c="></script>
+
+<script defer src="../../../../../sw.min.6f6f90fcb8eb1c49ec389838e6b801d0de19430b8e516902f8d75c3c8bd98739.js" integrity="sha256-b2&#43;Q/LjrHEnsOJg45rgB0N4ZQwuOUWkC&#43;NdcPIvZhzk="></script>
+<!--
+Made with Book Theme
+https://github.com/alex-shpak/hugo-book
+-->
+
+<link rel="stylesheet" href="../../../../../katex/katex.min.css">
+<script src="../../../../../katex/katex.min.js"></script>
+<script src="../../../../../katex/auto-render.min.js"></script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    renderMathInElement(document.body, {
+      delimiters: [
+        { left: "$$", right: "$$", display: true },
+        { left: "$", right: "$", display: false }
+      ]
+    });
+  });
+</script>
+
+
+
+<script src="../../../../../lib/plantuml-encoder.min.js" integrity="sha256-Qsk2KRBCN5qVZX7B+8+2IvQl1Aqc723qV1tBCQaVoqo=" crossorigin="anonymous"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+  let plantumlPrefix = "language-plantuml";
+  Array.prototype.forEach.call(document.querySelectorAll("[class^=" + plantumlPrefix + "]"), function(code){
+    let image = document.createElement("IMG");
+    image.loading = 'lazy'; 
+    image.src = 'https://www.plantuml.com/plantuml/svg/~1' + plantumlEncoder.encode(code.innerText);
+    code.style.display = 'none';
+    code.parentNode.style = 'text-align: center; margin: 0; padding: 0; background-color: transparent;';
+
+    
+    
+    let div = document.createElement("DIV");
+    div.className = "post-img-view";
+    let a = document.createElement("A");
+    a.setAttribute("data-fancybox", "gallery");
+    a.setAttribute("href", image.src);
+    a.appendChild(image);
+    div.appendChild(a);
+    code.parentNode.insertBefore(div, code);
+    
+  });
+});
+</script>
+
+
+
+<script src="../../../../../lib/fancybox/jquery.min.js"></script>
+<link rel="stylesheet" href="../../../../../lib/fancybox/jquery.fancybox.min.css" />
+<script src="../../../../../lib/fancybox/jquery.fancybox.min.js"></script>
+
+
+  
+</head>
+<body dir="ltr">
+  <input type="checkbox" class="hidden toggle" id="menu-control" />
+  <input type="checkbox" class="hidden toggle" id="toc-control" />
+  <main class="container flex">
+    <aside class="book-menu">
+      <div class="book-menu-content">
+        
+  <nav>
+<h2 class="book-brand">
+  <a class="flex align-center" href="../../../../../"><span>技术的路上奔跑</span>
+  </a>
+</h2>
+
+
+<div class="book-search">
+  <input type="text" id="book-search-input" placeholder="Search" aria-label="Search" maxlength="64" data-hotkeys="s/" />
+  <div class="book-search-spinner hidden"></div>
+  <ul id="book-search-results"></ul>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <ul>
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-076945525d27fc883dc64d169725123d" class="toggle"  />
+    <label for="section-076945525d27fc883dc64d169725123d" class="flex justify-between">
+      <a href="../../../../../docs/c&#43;&#43;/" class="">C&#43;&#43;源码分析记录</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/c&#43;&#43;/macro/" class="">预定义宏</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/c&#43;&#43;/move/" class="">std::move</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/c&#43;&#43;/shared_ptr/" class="">std::shared_ptr</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-6ae1a891fb3a3f71d71273fc61b29b76" class="toggle" checked />
+    <label for="section-6ae1a891fb3a3f71d71273fc61b29b76" class="flex justify-between">
+      <a role="button" class="">linux</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-3a06e930057f0966216e8ee296319246" class="toggle"  />
+    <label for="section-3a06e930057f0966216e8ee296319246" class="flex justify-between">
+      <a href="../../../../../docs/linux/linux-kernel/" class="">linux内核源码分析记录</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/compile-thinking/" class="">编译思想</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-fe3499b386047030cefed47c8171acfe" class="toggle"  />
+    <label for="section-fe3499b386047030cefed47c8171acfe" class="flex justify-between">
+      <a role="button" class="">数据结构</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/data-structures/container_of/" class="">container_of() 根据成员地址找其所在结构体</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/data-structures/atomic/" class="">atomic 原子变量</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/data-structures/hashtable/" class="">hashtable 哈希表</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/data-structures/kfifo/" class="">kfifo 无锁循环队列</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/data-structures/list/" class="">list 链表</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/data-structures/rbtree/" class="">rbtree 红黑树</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/data-structures/rcu/" class="">RCU Read-Copy-Update</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-61e0ef8b04de577fbdc7b126d08efe69" class="toggle"  />
+    <label for="section-61e0ef8b04de577fbdc7b126d08efe69" class="flex justify-between">
+      <a role="button" class="">/drivers/ 驱动部分</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-ae532a140ecd7bf2d7c22e0b1a16962f" class="toggle"  />
+    <label for="section-ae532a140ecd7bf2d7c22e0b1a16962f" class="flex justify-between">
+      <a role="button" class="">net/ 网卡驱动部分</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/drivers/net/common/" class="">通用网络驱动开发知识</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/drivers/net/igb/" class="">Igb</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/drivers/keyboard/" class="">键盘驱动</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-2e9314dfe8a7648843991b528610d749" class="toggle"  />
+    <label for="section-2e9314dfe8a7648843991b528610d749" class="flex justify-between">
+      <a role="button" class="">/net/ 网络部分</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/net/common/" class="">网络数据包处理流程</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-fc939877a55e0f79c88a1c64432710ef" class="toggle"  />
+    <label for="section-fc939877a55e0f79c88a1c64432710ef" class="flex justify-between">
+      <a role="button" class="">socket</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/net/socket/socket/" class="">socket总述</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/net/socket/sendmsg/" class="">sendmsg</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/net/socket/recvmsg/" class="">recvmsg</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/net/iptables/" class="">Iptables</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-0a7f1c84540241f1c6f1800de49a7720" class="toggle"  />
+    <label for="section-0a7f1c84540241f1c6f1800de49a7720" class="flex justify-between">
+      <a role="button" class="">ipv4/ ipv4的处理部分</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/net/ipv4/ipv4/" class="">Ipv4</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/net/ipv4/tcp/" class="">tcp</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/net/ipv4/udp/" class="">udp</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-108538e770a9cc3fc0b35a5067536d07" class="toggle"  />
+    <label for="section-108538e770a9cc3fc0b35a5067536d07" class="flex justify-between">
+      <a role="button" class="">ipv6/ ipv6的处理部分</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/net/ipv6/inet6/" class="">Inet6</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-82fca42832e0f5862765245480c6d50a" class="toggle"  />
+    <label for="section-82fca42832e0f5862765245480c6d50a" class="flex justify-between">
+      <a role="button" class="">unix/ unix的处理部分</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/net/unix/unix/" class="">Unix</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/net/bridge/" class="">linux网桥</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/net/epoll/" class="">Epoll</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/net/poll/" class="">Poll</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/net/select/" class="">Select</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/net/sk_buff/" class="">sk_buff 内核中数据包结构体</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-ccd466ff3139a06e35e5768247dedcda" class="toggle"  />
+    <label for="section-ccd466ff3139a06e35e5768247dedcda" class="flex justify-between">
+      <a role="button" class="">/arch/ cpu体系架构</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-f796c2cc14778d5a798d7af8ab5b83b3" class="toggle"  />
+    <label for="section-f796c2cc14778d5a798d7af8ab5b83b3" class="flex justify-between">
+      <a href="../../../../../docs/linux/linux-kernel/arch/common/" class="">公共处理方式</a>
+    </label>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-17eb2a36dc4fa094b5493959ccab63bc" class="toggle"  />
+    <label for="section-17eb2a36dc4fa094b5493959ccab63bc" class="flex justify-between">
+      <a role="button" class="">x86/ x86体系</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/arch/x86/boot/" class="">x86启动过程</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/arch/x86/register/" class="">特殊寄存器</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/arch/x86/gdt-idt-ldt-tss-tgd/" class="">gdt/idt/ldt/tss/tgd</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/arch/x86/timer/" class="">定时器设定</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/arch/x86/early-printk/" class="">早期日志输出</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-c0c473dcbf34f130a01d125d9e77f9a9" class="toggle"  />
+    <label for="section-c0c473dcbf34f130a01d125d9e77f9a9" class="flex justify-between">
+      <a role="button" class="">/fs/ 文件部分</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/fs/common/" class="">文件系统总述</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/fs/open/" class="">open系统调用</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/fs/inotify/" class="">Inotify</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-2f4734425ea4bf70ec20a77f7fe621dd" class="toggle"  />
+    <label for="section-2f4734425ea4bf70ec20a77f7fe621dd" class="flex justify-between">
+      <a role="button" class="">/kernel/ 内核运行主要代码</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-eb76a8b10e091e71a1250b7c433d77db" class="toggle"  />
+    <label for="section-eb76a8b10e091e71a1250b7c433d77db" class="flex justify-between">
+      <a role="button" class="">/kernel/lockng/ 锁相关</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/kernel/locking/bit_spinlock/" class="">bit_spinlock</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/kernel/locking/qspinlock/" class="">qspinlock</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-b5a08711df6a5e37561d8b68c9439067" class="toggle"  />
+    <label for="section-b5a08711df6a5e37561d8b68c9439067" class="flex justify-between">
+      <a href="../../../../../docs/linux/linux-kernel/kernel/sched/" class="">/kernel/sched/ 进程调度</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/kernel/sched/schedule/" class="">主调度器</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-1e39884438084c2c1fc67e916eb2b208" class="toggle"  />
+    <label for="section-1e39884438084c2c1fc67e916eb2b208" class="flex justify-between">
+      <a href="../../../../../docs/linux/linux-kernel/kernel/cgroup/" class="">/kernel/cgroup/ cgroup处理</a>
+    </label>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-f1341bef3dd7f66ab15601ff5c2bb167" class="toggle"  />
+    <label for="section-f1341bef3dd7f66ab15601ff5c2bb167" class="flex justify-between">
+      <a href="../../../../../docs/linux/linux-kernel/kernel/watchdog/" class="">/kernel/watchdog* 看门狗</a>
+    </label>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/kernel/timer/" class="">内核计时和定时器</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/kernel/time/" class="">时间系统</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-9e5b7eb3577a3bb9311b9512acca784c" class="toggle"  />
+    <label for="section-9e5b7eb3577a3bb9311b9512acca784c" class="flex justify-between">
+      <a role="button" class="">中断</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/intterupt/common/" class="">上半部和下半部</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-7136deee92473c69f24df09271c02b70" class="toggle"  />
+    <label for="section-7136deee92473c69f24df09271c02b70" class="flex justify-between">
+      <a role="button" class="">/mm/ 内存管理</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/mm/kmem_cache/" class="">kmem_cache</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/linux-kernel/public-micro/" class="">公共宏的一些定义</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-89208b0ad894e0bedeaaff6a9f182258" class="toggle"  />
+    <label for="section-89208b0ad894e0bedeaaff6a9f182258" class="flex justify-between">
+      <a role="button" class="">调试技术</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-4ae4ec450d01e14f8d498fceca77e47f" class="toggle"  />
+    <label for="section-4ae4ec450d01e14f8d498fceca77e47f" class="flex justify-between">
+      <a role="button" class="">proc目录内容详解</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/debug/proc/diskstats/" class="">/proc/diskstats 磁盘信息</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/debug/ftrace/" class="">ftrace</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/debug/systemtap/" class="">systemtap</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-d7ea361bf72968532bcfe65fe25e5cd9" class="toggle" checked />
+    <label for="section-d7ea361bf72968532bcfe65fe25e5cd9" class="flex justify-between">
+      <a role="button" class="">内核问题排查记录</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-da8cfb336c9632e4b8d863855abae391" class="toggle" checked />
+    <label for="section-da8cfb336c9632e4b8d863855abae391" class="flex justify-between">
+      <a role="button" class="">宕机vmcore分析</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/kernel-troubleshooting/crash/01-netfilter-driver-crash/" class="active">1. netfilter驱动使用sk错误引发宕机</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/kernel-troubleshooting/crash/02-hung-task-crash/" class="">2. Kernel panic - not syncing: hung_task: blocked tasks</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/linux/kernel-troubleshooting/knowledge/" class="">知识性说明</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-81ac4d0ce2be51263b8d525fd8e2f1f6" class="toggle"  />
+    <label for="section-81ac4d0ce2be51263b8d525fd8e2f1f6" class="flex justify-between">
+      <a href="../../../../../docs/glibc/" class="">glibc源码分析记录</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-1a3b279e0f293c5c3a083f9323ca8ab2" class="toggle"  />
+    <label for="section-1a3b279e0f293c5c3a083f9323ca8ab2" class="flex justify-between">
+      <a role="button" class="">nss: Name Service Switch</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-12c635147ca4f050649e8f9130f1ba3c" class="toggle"  />
+    <label for="section-12c635147ca4f050649e8f9130f1ba3c" class="flex justify-between">
+      <a role="button" class="">hosts dns解析服务</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/glibc/nss/hosts/dns/" class="">dns 根据/etc/resolv.conf发包处理</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/glibc/nss/hosts/files/" class="">files 读取/etc/hosts文件</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-e66e2e478c81786f553bd82d3931b216" class="toggle"  />
+    <label for="section-e66e2e478c81786f553bd82d3931b216" class="flex justify-between">
+      <a href="../../../../../docs/mysql/" class="">mysql源码分析记录</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/mysql/compile/" class="">编译和调试方法</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-f8bd884eebd2f3fa4437f5c30e95d87b" class="toggle"  />
+    <label for="section-f8bd884eebd2f3fa4437f5c30e95d87b" class="flex justify-between">
+      <a href="../../../../../docs/openssl/" class="">openssl源码分析记录</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-79f5d582b25e0ba116147e70d7c37d9b" class="toggle"  />
+    <label for="section-79f5d582b25e0ba116147e70d7c37d9b" class="flex justify-between">
+      <a role="button" class="">crypto 加解密库</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/openssl/crypto/X509/" class="">X509证书</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-b0d378e2e51e9e43c0fd54b7f68d5d64" class="toggle"  />
+    <label for="section-b0d378e2e51e9e43c0fd54b7f68d5d64" class="flex justify-between">
+      <a role="button" class="">ssl ssl协议相关</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/openssl/ssl/certificate/" class="">Certificate</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/openssl/ssl/certificateVerify/" class="">Certificate Verify</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-ad6c2bf4e759ec71c24d3649b1af28e6" class="toggle"  />
+    <label for="section-ad6c2bf4e759ec71c24d3649b1af28e6" class="flex justify-between">
+      <a role="button" class="">引擎开发</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/openssl/engines/rsa/" class="">rsa普密ukey</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-2b0f9c71b96dae88f32ac3cee96b20d0" class="toggle"  />
+    <label for="section-2b0f9c71b96dae88f32ac3cee96b20d0" class="flex justify-between">
+      <a role="button" class="">systemd源码分析记录</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/systemd/dns/" class="">dns 根据/etc/resolv.conf发包处理</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-f55a7674027409a03b8a5abb4bc297a8" class="toggle"  />
+    <label for="section-f55a7674027409a03b8a5abb4bc297a8" class="flex justify-between">
+      <a role="button" class="">nginx与openresty源码分析记录</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-31add6f61f1172621b97f8a589c1d0b2" class="toggle"  />
+    <label for="section-31add6f61f1172621b97f8a589c1d0b2" class="flex justify-between">
+      <a href="../../../../../docs/nginx/nginx/" class="">nginx</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/nginx/nginx/common/" class="">nginx结构综述</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-fff5261d3f813bb84c350c416cb2fb96" class="toggle"  />
+    <label for="section-fff5261d3f813bb84c350c416cb2fb96" class="flex justify-between">
+      <a href="../../../../../docs/nginx/nginx/http/" class="">http模块</a>
+    </label>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-f4402e173ff6e0baf39c7dcabe4cc055" class="toggle"  />
+    <label for="section-f4402e173ff6e0baf39c7dcabe4cc055" class="flex justify-between">
+      <a role="button" class="">stream模块</a>
+    </label>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-17591ec0ca9929e17ca9b0e68c7f4109" class="toggle"  />
+    <label for="section-17591ec0ca9929e17ca9b0e68c7f4109" class="flex justify-between">
+      <a href="../../../../../docs/nginx/openresty/" class="">openresty扩展组件</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-ac6c60f4cffbffe56d10067a0daed9b7" class="toggle"  />
+    <label for="section-ac6c60f4cffbffe56d10067a0daed9b7" class="flex justify-between">
+      <a href="../../../../../docs/nginx/openresty/stream/" class="">https://github.com/openresty/stream-lua-nginx-module</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/nginx/openresty/stream/socket-tcp/" class="">ngx_stream_lua_socket_tcp.c</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-da0768733ed83a1a185c822afd62afca" class="toggle"  />
+    <label for="section-da0768733ed83a1a185c822afd62afca" class="flex justify-between">
+      <a role="button" class="">考试准备</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-73f081c9d6184c17d75a11eb0c89f950" class="toggle"  />
+    <label for="section-73f081c9d6184c17d75a11eb0c89f950" class="flex justify-between">
+      <a role="button" class="">系统架构师</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-3678bd996217536cb45684f08acbf2d5" class="toggle"  />
+    <label for="section-3678bd996217536cb45684f08acbf2d5" class="flex justify-between">
+      <a role="button" class="">大并发架构</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/examination/system-architect/large-concurrency/common/" class="">前言和综述</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/examination/system-architect/large-concurrency/reliability/" class="">可靠性</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/examination/system-architect/large-concurrency/proctical-scene/" class="">实践场景</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-e78103f8358bcc8897b2665157a6ac17" class="toggle"  />
+    <label for="section-e78103f8358bcc8897b2665157a6ac17" class="flex justify-between">
+      <a role="button" class="">读书和学习笔记</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/examination/system-architect/book-study/reliability/" class="">可靠性设计</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/examination/system-architect/book-study/designing-data-intensive-application/" class="">数据密集型应用系统设计</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>系统工程</span>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-bc467201b327634cf4794420f221e449" class="toggle"  />
+    <label for="section-bc467201b327634cf4794420f221e449" class="flex justify-between">
+      <a href="../../../../../docs/ctf/" class="">ctf知识总结</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-5c98ee620834c5b46fb9c98c912f3a58" class="toggle"  />
+    <label for="section-5c98ee620834c5b46fb9c98c912f3a58" class="flex justify-between">
+      <a role="button" class="">知识性总结</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-efb38f77116c50bfef7a34437bcb0d09" class="toggle"  />
+    <label for="section-efb38f77116c50bfef7a34437bcb0d09" class="flex justify-between">
+      <a role="button" class="">加解密编码等算法</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/ctf/knowledge/encoder-decoder/algorithm/" class="">hash和编码算法列表</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-048232ff144b12ee355b2a18ecb86c32" class="toggle"  />
+    <label for="section-048232ff144b12ee355b2a18ecb86c32" class="flex justify-between">
+      <a role="button" class="">压缩和解压缩</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/ctf/knowledge/compress/zip/" class="">zip</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-287675e4fff40951adcbf3f3bc57df6d" class="toggle"  />
+    <label for="section-287675e4fff40951adcbf3f3bc57df6d" class="flex justify-between">
+      <a role="button" class="">文件相关</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/ctf/knowledge/file/file-struct/" class="">文件格式</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-521980a8aaa52145eac6f7bd8ae2a51e" class="toggle"  />
+    <label for="section-521980a8aaa52145eac6f7bd8ae2a51e" class="flex justify-between">
+      <a role="button" class="">buuoj.cn的题目</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-dab01071fb6c7505b5567d9327443dcd" class="toggle"  />
+    <label for="section-dab01071fb6c7505b5567d9327443dcd" class="flex justify-between">
+      <a role="button" class="">misc</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/ctf/buuctf/misc/%E9%9D%A2%E5%85%B7%E4%B8%8B%E7%9A%84flag/" class="">面具下的flag</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-8bb89e37bc8ac94ed7933c2c15518f8c" class="toggle"  />
+    <label for="section-8bb89e37bc8ac94ed7933c2c15518f8c" class="flex justify-between">
+      <a role="button" class="">AI相关</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/ai/keywords/" class="">名词解释和学习大纲</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-1cc51252e9449a6be453972b2b6526e1" class="toggle"  />
+    <label for="section-1cc51252e9449a6be453972b2b6526e1" class="flex justify-between">
+      <a role="button" class="">计算机视觉</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/ai/cv/minst/" class="">minst手写数字识别——神经网络实战笔记</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-20038bcc21ca3d914920842c4a32533d" class="toggle"  />
+    <label for="section-20038bcc21ca3d914920842c4a32533d" class="flex justify-between">
+      <a href="../../../../../docs/leetcode/" class="">LeetCode刷题思路总结</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-e557ddd3240c9349f7b073a0a626b78b" class="toggle"  />
+    <label for="section-e557ddd3240c9349f7b073a0a626b78b" class="flex justify-between">
+      <a role="button" class="">简单</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode1/" class="">1. Two Sum</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode9/" class="">9. Palindrome Number</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode13/" class="">13. Roman to Integer</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode20/" class="">20. Valid Parentheses</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode101/" class="">101. Symmetric Tree</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode706/" class="">706. Design HashMap</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode1694/" class="">1694. Reformat Phone Number</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2399/" class="">2399. Check Distances Between Same Letters</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2413/" class="">2413. Smallest Even Multiple</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2418/" class="">2418. Sort the People</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2441/" class="">2441. Largest Positive Integer That Exists With Its Negative</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2446/" class="">2446. Determine if Two Events Have Conflict</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2455/" class="">2455. Average Value of Even Numbers That Are Divisible by Three</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2460/" class="">2460. Apply Operations to an Array</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2469/" class="">2469. Convert the Temperature</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2475/" class="">2475. Number of Unequal Triplets in Array</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2485/" class="">2485. Find the Pivot Integer</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2490/" class="">2490. Circular Sentence</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2500/" class="">2500. Delete Greatest Value in Each Row</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2515/" class="">2515. Shortest Distance to Target String in a Circular Array</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2520/" class="">2520. Count the Digits That Divide a Number</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2529/" class="">2529. Maximum Count of Positive Integer and Negative Integer</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2535/" class="">2535. Difference Between Element Sum and Digit Sum of an Array</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2562/" class="">2562. Find the Array Concatenation Value</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2570/" class="">2570. Merge Two 2D Arrays by Summing Values</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2574/" class="">2574. Left and Right Sum Differences</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2582/" class="">2582. Pass the Pillow</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2595/" class="">2595. Number of Even and Odd Bits</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2600/" class="">2600. K Items With the Maximum Sum</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2609/" class="">2609. Find the Longest Balanced Substring of a Binary String</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2614/" class="">2614. Prime In Diagonal</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2643/" class="">2643. Row With Maximum Ones</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2644/" class="">2644. Find the Maximum Divisibility Score</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2682/" class="">2682. Find the Losers of the Circular Game</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2710/" class="">2710. Remove Trailing Zeros From a String</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2716/" class="">2716. Minimize String Length</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2717/" class="">2717. Semi-Ordered Permutation</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2733/" class="">2733. Neither Minimum nor Maximum</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2739/" class="">2739. Total Distance Traveled</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2859/" class="">2859. Sum of Values at Indices With K Set Bits</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/simple/leetcode2860/" class="">2860. Happy Students</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-dbe51e7e4a89495069ffe18bd5d28a03" class="toggle"  />
+    <label for="section-dbe51e7e4a89495069ffe18bd5d28a03" class="flex justify-between">
+      <a role="button" class="">中等</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode3/" class="">3. Longest Substring Without Repeating Characters</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode5/" class="">5. Longest Palindromic Substring</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode6/" class="">6. ZigZag Conversion</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode7/" class="">7. Reverse Integer</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode8/" class="">8. String to Integer (atoi)</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode11/" class="">11. Container With Most Water</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode12/" class="">12. Integer to Roman</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode18/" class="">18. 4Sum</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode155/" class="">155. Min Stack</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode322/" class="">322. Coin Change</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode658/" class="">658. Find K Closest Elements</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode948/" class="">948. Bag of Tokens</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode1169/" class="">1169. Invalid Transactions</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode1352/" class="">1352. Product of the Last K Numbers</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2400/" class="">2400. Number of Ways to Reach a Position After Exactly k Steps</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2401/" class="">2401. Longest Nice Subarray</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2414/" class="">2414. Length of the Longest Alphabetical Continuous Substring</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2415/" class="">2415. Reverse Odd Levels of Binary Tree</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2419/" class="">2419. Longest Subarray With Maximum Bitwise AND</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2420/" class="">2420. Find All Good Indices</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2442/" class="">2442. Count Number of Distinct Integers After Reverse Operations</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2443/" class="">2443. Sum of Number and Its Reverse</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2447/" class="">2447. Number of Subarrays With GCD Equal to K</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2456/" class="">2456. Most Popular Video Creator</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2457/" class="">2457. Minimum Addition to Make Integer Beautiful</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2461/" class="">2461. Maximum Sum of Distinct Subarrays With Length K</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2462/" class="">2462. Total Cost to Hire K Workers</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2476/" class="">2476. Closest Nodes Queries in a Binary Search Tree</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2486/" class="">2486. Append Characters to String to Make Subsequence</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2487/" class="">2487. Remove Nodes From Linked List</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2491/" class="">2491. Circular Sentence</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2492/" class="">2492. Circular Sentence</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2501/" class="">2501. Longest Square Streak in an Array</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2502/" class="">2502. Longest Square Streak in an Array</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2516/" class="">2516. Take K of Each Character From Left and Right</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2517/" class="">2517. Maximum Tastiness of Candy Basket</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2521/" class="">2521. Distinct Prime Factors of Product of Array</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2522/" class="">2522. Partition String Into Substrings With Values at Most K</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2523/" class="">2523. Closest Prime Numbers in Range</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2530/" class="">2530. Maximum Count of Positive Integer and Negative Integer</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2531/" class="">2531. Make Number of Distinct Characters Equal</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2536/" class="">2536. Increment Submatrices by One</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2537/" class="">2537. Count the Number of Good Subarrays</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2563/" class="">2563. Count the Number of Fair Pairs</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2564/" class="">2564. Substring XOR Queries</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2571/" class="">2571. Minimum Operations to Reduce an Integer to 0</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2572/" class="">2572. Count the Number of Square-Free Subsets</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2575/" class="">2575. Find the Divisibility Array of a String</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2576/" class="">2576. Find the Maximum Number of Marked Indices</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2583/" class="">2583. Kth Largest Sum in a Binary Tree</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2596/" class="">2596. Check Knight Tour Configuration</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2597/" class="">2597. The Number of Beautiful Subsets</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2598/" class="">2598. Smallest Missing Non-negative Integer After Operations</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2601/" class="">2601. Prime Subtraction Operation</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2602/" class="">2602. Minimum Operations to Make All Array Elements Equal</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2610/" class="">2610. Convert an Array Into a 2D Array With Conditions</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2611/" class="">2611. Mice and Cheese</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2615/" class="">2615. Sum of Distances</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2645/" class="">2645. Find the Maximum Divisibility Score</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2683/" class="">2683. Neighboring Bitwise XOR</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2684/" class="">2684. Maximum Number of Moves in a Grid</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2685/" class="">2685. Count the Number of Complete Components</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2711/" class="">2711. Difference of Number of Distinct Values on Diagonals</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2712/" class="">2712. Minimum Cost to Make All Characters Equal</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2718/" class="">2718. Sum of Matrix After Queries</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2734/" class="">2734. Lexicographically Smallest String After Substring Operation</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2735/" class="">2735. Collecting Chocolates</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2740/" class="">2740. Find the Value of the Partition</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/medium/leetcode2741/" class="">2741. Special Permutations</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-42eecace07f2c55adbf8c2fda3b6b016" class="toggle"  />
+    <label for="section-42eecace07f2c55adbf8c2fda3b6b016" class="flex justify-between">
+      <a role="button" class="">困难</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/hard/leetcode4/" class="">4. Median of Two Sorted Arrays</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/hard/leetcode10/" class="">10. Regular Expression Matching</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/hard/leetcode41/" class="">41. First Missing Positive</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/hard/leetcode327/" class="">327. Count of Range Sum</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/hard/leetcode440/" class="">440. K-th Smallest in Lexicographical Order</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/hard/leetcode736/" class="">736. Parse Lisp Expression</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/hard/leetcode864/" class="">864. Shortest Path to Get All Keys</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/hard/leetcode2444/" class="">2444. Count Subarrays With Fixed Bounds</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/hard/leetcode2448/" class="">2448. Minimum Cost to Make Array Equal</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/hard/leetcode2488/" class="">2488. Count Subarrays With Median K</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/hard/leetcode2518/" class="">2518. Number of Great Partitions</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/hard/leetcode2573/" class="">2573. Count the Number of Square-Free Subsets</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/hard/leetcode2577/" class="">2577. 在网格图中访问一个格子的最少时间</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/hard/leetcode2584/" class="">2584. Split the Array to Make Coprime Products</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/hard/leetcode2612/" class="">2612. Minimum Reverse Operations</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/hard/leetcode2646/" class="">2646. Minimize the Total Price of the Trips</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/hard/leetcode2713/" class="">2713. Maximum Strictly Increasing Cells in a Matrix</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/hard/leetcode2719/" class="">2719. Count of Integers</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/leetcode/hard/leetcode2742/" class="">2742. Painting the Walls</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-010cc3a6dda69f98986133a7094047b7" class="toggle"  />
+    <label for="section-010cc3a6dda69f98986133a7094047b7" class="flex justify-between">
+      <a href="../../../../../docs/books/" class="">读书笔记</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-4ed26bb92a4c971f4b8276bfc9e49be9" class="toggle"  />
+    <label for="section-4ed26bb92a4c971f4b8276bfc9e49be9" class="flex justify-between">
+      <a role="button" class="">社交相关</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="../../../../../docs/books/social/the-art-of-communication/" class="">沟通的艺术与处世智慧 -- 【美】戴尔*卡耐基</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+
+
+
+
+
+
+
+
+
+
+  
+<ul>
+  
+  <li>
+    <a href="../../../../../posts/"  >
+        Blog
+      </a>
+  </li>
+  
+  <li>
+    <a href="https://github.com/githubwyb"  target="_blank" rel="noopener">
+        Github
+      </a>
+  </li>
+  
+</ul>
+
+
+
+
+
+
+</nav>
+
+
+
+
+  <script>(function(){var e=document.querySelector("aside .book-menu-content");addEventListener("beforeunload",function(){localStorage.setItem("menu.scrollTop",e.scrollTop)}),e.scrollTop=localStorage.getItem("menu.scrollTop")})()</script>
+
+
+ 
+      </div>
+    </aside>
+
+    <div class="book-page">
+      <header class="book-header">
+        
+  <div class="flex align-center justify-between">
+  <label for="menu-control">
+    <img src="../../../../../svg/menu.svg" class="book-icon" alt="Menu" />
+  </label>
+
+  <strong>1. netfilter驱动使用sk错误引发宕机</strong>
+
+  <label for="toc-control">
+    
+    <img src="../../../../../svg/toc.svg" class="book-icon" alt="Table of Contents" />
+    
+  </label>
+</div>
+
+
+  
+  <aside class="hidden clearfix">
+    
+  
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#一堆栈信息">一、堆栈信息</a></li>
+    <li><a href="#二分析堆栈信息">二、分析堆栈信息</a>
+      <ul>
+        <li><a href="#1-首先正面分析堆栈">1. 首先正面分析堆栈</a></li>
+        <li><a href="#2-验证结果">2. 验证结果</a></li>
+      </ul>
+    </li>
+    <li><a href="#三结论">三、结论</a></li>
+  </ul>
+</nav>
+
+
+
+  </aside>
+  
+ 
+      </header>
+
+      
+      
+  <article class="markdown"><h1 id="一堆栈信息">
+  一、堆栈信息
+  <a class="anchor" href="#%e4%b8%80%e5%a0%86%e6%a0%88%e4%bf%a1%e6%81%af">#</a>
+</h1>
+<pre tabindex="0"><code>[28772.702878] BUG: unable to handle kernel paging request at 0000000400080040
+[28772.703475] PGD 0 P4D 0
+[28772.703614] Oops: 0000 [#1] SMP PTI
+[28772.703806] CPU: 6 PID: 96951 Comm: sdptun Kdump: loaded Tainted: G        W  OE     4.19.181 #6
+[28772.704255] Hardware name: Bochs Bochs, BIOS 1.13.0-20201211_142035 04/01/2014
+[28772.704635] RIP: 0010:tcp_md5_do_lookup+0x15/0x130
+[28772.704881] Code: 04 00 00 0f a3 c2 73 01 c3 e9 37 ff ff ff 0f 1f 80 00 00 00 00 66 66 66 66 90 48 8b 87 40 08 00 00 48 85 c0 0f 84 e4 00 00 00 &lt;48&gt; 8b 38 31 c0 48 85 ff 74 62 41 bb 40 00 00 00 49 c7 c2 ff ff ff
+[28772.705826] RSP: 0018:ffff957075d83d20 EFLAGS: 00010202
+[28772.706093] RAX: 0000000400080040 RBX: ffff956fdfa56118 RCX: 0000000000000001
+[28772.706454] RDX: 0000000000000002 RSI: ffff956fdfa56118 RDI: ffff956fbcf3aa80
+[28772.706866] RBP: ffff956fdfa5610c R08: 0000000000000001 R09: 000000000000ebb5
+[28772.707244] R10: 000000000100007f R11: 000000000000c352 R12: ffff956fbcf3aa80
+[28772.707604] R13: ffff956f600ce000 R14: ffff956fdfa56120 R15: ffff956fdfa5610c
+[28772.707985] FS:  00007f32b003d740(0000) GS:ffff957075d80000(0000) knlGS:0000000000000000
+[28772.708395] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[28772.708740] CR2: 0000000400080040 CR3: 00000002263ca006 CR4: 00000000000206e0
+[28772.709112] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[28772.709473] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+[28772.709834] Call Trace:
+[28772.709979]  &lt;IRQ&gt;
+[28772.710090]  tcp_v4_inbound_md5_hash+0x5c/0x160
+[28772.710336]  tcp_v4_rcv+0x565/0xc00
+[28772.710521]  ip_local_deliver_finish+0x61/0x1e0
+[28772.710766]  ip_local_deliver+0xe0/0xf0
+[28772.711016]  ? ip_sublist_rcv_finish+0x80/0x80
+[28772.711301]  ip_rcv+0xbc/0xd0
+[28772.711458]  ? ip_rcv_finish_core.isra.18+0x360/0x360
+[28772.711719]  __netif_receive_skb_one_core+0x5a/0x80
+[28772.711982]  process_backlog+0xaa/0x160
+[28772.712182]  net_rx_action+0x149/0x3b0
+[28772.712379]  ? sched_clock+0x5/0x10
+[28772.712577]  __do_softirq+0xe3/0x2eb
+[28772.712766]  do_softirq_own_stack+0x2a/0x40
+[28772.712982]  &lt;/IRQ&gt;
+[28772.713106]  do_softirq.part.15+0x4f/0x60
+[28772.713326]  __local_bh_enable_ip+0x60/0x70
+[28772.713595]  ip_finish_output2+0x1a7/0x430
+[28772.713811]  ? ip_finish_output+0x13a/0x280
+[28772.714033]  ip_output+0x6c/0xe0
+[28772.714208]  ? ip_fragment.constprop.50+0x80/0x80
+[28772.714450]  __ip_queue_xmit+0x15d/0x410
+[28772.714665]  __tcp_transmit_skb+0x528/0xaf0
+[28772.714882]  tcp_rcv_state_process+0xbc2/0xda0
+[28772.715122]  tcp_v4_do_rcv+0xb4/0x1e0
+[28772.715314]  __release_sock+0x7c/0xd0
+[28772.715516]  release_sock+0x2b/0x90
+[28772.715700]  inet_stream_connect+0x41/0x50
+[28772.715983]  __sys_connect+0xd0/0x100
+[28772.716177]  ? syscall_trace_enter+0x1d3/0x2b0
+[28772.716406]  __x64_sys_connect+0x16/0x20
+[28772.716610]  do_syscall_64+0x5f/0x1e0
+[28772.716801]  ? async_page_fault+0x8/0x30
+[28772.717006]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
+[28772.717265] RIP: 0033:0x7f32afa0fcd5
+[28772.717452] Code: 64 89 02 b8 ff ff ff ff eb ba 66 2e 0f 1f 84 00 00 00 00 00 90 f3 0f 1e fa 8b 05 76 d7 20 00 85 c0 75 12 b8 2a 00 00 00 0f 05 &lt;48&gt; 3d 00 f0 ff ff 77 53 c3 66 90 41 54 41 89 d4 55 48 89 f5 53 89
+[28772.718398] RSP: 002b:00007ffef365ce88 EFLAGS: 00000246 ORIG_RAX: 000000000000002a
+[28772.718781] RAX: ffffffffffffffda RBX: 00007f329838ef80 RCX: 00007f32afa0fcd5
+[28772.719155] RDX: 0000000000000010 RSI: 000055af9e8e26a0 RDI: 000000000000017f
+[28772.719570] RBP: 00007f3299512df8 R08: 0000000000000004 R09: 0000000000000070
+[28772.719930] R10: 00007ffef365ce5c R11: 0000000000000246 R12: 000000000000017f
+[28772.720292] R13: 00007f32990ecd30 R14: 00007f32992fcd30 R15: 0000000000000001
+[28772.720682] Modules linked in: sdp_toa(OE) nfnetlink_queue tun xt_addrtype br_netfilter overlay bridge stp llc xt_TEE nf_dup_ipv6 nf_dup_ipv4 xt_TPROXY nf_tproxy_ipv6 nf_tproxy_ipv4 veth tcp_diag udp_diag inet_diag ipt_MASQUERADE xt_nat xt_multiport xt_socket nf_socket_ipv4 nf_socket_ipv6 nf_conntrack_netlink xt_HL xt_hl xt_set xt_comment xt_owner xt_connmark xt_mark ip6t_REJECT nf_reject_ipv6 ipt_REJECT nf_reject_ipv4 xt_conntrack nft_counter nft_chain_nat_ipv6 nf_nat_ipv6 nft_chain_route_ipv6 nft_chain_nat_ipv4 nf_nat_ipv4 nf_nat nft_chain_route_ipv4 ip_set_hash_netport ip_set_hash_net rfkill ip6_tables nft_compat ip_set nf_tables(E) nfnetlink igb i2c_algo_bit dca tcp_bbr sch_fq ip_vs nf_conntrack nf_defrag_ipv6 nf_defrag_ipv4 loop ext4 mbcache jbd2 joydev pcspkr i2c_piix4 ip_tables xfs libcrc32c
+[28772.725085]  dm_crypt xts ata_generic crc32c_intel serio_raw virtio_net ata_piix net_failover virtio_console virtio_blk failover libata dm_mirror dm_region_hash dm_log dm_mod fuse [last unloaded: sdp_toa]
+[28772.726001] CR2: 0000000400080040
+</code></pre><h1 id="二分析堆栈信息">
+  二、分析堆栈信息
+  <a class="anchor" href="#%e4%ba%8c%e5%88%86%e6%9e%90%e5%a0%86%e6%a0%88%e4%bf%a1%e6%81%af">#</a>
+</h1>
+<h2 id="1-首先正面分析堆栈">
+  1. 首先正面分析堆栈
+  <a class="anchor" href="#1-%e9%a6%96%e5%85%88%e6%ad%a3%e9%9d%a2%e5%88%86%e6%9e%90%e5%a0%86%e6%a0%88">#</a>
+</h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1</span><span><span style="color:#555">[</span>28772.702878<span style="color:#555">]</span> BUG: unable to handle kernel paging request at <span style="color:#f60">0000000400080040</span>
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span><span style="color:#09f;font-style:italic">// arch/x86/mm/fault.c
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span><span><span style="color:#09f;font-style:italic"></span><span style="color:#069;font-weight:bold">static</span> <span style="color:#078;font-weight:bold">void</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span><span style="color:#c0f">show_fault_oops</span>(<span style="color:#069;font-weight:bold">struct</span> <span style="color:#0a8;font-weight:bold">pt_regs</span> <span style="color:#555">*</span>regs, <span style="color:#078;font-weight:bold">unsigned</span> <span style="color:#078;font-weight:bold">long</span> error_code,
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span><span>		<span style="color:#078;font-weight:bold">unsigned</span> <span style="color:#078;font-weight:bold">long</span> address)
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span><span>{
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span><span>        ...
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span><span>	pr_alert(<span style="color:#c30">&#34;BUG: unable to handle kernel %s at %px</span><span style="color:#c30;font-weight:bold">\n</span><span style="color:#c30">&#34;</span>,
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span>		 address <span style="color:#555">&lt;</span> PAGE_SIZE <span style="color:#555">?</span> <span style="color:#c30">&#34;NULL pointer dereference&#34;</span> <span style="color:#555">:</span> <span style="color:#c30">&#34;paging request&#34;</span>,
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span><span>		 (<span style="color:#078;font-weight:bold">void</span> <span style="color:#555">*</span>)address);
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span><span>	dump_pagetable(address);
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span>}
+</span></span></code></pre></div><ul>
+<li>这个在网上查原因是地址非法，看起来地址和正常的地址确实不太一样，像sk的地址为0xffff956fbcf3aa80</li>
+<li>使用crash命令调试vmcore</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span><span style="color:#555">=</span>&gt; crash vmlinux /hislog/crash/kdump/127.0.0.1-2023-12-30-00<span style="color:#c30;font-weight:bold">\:</span>40<span style="color:#c30;font-weight:bold">\:</span>52/vmcore
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span><span>...
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span>      KERNEL: vmlinux
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span><span>    DUMPFILE: /hislog/crash/kdump/127.0.0.1-2023-12-30-00:40:52/vmcore  <span style="color:#555">[</span>PARTIAL DUMP<span style="color:#555">]</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span><span>        CPUS: <span style="color:#f60">8</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span><span>        DATE: Sat Dec <span style="color:#f60">30</span> 00:40:46 <span style="color:#f60">2023</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span><span>      UPTIME: 07:59:32
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span>LOAD AVERAGE: 1.30, 1.30, 1.44
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span><span>       TASKS: <span style="color:#f60">1624</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span><span>    NODENAME: aTrust
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span><span>     RELEASE: 4.19.181
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span>     VERSION: <span style="color:#09f;font-style:italic">#6 SMP Thu Jun 16 04:03:14 CST 2022</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span>     MACHINE: x86_64  <span style="color:#555">(</span><span style="color:#f60">2194</span> Mhz<span style="color:#555">)</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span>      MEMORY: <span style="color:#f60">8</span> GB
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span><span>       PANIC: <span style="color:#c30">&#34;BUG: unable to handle kernel paging request at 0000000400080040&#34;</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span><span>         PID: <span style="color:#f60">96951</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span><span>     COMMAND: <span style="color:#c30">&#34;sdptun&#34;</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span><span>        TASK: ffff956fe2e65800  <span style="color:#555">[</span>THREAD_INFO: ffff956fe2e65800<span style="color:#555">]</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span><span>         CPU: <span style="color:#f60">6</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span><span>       STATE: TASK_RUNNING <span style="color:#555">(</span>PANIC<span style="color:#555">)</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22</span><span>crash&gt; bt
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23</span><span>PID: <span style="color:#f60">96951</span>  TASK: ffff956fe2e65800  CPU: <span style="color:#f60">6</span>   COMMAND: <span style="color:#c30">&#34;sdptun&#34;</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24</span><span> <span style="color:#09f;font-style:italic">#0 [ffff957075d83a20] machine_kexec at ffffffff8e24baae</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25</span><span> <span style="color:#09f;font-style:italic">#1 [ffff957075d83a78] __crash_kexec at ffffffff8e33eccd</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26</span><span> <span style="color:#09f;font-style:italic">#2 [ffff957075d83b40] crash_kexec at ffffffff8e33fbad</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27</span><span> <span style="color:#09f;font-style:italic">#3 [ffff957075d83b58] oops_end at ffffffff8e21fedd</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28</span><span> <span style="color:#09f;font-style:italic">#4 [ffff957075d83b78] no_context at ffffffff8e25974c</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29</span><span> <span style="color:#09f;font-style:italic">#5 [ffff957075d83bd0] __do_page_fault at ffffffff8e259e5e</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">30</span><span> <span style="color:#09f;font-style:italic">#6 [ffff957075d83c40] do_page_fault at ffffffff8e25a2f2</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">31</span><span> <span style="color:#09f;font-style:italic">#7 [ffff957075d83c70] async_page_fault at ffffffff8ec0119e</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">32</span><span>    <span style="color:#555">[</span>exception RIP: tcp_md5_do_lookup+21<span style="color:#555">]</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">33</span><span>    RIP: ffffffff8e9ad3f5  RSP: ffff957075d83d20  RFLAGS: <span style="color:#f60">00010202</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">34</span><span>    RAX: <span style="color:#f60">0000000400080040</span>  RBX: ffff956fdfa56118  RCX: <span style="color:#f60">0000000000000001</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">35</span><span>    RDX: <span style="color:#f60">0000000000000002</span>  RSI: ffff956fdfa56118  RDI: ffff956fbcf3aa80
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">36</span><span>    RBP: ffff956fdfa5610c   R8: <span style="color:#f60">0000000000000001</span>   R9: 000000000000ebb5
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">37</span><span>    R10: 000000000100007f  R11: 000000000000c352  R12: ffff956fbcf3aa80
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">38</span><span>    R13: ffff956f600ce000  R14: ffff956fdfa56120  R15: ffff956fdfa5610c
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">39</span><span>    ORIG_RAX: ffffffffffffffff  CS: <span style="color:#f60">0010</span>  SS: <span style="color:#f60">0018</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">40</span><span> <span style="color:#09f;font-style:italic">#8 [ffff957075d83d20] tcp_v4_inbound_md5_hash at ffffffff8e9adecc</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">41</span><span> <span style="color:#09f;font-style:italic">#9 [ffff957075d83d78] tcp_v4_rcv at ffffffff8e9af9a5</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">42</span><span><span style="color:#09f;font-style:italic">#10 [ffff957075d83de8] ip_local_deliver_finish at ffffffff8e985f61</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">43</span><span><span style="color:#09f;font-style:italic">#11 [ffff957075d83e08] ip_local_deliver at ffffffff8e986800</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">44</span><span><span style="color:#09f;font-style:italic">#12 [ffff957075d83e58] ip_rcv at ffffffff8e9868cc</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">45</span><span><span style="color:#09f;font-style:italic">#13 [ffff957075d83eb0] __netif_receive_skb_one_core at ffffffff8e92523a</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">46</span><span><span style="color:#09f;font-style:italic">#14 [ffff957075d83ed8] process_backlog at ffffffff8e92642a</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">47</span><span><span style="color:#09f;font-style:italic">#15 [ffff957075d83f10] net_rx_action at ffffffff8e9257c9</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">48</span><span><span style="color:#09f;font-style:italic">#16 [ffff957075d83f90] __softirqentry_text_start at ffffffff8ee000e3</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">49</span><span><span style="color:#09f;font-style:italic">#17 [ffff957075d83ff0] do_softirq_own_stack at ffffffff8ec00e9a</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">50</span><span>--- &lt;IRQ stack&gt; ---
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">51</span><span><span style="color:#09f;font-style:italic">#18 [ffffac70016cbbb0] do_softirq_own_stack at ffffffff8ec00e9a</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">52</span><span>    <span style="color:#555">[</span>exception RIP: unknown or invalid address<span style="color:#555">]</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">53</span><span>    RIP: ffff956ff7c98000  RSP: ffff956fb117c240  RFLAGS: ffff956ff7c98348
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">54</span><span>    RAX: ffffffff8f5e0080  RBX: ffffac70016cbc50  RCX: <span style="color:#f60">0000000000000000</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">55</span><span>    RDX: 0100007ff7c98348  RSI: e214a24fbc22aa00  RDI: ffffffff8e98b1ca
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">56</span><span>    RBP: ffff956f600ce000   R8: ffffffff8e989a87   R9: ffffffff8e2a7850
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">57</span><span>    R10: ffff957018d7c400  R11: ffffffff8e2a77df  R12: ffff957018d7c400
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">58</span><span>    R13: ffff956ff7c98000  R14: e214a24fbc22aa00  R15: <span style="color:#f60">0000000000000000</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">59</span><span>    ORIG_RAX: ffff956f600ce000  CS: <span style="color:#f60">0000</span>  SS: ffffffff8f5e0080
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">60</span><span>bt: WARNING: possibly bogus exception frame
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">61</span><span><span style="color:#09f;font-style:italic">#19 [ffffac70016cbc58] ip_output at ffffffff8e98bd4c</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">62</span><span><span style="color:#09f;font-style:italic">#20 [ffffac70016cbcb0] __ip_queue_xmit at ffffffff8e98b7ad</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">63</span><span><span style="color:#09f;font-style:italic">#21 [ffffac70016cbd08] __tcp_transmit_skb at ffffffff8e9a5e48</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">64</span><span><span style="color:#09f;font-style:italic">#22 [ffffac70016cbd78] tcp_rcv_state_process at ffffffff8e9a3c12</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">65</span><span><span style="color:#09f;font-style:italic">#23 [ffffac70016cbde8] tcp_v4_do_rcv at ffffffff8e9ae494</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">66</span><span><span style="color:#09f;font-style:italic">#24 [ffffac70016cbe08] __release_sock at ffffffff8e907c8c</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">67</span><span><span style="color:#09f;font-style:italic">#25 [ffffac70016cbe30] release_sock at ffffffff8e907d0b</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">68</span><span><span style="color:#09f;font-style:italic">#26 [ffffac70016cbe48] inet_stream_connect at ffffffff8e9c6bd1</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">69</span><span><span style="color:#09f;font-style:italic">#27 [ffffac70016cbe70] __sys_connect at ffffffff8e902cd0</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">70</span><span><span style="color:#09f;font-style:italic">#28 [ffffac70016cbf28] __x64_sys_connect at ffffffff8e902d16</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">71</span><span><span style="color:#09f;font-style:italic">#29 [ffffac70016cbf30] do_syscall_64 at ffffffff8e203eef</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">72</span><span><span style="color:#09f;font-style:italic">#30 [ffffac70016cbf50] entry_SYSCALL_64_after_hwframe at ffffffff8ec00088</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">73</span><span>    RIP: 00007f32afa0fcd5  RSP: 00007ffef365ce88  RFLAGS: <span style="color:#f60">00000246</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">74</span><span>    RAX: ffffffffffffffda  RBX: 00007f329838ef80  RCX: 00007f32afa0fcd5
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">75</span><span>    RDX: <span style="color:#f60">0000000000000010</span>  RSI: 000055af9e8e26a0  RDI: 000000000000017f
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">76</span><span>    RBP: 00007f3299512df8   R8: <span style="color:#f60">0000000000000004</span>   R9: <span style="color:#f60">0000000000000070</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">77</span><span>    R10: 00007ffef365ce5c  R11: <span style="color:#f60">0000000000000246</span>  R12: 000000000000017f
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">78</span><span>    R13: 00007f32990ecd30  R14: 00007f32992fcd30  R15: <span style="color:#f60">0000000000000001</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">79</span><span>    ORIG_RAX: 000000000000002a  CS: <span style="color:#f60">0033</span>  SS: 002b
+</span></span></code></pre></div><ul>
+<li>堆栈位置</li>
+</ul>
+<pre tabindex="0"><code>crash&gt; dis -l tcp_md5_do_lookup+21 5
+/root/hdc/hardware/linux_kernel_4.19.181/linux-4.19.181/./include/linux/compiler.h: 207
+0xffffffff8e9ad3f5 &lt;tcp_md5_do_lookup+21&gt;:      mov    (%rax),%rdi
+/root/hdc/hardware/linux_kernel_4.19.181/linux-4.19.181/net/ipv4/tcp_ipv4.c: 994
+0xffffffff8e9ad3f8 &lt;tcp_md5_do_lookup+24&gt;:      xor    %eax,%eax
+0xffffffff8e9ad3fa &lt;tcp_md5_do_lookup+26&gt;:      test   %rdi,%rdi
+0xffffffff8e9ad3fd &lt;tcp_md5_do_lookup+29&gt;:      je     0xffffffff8e9ad461 &lt;tcp_md5_do_lookup+129&gt;
+0xffffffff8e9ad3ff &lt;tcp_md5_do_lookup+31&gt;:      mov    $0x40,%r11d
+</code></pre><div class="highlight"><pre tabindex="0" style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span><span style="color:#09f;font-style:italic">// net/ipv4/tcp_ipv4.c
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span><span><span style="color:#09f;font-style:italic"></span><span style="color:#09f;font-style:italic">/* Find the Key structure for an address.  */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span><span style="color:#069;font-weight:bold">struct</span> <span style="color:#0a8;font-weight:bold">tcp_md5sig_key</span> <span style="color:#555">*</span><span style="color:#c0f">tcp_md5_do_lookup</span>(<span style="color:#069;font-weight:bold">const</span> <span style="color:#069;font-weight:bold">struct</span> <span style="color:#0a8;font-weight:bold">sock</span> <span style="color:#555">*</span>sk,
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span><span>					 <span style="color:#069;font-weight:bold">const</span> <span style="color:#069;font-weight:bold">union</span> <span style="color:#0a8;font-weight:bold">tcp_md5_addr</span> <span style="color:#555">*</span>addr,
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span><span>					 <span style="color:#078;font-weight:bold">int</span> family)
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span><span>{
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span><span>	<span style="color:#069;font-weight:bold">const</span> <span style="color:#069;font-weight:bold">struct</span> <span style="color:#0a8;font-weight:bold">tcp_sock</span> <span style="color:#555">*</span>tp <span style="color:#555">=</span> tcp_sk(sk);
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span>	<span style="color:#069;font-weight:bold">struct</span> <span style="color:#0a8;font-weight:bold">tcp_md5sig_key</span> <span style="color:#555">*</span>key;
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span><span>	<span style="color:#069;font-weight:bold">const</span> <span style="color:#069;font-weight:bold">struct</span> <span style="color:#0a8;font-weight:bold">tcp_md5sig_info</span> <span style="color:#555">*</span>md5sig;
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span><span>	__be32 mask;
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span><span>	<span style="color:#069;font-weight:bold">struct</span> <span style="color:#0a8;font-weight:bold">tcp_md5sig_key</span> <span style="color:#555">*</span>best_match <span style="color:#555">=</span> <span style="color:#366">NULL</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span>	<span style="color:#078;font-weight:bold">bool</span> match;
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span>	<span style="color:#09f;font-style:italic">/* caller either holds rcu_read_lock() or socket lock */</span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span><span>	md5sig <span style="color:#555">=</span> rcu_dereference_check(tp<span style="color:#555">-&gt;</span>md5sig_info,
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span><span>				       lockdep_sock_is_held(sk));
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span><span>	<span style="color:#069;font-weight:bold">if</span> (<span style="color:#555">!</span>md5sig)
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span><span>		<span style="color:#069;font-weight:bold">return</span> <span style="color:#366">NULL</span>;
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span><span>	hlist_for_each_entry_rcu(key, <span style="color:#555">&amp;</span>md5sig<span style="color:#555">-&gt;</span>head, node) {
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21</span><span>                ...
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22</span><span>	}
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23</span><span>	<span style="color:#069;font-weight:bold">return</span> best_match;
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24</span><span>}
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25</span><span>EXPORT_SYMBOL(tcp_md5_do_lookup);
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26</span><span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27</span><span><span style="color:#09f;font-style:italic">// include/linux/compiler.h
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28</span><span><span style="color:#09f;font-style:italic"></span><span style="color:#099">#define __READ_ONCE_SIZE						\
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29</span><span><span style="color:#099">({									\
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">30</span><span><span style="color:#099">	switch (size) {							\
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">31</span><span><span style="color:#099">	case 1: *(__u8 *)res = *(volatile __u8 *)p; break;		\
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">32</span><span><span style="color:#099">	case 2: *(__u16 *)res = *(volatile __u16 *)p; break;		\
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">33</span><span><span style="color:#099">	case 4: *(__u32 *)res = *(volatile __u32 *)p; break;		\
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">34</span><span><span style="color:#099">	case 8: *(__u64 *)res = *(volatile __u64 *)p; break;		\
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">35</span><span><span style="color:#099">	default:							\
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">36</span><span><span style="color:#099">		barrier();						\
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">37</span><span><span style="color:#099">		__builtin_memcpy((void *)res, (const void *)p, size);	\
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">38</span><span><span style="color:#099">		barrier();						\
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">39</span><span><span style="color:#099">	}								\
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">40</span><span><span style="color:#099">})
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">41</span><span><span style="color:#099"></span>
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">42</span><span><span style="color:#069;font-weight:bold">static</span> __always_inline
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">43</span><span><span style="color:#078;font-weight:bold">void</span> <span style="color:#c0f">__read_once_size</span>(<span style="color:#069;font-weight:bold">const</span> <span style="color:#069;font-weight:bold">volatile</span> <span style="color:#078;font-weight:bold">void</span> <span style="color:#555">*</span>p, <span style="color:#078;font-weight:bold">void</span> <span style="color:#555">*</span>res, <span style="color:#078;font-weight:bold">int</span> size)
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">44</span><span>{
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">45</span><span>	__READ_ONCE_SIZE;
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">46</span><span>}
+</span></span></code></pre></div><ul>
+<li>从堆栈分析和代码上看，应该是<code>tp-&gt;md5sig_info</code>存在问题</li>
+<li>堆栈看是收包到协议栈的tcp处理时</li>
+<li>这个变量我们没有动，驱动里面最多修改skb但是也是发出去的，和收包应该没关系</li>
+<li>修改的sk结构体的sk_user_data和skc_flags，上面的md5sig_info是tcp_sock中的，和前面两个结构体应该没关系</li>
+</ul>
+<p><strong>怀疑点</strong></p>
+<ul>
+<li>踩内存
+<ul>
+<li>跑一下kasan的分析</li>
+</ul>
+</li>
+<li>收包时复用了sk，sk的标记不对导致修改错了包而出现问题
+<ul>
+<li>优化代码，判断一下sk的状态，跑一下能否复现</li>
+</ul>
+</li>
+</ul>
+<h2 id="2-验证结果">
+  2. 验证结果
+  <a class="anchor" href="#2-%e9%aa%8c%e8%af%81%e7%bb%93%e6%9e%9c">#</a>
+</h2>
+<ul>
+<li>kasan确实发现踩内存了，踩内存代码在这里</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1</span><span>    <span style="color:#09f;font-style:italic">// 只处理tcp协议包
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2</span><span><span style="color:#09f;font-style:italic"></span>    <span style="color:#069;font-weight:bold">if</span> (<span style="color:#555">!</span>sk <span style="color:#555">||</span> sk<span style="color:#555">-&gt;</span>sk_protocol <span style="color:#555">!=</span> IPPROTO_TCP) {
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3</span><span>        <span style="color:#069;font-weight:bold">return</span> NF_ACCEPT;
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">4</span><span>    }
+</span></span></code></pre></div><ul>
+<li>堆栈是在发送syn/ack时，要不是之前理过内核代码，都没想到这个时候的sock结构体是request_sock</li>
+<li>request_sock结构体比sock结构体少了好多东西，所以这里的sk_protocol其实已经越界了，具体是不是IPPROTO_TCP就不一定了</li>
+<li>而request_sock结构体中的sk_flags是使用的skc_listener指针，指针的第30位是否为1也是不确定的</li>
+<li>写了代码验证确实可能在request_sock中进入到设置toa的逻辑，而request_sock也没有sk_user_data，sk_flags也是指针地址，驱动中正好改了这两个，sk_user_data清零，sk_flags的第30位置0</li>
+<li>那么，一个是越界，一个是指针地址不对了，要么改了其他内存，要么free了其他内存且内存泄漏，完美的崩溃</li>
+</ul>
+<h1 id="三结论">
+  三、结论
+  <a class="anchor" href="#%e4%b8%89%e7%bb%93%e8%ae%ba">#</a>
+</h1>
+<ul>
+<li>netfilter的hook中，sock结构体指针指向的可能不是我们认为的<code>struct sock</code>，也可能是<code>struct request_sock</code>或<code>struct </code>，源码分析见 
+  <a href="../../../../../docs/linux/linux-kernel/net/socket/socket/#13-minisock-%e7%bc%a9%e5%87%8f%e7%89%88%e6%9c%ac%e7%9a%84socket">minisock 缩减版本的socket</a></li>
+<li>写netfilter驱动时，需要先对sock结构体指针做判断</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1</span><span>    <span style="color:#09f;font-style:italic">// 这里需要判断sock是否是完整的，只有完整的sock中flag才是真的flag
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2</span><span><span style="color:#09f;font-style:italic"></span>    <span style="color:#09f;font-style:italic">// 非完整的request_sock中flag是skc_listener
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3</span><span><span style="color:#09f;font-style:italic"></span>    <span style="color:#09f;font-style:italic">// 非完整的inet_timewait_sock中flag是skc_tw_dr
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">4</span><span><span style="color:#09f;font-style:italic"></span>    <span style="color:#09f;font-style:italic">// 只处理ipv4
+</span></span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">5</span><span><span style="color:#09f;font-style:italic"></span>    <span style="color:#069;font-weight:bold">if</span> (<span style="color:#555">!</span>sk <span style="color:#555">||</span> <span style="color:#555">!</span>sk_fullsock(sk) <span style="color:#555">||</span> sk<span style="color:#555">-&gt;</span>sk_family <span style="color:#555">!=</span> PF_INET) {
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">6</span><span>        <span style="color:#069;font-weight:bold">return</span> NF_ACCEPT;
+</span></span><span style="display:flex;"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">7</span><span>    }
+</span></span></code></pre></div></article>
+ 
+      
+
+      <footer class="book-footer">
+        
+  <div class="flex flex-wrap justify-between">
+
+
+
+
+
+</div>
+
+
+
+  <script>(function(){function e(e){const t=window.getSelection(),n=document.createRange();n.selectNodeContents(e),t.removeAllRanges(),t.addRange(n)}document.querySelectorAll("pre code").forEach(t=>{t.addEventListener("click",function(){if(window.getSelection().toString())return;e(t.parentElement),navigator.clipboard&&navigator.clipboard.writeText(t.parentElement.textContent)})})})()</script>
+
+
+ 
+        
+      </footer>
+
+      
+  
+  <div class="book-comments">
+
+</div>
+  
+ 
+
+      <label for="menu-control" class="hidden book-menu-overlay"></label>
+    </div>
+
+    
+    <aside class="book-toc">
+      <div class="book-toc-content">
+        
+  
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#一堆栈信息">一、堆栈信息</a></li>
+    <li><a href="#二分析堆栈信息">二、分析堆栈信息</a>
+      <ul>
+        <li><a href="#1-首先正面分析堆栈">1. 首先正面分析堆栈</a></li>
+        <li><a href="#2-验证结果">2. 验证结果</a></li>
+      </ul>
+    </li>
+    <li><a href="#三结论">三、结论</a></li>
+  </ul>
+</nav>
+
+
+ 
+      </div>
+    </aside>
+    
+  </main>
+
+  
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+

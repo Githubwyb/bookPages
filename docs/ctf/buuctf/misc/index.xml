@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>misc on 技术的路上奔跑</title>
+    <link>/docs/ctf/buuctf/misc/</link>
+    <description>Recent content in misc on 技术的路上奔跑</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language><atom:link href="/docs/ctf/buuctf/misc/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>面具下的flag</title>
+      <link>/docs/ctf/buuctf/misc/%E9%9D%A2%E5%85%B7%E4%B8%8B%E7%9A%84flag/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/ctf/buuctf/misc/%E9%9D%A2%E5%85%B7%E4%B8%8B%E7%9A%84flag/</guid>
+      <description>一、解压压缩包 # . └── 面具下的flag └── mianju.jpg 图片使用hexdump看好像后面有一个flag.vmdk，那么可能使用了隐写技术 二、解隐写图片 # 使用binwalk进行查看 1=&amp;gt; binwalk mianju.jpg 2 3DECIMAL HEXADECIMAL DESCRIPTION 4-------------------------------------------------------------------------------- 50 0x0 JPEG image data, EXIF standard 612 0xC TIFF image data, little-endian offset of first image directory: 8 7478718 0x74DFE Zip archive data, at least v2.0 to extract, compressed size: 153767, uncompressed size: 3145728, name: flag.vmdk 8632615 0x9A727 End of Zip archive, footer length: 22 里面确实有一个压缩包，那么解一下隐写 1=&amp;gt; cd temp &amp;amp;&amp;amp; cd temp 2=&amp;gt; binwalk -e .</description>
+    </item>
+    
+  </channel>
+</rss>

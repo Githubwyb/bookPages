@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>ipv6/ ipv6的处理部分 on 技术的路上奔跑</title>
+    <link>/docs/linux/linux-kernel/net/ipv6/</link>
+    <description>Recent content in ipv6/ ipv6的处理部分 on 技术的路上奔跑</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language><atom:link href="/docs/linux/linux-kernel/net/ipv6/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title></title>
+      <link>/docs/linux/linux-kernel/net/ipv6/inet6/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux/linux-kernel/net/ipv6/inet6/</guid>
+      <description>一、总述 # 1. 关键结构体关系 # @startuml xxx class socket { struct sock *sk; } class sock {} class inet_sock implements sock { struct sock sk; } note left of inet_sock inet_sock是在sock基础上做了一些拓展 创建时申请的是inet_sock但是使用sock结构体指针赋值给socket 在inet里面的操作做强转使用 end note class inet_connection_sock implements inet_sock { struct inet_sock icsk_inet; } note left of inet_connection_sock inet_connection_sock是拓展了inet_sock 同样复用sock的指针 end note socket &amp;lt;|-- sock @enduml 二、socket创建过程 inet6_create # 初始化注册inet6_family_ops 1// net/ipv6/af_inet6.c 2 3static const struct net_proto_family inet6_family_ops = { 4	.</description>
+    </item>
+    
+  </channel>
+</rss>

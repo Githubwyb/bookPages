@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>net/ 网卡驱动部分 on 技术的路上奔跑</title>
+    <link>/docs/linux/linux-kernel/drivers/net/</link>
+    <description>Recent content in net/ 网卡驱动部分 on 技术的路上奔跑</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language><atom:link href="/docs/linux/linux-kernel/drivers/net/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>通用网络驱动开发知识</title>
+      <link>/docs/linux/linux-kernel/drivers/net/common/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux/linux-kernel/drivers/net/common/</guid>
+      <description>一、驱动到网络协议栈处理过程 # @startuml box kernel #White participant net participant ksoftirqd end box box driver #White participant eth end box participant cpu autonumber net -&amp;gt; eth: net_device_ops::ndo_open eth -&amp;gt; cpu: 注册硬件中断处理函数 eth -&amp;gt; net: 调用netif_napi_add注册poll函数到napi列表里面 == 收到包 == autonumber 1 cpu -&amp;gt; eth: 来中断了 eth -&amp;gt; ksoftirqd: 设置软中断NET_RX_SOFTIRQ ksoftirqd -&amp;gt; net: 根据软中断类型调用net_rx_action net -&amp;gt; eth: 从napi列表中遍历处理，找到对应的poll函数 eth -&amp;gt; eth: 从硬件buffer中读取数据帧创建sk_buff eth -&amp;gt; net: 将sk_buff通过函数napi_gro_receive调用到内核 net -&amp;gt; net: napi_gro_receive =&amp;gt; napi_skb_finish net -&amp;gt; net: napi_skb_finish =&amp;gt; netif_receive_skb net -&amp;gt; net: netif_receive_skb =&amp;gt; deliver_skb net -&amp;gt; net: deliver_skb =&amp;gt; ip_rcv @enduml 二、驱动定义 # 1.</description>
+    </item>
+    
+    <item>
+      <title></title>
+      <link>/docs/linux/linux-kernel/drivers/net/igb/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux/linux-kernel/drivers/net/igb/</guid>
+      <description>一、igb操作结构体 # 1// drivers/net/ethernet/intel/igb/igb_main.c 2static const struct net_device_ops igb_netdev_ops = { 3	.ndo_open	= igb_open, 4	.ndo_stop	= igb_close, 5	.ndo_start_xmit	= igb_xmit_frame, 6	.ndo_get_stats64	= igb_get_stats64, 7	.ndo_set_rx_mode	= igb_set_rx_mode, 8	.ndo_set_mac_address	= igb_set_mac, 9	.ndo_change_mtu	= igb_change_mtu, 10	.ndo_eth_ioctl	= igb_ioctl, 11	.ndo_tx_timeout	= igb_tx_timeout, 12	.ndo_validate_addr	= eth_validate_addr, 13	.ndo_vlan_rx_add_vid	= igb_vlan_rx_add_vid, 14	.ndo_vlan_rx_kill_vid	= igb_vlan_rx_kill_vid, 15	.ndo_set_vf_mac	= igb_ndo_set_vf_mac, 16	.ndo_set_vf_vlan	= igb_ndo_set_vf_vlan, 17	.ndo_set_vf_rate	= igb_ndo_set_vf_bw, 18	.</description>
+    </item>
+    
+  </channel>
+</rss>

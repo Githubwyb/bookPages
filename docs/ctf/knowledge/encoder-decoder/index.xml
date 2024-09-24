@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>加解密编码等算法 on 技术的路上奔跑</title>
+    <link>/docs/ctf/knowledge/encoder-decoder/</link>
+    <description>Recent content in 加解密编码等算法 on 技术的路上奔跑</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language><atom:link href="/docs/ctf/knowledge/encoder-decoder/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>hash和编码算法列表</title>
+      <link>/docs/ctf/knowledge/encoder-decoder/algorithm/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/ctf/knowledge/encoder-decoder/algorithm/</guid>
+      <description>一、hash算法对应的场景 # hash均为不可逆加密，一般用于密码的校验 算法名称 位数 用途 hashcat编号 备注 NTLM v2为16位 windows密码 1000 先算hex，再使用unicode编码，再计算md4
+爆破的hash类似a7fcb22a88038f35a8f39d503e7f0062 RAR5 压缩包密码 13000 爆破的hash类似$rar5$16$1e71cb65fbc2e25d134279f2cb5be013$15$f6115d7dee842c1f8901b057e2bc8952$8$1988f3ce18017cdb RAR3-hp 压缩包密码 12500 爆破的hash类似$RAR3$*0*f3e592b768e33df0*f304b7cfd600a36ea3930f7a3c1db19b 二、编码算法对应场景 # 算法名称 位数 用途 备注 base64 数据编码传输 在线加解密https://the-x.cn/encodings/Base64.aspx brainfuck 数据编码 在线编码解码https://www.splitbrain.org/services/ook Ook! 数据编码 在线编码解码https://www.splitbrain.org/services/ook 与佛论禅 数据加密 在线加解密http://www.keyfc.net/bbs/tools/tudoucode.aspx 1. brainfuck # 1.1. 示例 # +++++ +++++ [-&amp;gt;++ +++++ +++&amp;lt;] &amp;gt;++.+ +++++ .&amp;lt;+++ [-&amp;gt;-- -&amp;lt;]&amp;gt;- -.+++ +++.&amp;lt; ++++[ -&amp;gt;+++ +&amp;lt;]&amp;gt;+ +++.&amp;lt; +++++ +[-&amp;gt;- ----- &amp;lt;]&amp;gt;-- ----- --.&amp;lt;+ +++[- &amp;gt;---- &amp;lt;]&amp;gt;-- ----- .</description>
+    </item>
+    
+  </channel>
+</rss>

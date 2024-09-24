@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>宕机vmcore分析 on 技术的路上奔跑</title>
+    <link>/docs/linux/kernel-troubleshooting/crash/</link>
+    <description>Recent content in 宕机vmcore分析 on 技术的路上奔跑</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language><atom:link href="/docs/linux/kernel-troubleshooting/crash/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>1. netfilter驱动使用sk错误引发宕机</title>
+      <link>/docs/linux/kernel-troubleshooting/crash/01-netfilter-driver-crash/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux/kernel-troubleshooting/crash/01-netfilter-driver-crash/</guid>
+      <description>一、堆栈信息 # [28772.702878] BUG: unable to handle kernel paging request at 0000000400080040 [28772.703475] PGD 0 P4D 0 [28772.703614] Oops: 0000 [#1] SMP PTI [28772.703806] CPU: 6 PID: 96951 Comm: sdptun Kdump: loaded Tainted: G W OE 4.19.181 #6 [28772.704255] Hardware name: Bochs Bochs, BIOS 1.13.0-20201211_142035 04/01/2014 [28772.704635] RIP: 0010:tcp_md5_do_lookup+0x15/0x130 [28772.704881] Code: 04 00 00 0f a3 c2 73 01 c3 e9 37 ff ff ff 0f 1f 80 00 00 00 00 66 66 66 66 90 48 8b 87 40 08 00 00 48 85 c0 0f 84 e4 00 00 00 &amp;lt;48&amp;gt; 8b 38 31 c0 48 85 ff 74 62 41 bb 40 00 00 00 49 c7 c2 ff ff ff [28772.</description>
+    </item>
+    
+    <item>
+      <title>2. Kernel panic - not syncing: hung_task: blocked tasks</title>
+      <link>/docs/linux/kernel-troubleshooting/crash/02-hung-task-crash/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux/kernel-troubleshooting/crash/02-hung-task-crash/</guid>
+      <description>一、堆栈信息 # [930452.890969] INFO: task idsd:31761 blocked for more than 480 seconds. [930452.891127] oom_reaper: reaped process 15265 ((irewalld)), now anon-rss:0kB, file-rss:0kB, shmem-rss:0kB [930452.891476] Tainted: G E 4.19.181 #6 [930452.892678] &amp;#34;echo 0 &amp;gt; /proc/sys/kernel/hung_task_timeout_secs&amp;#34; disables this message. [930452.893296] idsd D 0 31761 1 0x00000080 [930452.893721] Call Trace: [930452.893934] __schedule+0x254/0x840 [930452.894217] schedule+0x28/0x80 [930452.894463] rwsem_down_read_failed+0x111/0x180 [930452.894981] ? xfs_file_buffered_aio_read+0x3c/0xe0 [xfs] [930452.895398] call_rwsem_down_read_failed+0x14/0x30 [930452.895798] down_read+0x1c/0x30 [930452.896102] xfs_ilock+0x82/0x100 [xfs] [930452.896435] xfs_file_buffered_aio_read+0x3c/0xe0 [xfs] [930452.896901] xfs_file_read_iter+0x6e/0xd0 [xfs] [930452.</description>
+    </item>
+    
+  </channel>
+</rss>

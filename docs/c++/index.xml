@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>C&#43;&#43;源码分析记录 on 技术的路上奔跑</title>
+    <link>/docs/c&#43;&#43;/</link>
+    <description>Recent content in C&#43;&#43;源码分析记录 on 技术的路上奔跑</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language><atom:link href="/docs/c++/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>预定义宏</title>
+      <link>/docs/c&#43;&#43;/macro/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/c&#43;&#43;/macro/</guid>
+      <description> 一、变量修饰 # 1. 返回值修饰 # 1.1. _GLIBCXX_NODISCARD # C++17生效，会在返回值没有使用的情况下编译报warning 1// /usr/include/c++/12.2.0/x86_64-pc-linux-gnu/bits/c++config.h 2// Macro to warn about unused results. 3#if __cplusplus &amp;gt;= 201703L 4# define _GLIBCXX_NODISCARD [[__nodiscard__]] 5#else 6# define _GLIBCXX_NODISCARD 7#endif </description>
+    </item>
+    
+    <item>
+      <title>std::move</title>
+      <link>/docs/c&#43;&#43;/move/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/c&#43;&#43;/move/</guid>
+      <description> 源码 # 1// /usr/include/c++/12.2.0/bits/move.h 2 /** 3 * @brief Convert a value to an rvalue. 4 * @param __t A thing of arbitrary type. 5 * @return The parameter cast to an rvalue-reference to allow moving it. 6 */ 7 template&amp;lt;typename _Tp&amp;gt; 8 _GLIBCXX_NODISCARD 9 constexpr typename std::remove_reference&amp;lt;_Tp&amp;gt;::type&amp;amp;&amp;amp; 10 move(_Tp&amp;amp;&amp;amp; __t) noexcept 11 { return static_cast&amp;lt;typename std::remove_reference&amp;lt;_Tp&amp;gt;::type&amp;amp;&amp;amp;&amp;gt;(__t); } 可以看到std::move仅对类型做了一次转换，变成右值 在调用=时会匹配到移动赋值函数，所以对象内容会被转移（具体看对应的实现） 如果仅使用std::move(xxx)没有任何效果 </description>
+    </item>
+    
+    <item>
+      <title>std::shared_ptr</title>
+      <link>/docs/c&#43;&#43;/shared_ptr/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/c&#43;&#43;/shared_ptr/</guid>
+      <description>一、shared_ptr(_Yp* __p)分析 # 1. 初始化 # 1// /usr/include/c++/12.2.0/bits/shared_ptr.h 2 3 template&amp;lt;typename _Tp&amp;gt; 4 class shared_ptr : public __shared_ptr&amp;lt;_Tp&amp;gt; 5 { 6 ... 7 public: 8 ... 9 /** 10 * @brief Construct a %shared_ptr that owns the pointer @a __p. 11 * @param __p A pointer that is convertible to element_type*. 12 * @post use_count() == 1 &amp;amp;&amp;amp; get() == __p 13 * @throw std::bad_alloc, in which case @c delete @a __p is called.</description>
+    </item>
+    
+  </channel>
+</rss>

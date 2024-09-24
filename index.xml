@@ -1,0 +1,460 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>首页 on 技术的路上奔跑</title>
+    <link>/</link>
+    <description>Recent content in 首页 on 技术的路上奔跑</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language><atom:link href="/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title></title>
+      <link>/docs/linux/linux-kernel/net/ipv6/inet6/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux/linux-kernel/net/ipv6/inet6/</guid>
+      <description>一、总述 # 1. 关键结构体关系 # @startuml xxx class socket { struct sock *sk; } class sock {} class inet_sock implements sock { struct sock sk; } note left of inet_sock inet_sock是在sock基础上做了一些拓展 创建时申请的是inet_sock但是使用sock结构体指针赋值给socket 在inet里面的操作做强转使用 end note class inet_connection_sock implements inet_sock { struct inet_sock icsk_inet; } note left of inet_connection_sock inet_connection_sock是拓展了inet_sock 同样复用sock的指针 end note socket &amp;lt;|-- sock @enduml 二、socket创建过程 inet6_create # 初始化注册inet6_family_ops 1// net/ipv6/af_inet6.c 2 3static const struct net_proto_family inet6_family_ops = { 4	.</description>
+    </item>
+    
+    <item>
+      <title>container_of() 根据成员地址找其所在结构体</title>
+      <link>/docs/linux/linux-kernel/data-structures/container_of/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux/linux-kernel/data-structures/container_of/</guid>
+      <description>一、源码 # 1// include/linux/kernel.h 2 3/** 4 * container_of - cast a member of a structure out to the containing structure 5 * @ptr:	the pointer to the member. 6 * @type:	the type of the container struct this is embedded in. 7 * @member:	the name of the member within the struct. 8 * 9 */ 10#define container_of(ptr, type, member) ({	\ 11	void *__mptr = (void *)(ptr);	\ 12	BUILD_BUG_ON_MSG(!</description>
+    </item>
+    
+    <item>
+      <title>socket总述</title>
+      <link>/docs/linux/linux-kernel/net/socket/socket/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux/linux-kernel/net/socket/socket/</guid>
+      <description>一、总述 # 1. socket 相关内核结构体 # @startuml xxx namespace 用户空间 { class fd } namespace 内核空间 { class socket { socket_state	state; struct file	*file; struct sock	*sk; const struct proto_ops	*ops; } enum socket_state { SS_FREE = 0,	/* not allocated	*/ SS_UNCONNECTED,	/* unconnected to any socket	*/ SS_CONNECTING,	/* in process of connecting	*/ SS_CONNECTED,	/* connected to socket	*/ SS_DISCONNECTING	/* in process of disconnecting	*/ } class file {} class sock { struc sock_common __sk_common; } class sock_common { volatile unsigned char skc_state; struct proto	*skc_prot; } note right of sock sk_state =&amp;gt; __sk_common.</description>
+    </item>
+    
+    <item>
+      <title>上半部和下半部</title>
+      <link>/docs/linux/linux-kernel/intterupt/common/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux/linux-kernel/intterupt/common/</guid>
+      <description> 一、上半部实现 # 二、下半部实现 # 1. 软中断 # 软中断触发时机：
+从中断返回时触发调用软中断，这时候在中断上下文中，但是是允许响应中断的 在ksoftirqd线程中，处于进程上下文中 在显示调用软中断的代码中，比如网络子系统 由于软中断调用时机即可能是中断上下文，也可能是进程上下文，所以软中断按照最严格的上下文处理，也就是中断上下文，不允许睡眠。
+2. tasklet # tasklet是使用软中断实现的，存在高优先级和普通优先级两个tasklet
+1// include/linux/intterupt.h 3. 工作队列 # 工作队列是运行在进程上下文中，本身优先级很低 工作队列线程在每个cpu都有一个，默认的为event/n </description>
+    </item>
+    
+    <item>
+      <title>前言和综述</title>
+      <link>/docs/examination/system-architect/large-concurrency/common/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/examination/system-architect/large-concurrency/common/</guid>
+      <description> 名词解释 # DFX（Design For X）: 面向产品生命周期设计以及面向来自客户对产品的要求的设计，X可以指产品生命周期内的某一个环节或特性 RAMS: 广义可靠性 Reliability － 可靠性 Availability － 可用性 Maintainability － 可维护性 Safety － 安全性（人身安全） 可维护性: 产品在规定的条件下和规定的时间内，按规定的程序和方法进行维护时，保持或恢复到规定状态的能力。 可用性: 是产品在任意一个随机时刻处于可用状态的能力。可用性＝可用时间/（可用时间＋不可用时间） 一、大型架构演进 # 1. 系统处理能力提升途径 # 垂直伸缩 水平伸缩 伸缩途径 单机性能提升 增加机器组建集群 行业 传统行业，如银行 互联网行业 成本 增加处理能力到某个程度后，会需要更多的钱来进行更高的提升 增加服务器的成本为线性的 极限 物理处理存在极限
+操作系统或应用程序处理存在极限 增加服务器就可以提升性能
+应用程序和系统在不同服务器运行，不会达到极限 2. 架构演进 # 用户数 方案 解决瓶颈 当前性能瓶颈 少量 单机系统处理 数据在业务层处理复杂度 万级 使用数据库处理数据，业务读取数据库 应用处理瓶颈 单机数据库读写瓶颈以及应用的cpu处理瓶颈 十万级 需要增加缓存改善，应用服务分布式集群 单机cpu处理瓶颈 数据库io瓶颈 百万级 使用cdn和反向代理进行加速响应
+数据库进行读写分离 数据库处理速度，减少静态资源处理消耗 文件系统和数据库处理瓶颈 千万级 分布式文件系统，分布式数据库系统 文件系统和数据库处理瓶颈 数据量大了之后，硬件性能、数据库、处理数据的能力都是瓶颈 亿级 使用搜索引擎、NoSQL、消息队列与分布式服务 业务增加的复杂度 数据库应用分离 缓存改进性能 应用服务集群，使用负载均衡调度到不同的应用服务器 数据库读写分离 反向代理和CDN加速响应 分布式文件系统和分布式数据库系统 使用消息队列与分布式服务 </description>
+    </item>
+    
+    <item>
+      <title>可靠性设计</title>
+      <link>/docs/examination/system-architect/book-study/reliability/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/examination/system-architect/book-study/reliability/</guid>
+      <description>1. 基本概念 # 可靠性工程（Reliability Engineering）: 是在产品寿命周期全过程（论证、方案、工程研制、生产和使用）中同产品故障作斗争的一门学科 1.1. 可靠性: 产品在规定的条件下、规定的时间内完成规定的功能的能力，即业界所说的三规。是产品的一种固有属性 # 1) 规定的条件：产品的运行环境 # 环境条件：温度，湿度，压力，振动，冲击，电磁场，电磁辐射等等 工作条件：工作应力，系统负载，业务模型，人员操作等等 2) 规定的时间：产品的生命周期 # 工作时间：时长（小时）、频次（次数）、距离（公里），例如交换机寿命20年，手机寿命5年，手机划盖工作寿命6万次，汽车寿命30万公里 非工作时间：待机状态，储存状态等 3) 规定的功能：产品的技术性指标 # 指产品标准或产品技术条件中所规定的各项技术性能（技术指标） 1.2. 故障（Fault）：系统内的对象实体相对正常状态的偏离（站在这个对象的外部来看）的一种静态状态。例如进程挂死，硬盘坏道，CPU降频，网络丢包，文件系统只读，配置文件丢失等等 # 偏离的表现形式称之为故障模式 = 故障对象（主语）+ 故障表现（谓语） 故障对象：保证系统运行以及提供业务能力的物理（硬盘、网卡等等）或者逻辑实体（进程、文件、数据等），可以是一个单一实体，也可以是多个单一实体组成的综合实体（主机、集群、站点等），其本质是系统的组成成分，类似于一座房子的墙面，房梁、房檐、砖头、瓦片；也类似于一个人的四肢、眼睛、耳朵、嘴巴等 故障表现：偏离于正常状态的表达，一般是动词、形容词来表示，比如只读、退出、掉电、卡慢、崩溃、坏道、高温、泄漏、过载、损坏、丢失、抢占、重启、失败、空间满等等 系统是由软件和硬件构成的，所以系统的故障对象就是软件和硬件，其中硬件包含主机（主机本身如主板、机箱等；以及主机上的硬件部件如硬盘、网卡、CPU、电源、风扇、内存、PCIE接口等等）以及网络设备（用于主机之间的连接，例如交换机、路由器、光纤网线、网卡/光模块等），软件包含操作系统（内核、驱动、系统服务等）、系统业务软件（包含进程、服务、容器、虚拟机、数据、文件、开源中间件等等） 故障被激活（Active）的时候会产生错误（Error），未被激活的故障就是休眠的/静默的（Dormant） 故障来源： 对象实体内部自然产生的：例如软件缺陷，硬件的自然损坏等。也叫作内源性故障 对象实体外部交互产生的：例如配置类故障（配置项不正确），误操作类故障（误删文件）、交互类故障等、也叫作外源性故障 1.3. 错误（Error）：是故障被激活后的一种动态状态，也是会直接导致业务失效的某种状态（State）。典型的错误如消息发送超时（网络丢包被激活导致的），请求无响应（对端进程挂死被激活导致的），配置文件读失败（配置文件丢失被激活导致的），硬盘写超时（硬盘坏道被激活导致的），硬盘读写慢（硬盘坏道被激活导致的）等等 # 激活：业务操作路径经过了某个存在故障的对象实体，从而导致该对象实体的某个故障被激活（也就是说故障只有被激活才会对系统产生影响，静默故障是无害的） 错误检测：当某个错误信息或者错误信号（Error message or Error signal）未被感知到，该错误就叫做静默错误（Latent Error），例如未感知到超时等 错误未被检测或者检测到而未有容错处理的话，就会产生业务失效（中断、性能下降等） 错误模式：类似于故障模式，区别是错误对象通常是业务操作而不是系统内部组件，错误表现和故障表现基本上是一样的 1.4. 失效（Failure）：系统当前的业务偏离正常业务（Correct Service ）的事件 # 偏离的表现：未按照规格要求实现或者规格要求本身不完整，通常称之为业务中断（Service Outage） 偏离正常业务的表现形式称之为失效模式（Failure Mode） = 失效对象 + 失效表现 失效对象：与故障对象不同的是，失效是基于外部客户业务的角度进行描述的，因此失效对象主要为客户的业务类型/模型或者抽象表达，所以描述为业务（数据面-用户业务）、数据（数据面-用户数据）、控制台（管控面）、扩容（运维面）、升级（运维面）、更换（运维面）等等诸如此类 失效表现：相对于故障表现而言，会更加聚焦一些，一般也是动词、形容词来表达，主要有中断，卡慢，超时，丢失/错误，失败等 失效的行为规律： 持续性失效：一直失效直到人为恢复 间歇性/周期性失效：周期性或者无规律隔段时间出现一次然后自我恢复 偶然性失效：偶然出现一次然后自我恢复 失效对客户业务不同的影响程度的等级叫做失效严重程度（ Failure Severities ），也叫失效严酷度 失效对象对于客户而言就有重要性之分（不同的业务类型有着不同的重要性，比如说数据面业务重要性要大于管控面业务），同时对象本身还隐含着范围的概念（主要是指影响的用户数量，比如是影响了所有用户，还是影响了少部分用户，影响的用户数据范围等） 失效表现的角度来看也会有所区分，从两个维度来看，一是失效表现本身对客户的影响大小（比如数据丢失就是业务中断要影响大，中断要比卡慢影响大等等），二是失效表现的关键特征（包括持续时间例如时间越长对客户影响越大、出现次数例如次数越多则对客户影响越大） 在其他条件同等下，业务越重要、影响用户越多、影响越深、持续时间越长、发生次数越多则严重程度越高 可以是部分业务失效也可以是全部业务失效。部分失效也叫作降级工作状态，表现为业务降速，业务受限，应急状态等 失效是在系统的边界处体现出来的非正常的输出表现 1.</description>
+    </item>
+    
+    <item>
+      <title>名词解释和学习大纲</title>
+      <link>/docs/ai/keywords/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/ai/keywords/</guid>
+      <description>一、人工智能通识 # 1. 数学基础 # 1.1. 归一化 # 对数据范围缩小到(0, 1)范围内 为什么做归一化 # 会对准确率造成影响。不对数据进行归一化的话，如果你的网络层数又比较多的话，很有可能会造成梯度消失或梯度爆炸，而这会对你的权重的更新会造成很大的影响进而会影响模型的性能。 另外，如果你的特征之间因为量纲的影响而造成数据之间的数量级差别很大的话也会对训练出的模型的性能造成影响
+1.2. 梯度消失和梯度爆炸 # 梯度消失: 在反向传播过程中，随着算法向下传播到较低层，梯度通常会越来越小。结果梯度下降更新使较低层的连接权重保持不变，训练不能收敛到一个好的最优解 梯度爆炸: 在某些情况下，可能会出现相反的情况：梯度可能会越来越大，各层需要更新很大的权重直到算法发散为止 1.3. 精确度、准确率、召回率 # TP (True Positives): 真实的为1的样本（样本为true，预测准确，预测为true） TN (True Negatives): 真实的为0的样本（样本为false，预测准确，预测为false） FP (False Positives): 错误预测为1的样本（样本为false，预测错误，预测为true） FN (False Negatives): 错误预测为0的样本（样本为true，预测错误，预测为false）
+精确度 precision # $$ P = \frac{TP}{TP+FP} = \frac{实际为1被判定正确的数量}{预测为1的样本总数} $$
+主要反映对于0的误判率，如恶意文件扫描，精确度反映了对于恶意文件的扫描精确程度 换成一杯水，代表水中真实可以喝的水占整体水的总量 为1代表预测的正样本都是对的 准确率 accuracy # $$ A = \frac{TP+TN}{TP+TN+FP+FN} = \frac{实际为1判定正确的数量+实际为0判定正确的数量}{样本总数} $$
+准确率就是展示模型是否准确的基本数值 召回率 recall # $$ R = \frac{TP}{TP+FN} = \frac{实际为1被判定正确的数量}{实际为1的样本总数} $$</description>
+    </item>
+    
+    <item>
+      <title>知识性说明</title>
+      <link>/docs/linux/kernel-troubleshooting/knowledge/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux/kernel-troubleshooting/knowledge/</guid>
+      <description> 一、vmcore解析 # 1. 寄存器 # 1.1. 参数寄存器 # 64位汇编中，当参数少于7个时，参数从左到右放入寄存器: rdi, rsi, rdx, rcx, r8, r9 1.2. rsp 栈指针寄存器（指向栈顶） # x86汇编中 callq会将下一跳地址放到rsp中，rsp自动减四 push会放到rsp，rsp自动减四 pop会rsp加四，对应的值存放到寄存器中 1.3. gs percpu的基地址寄存器 # FS/GS寄存器的用途
+现代linux x86-64下gs里面存储了percpu的基地址，汇编中使用%gs:0x15bc0来取percpu的一些变量地址 用户态无法使用gs寄存器 </description>
+    </item>
+    
+    <item>
+      <title>编译和调试方法</title>
+      <link>/docs/mysql/compile/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/mysql/compile/</guid>
+      <description>一、概述 # mysql本身的开源就让我们可以很方便的编译出debug版本进行调试
+二、调试环境准备 # 1. 编译mysql的debug版本 # 预安装软件 1yum install ncurses-devel bison cmake libarchive gcc-toolset-10-gcc gcc-toolset-10-gcc-c++ gcc-toolset-10-binutils libtirpc-devel rpcgen 源码下载地址: https://downloads.mysql.com/archives/get/p/23/file/mysql-8.0.33.tar.gz 需要下载boost库1.73: https://boostorg.jfrog.io/artifactory/main/release/1.73.0/source/boost_1_73_0.tar.bz2 解压boost库到mysql-8.0.33/boost_1_73_0 编译命令 1# -DWITH_BOOST=./boost_1_73_0/ 指定boost库路径 2# -DWITH_DEBUG=1 编译成debug版本 3cmake -B build -DCMAKE_BUILD_TYPE:STRING=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=TRUE -DWITH_BOOST=./boost_1_73_0/ -DWITH_DEBUG=1 4cmake --build build -j 8 执行命令为下面的输出即为成功编译出debug版 1=&amp;gt; ./build/runtime_output_directory/mysqld --version 2/mysql-8.0.33/build/runtime_output_directory/mysqld Ver 8.0.33-debug for Linux on x86_64 (Source distribution) 2. 替换mysqld进行调试 # 编译好之后，需要上传./build/runtime_output_directory/mysqld和./build/runtime_output_directory/lib目录到服务器 1=&amp;gt; cd build 2=&amp;gt; zip -r mysql-8.0.33.zip ./runtime_output_directory/mysqld .</description>
+    </item>
+    
+    <item>
+      <title>通用网络驱动开发知识</title>
+      <link>/docs/linux/linux-kernel/drivers/net/common/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux/linux-kernel/drivers/net/common/</guid>
+      <description>一、驱动到网络协议栈处理过程 # @startuml box kernel #White participant net participant ksoftirqd end box box driver #White participant eth end box participant cpu autonumber net -&amp;gt; eth: net_device_ops::ndo_open eth -&amp;gt; cpu: 注册硬件中断处理函数 eth -&amp;gt; net: 调用netif_napi_add注册poll函数到napi列表里面 == 收到包 == autonumber 1 cpu -&amp;gt; eth: 来中断了 eth -&amp;gt; ksoftirqd: 设置软中断NET_RX_SOFTIRQ ksoftirqd -&amp;gt; net: 根据软中断类型调用net_rx_action net -&amp;gt; eth: 从napi列表中遍历处理，找到对应的poll函数 eth -&amp;gt; eth: 从硬件buffer中读取数据帧创建sk_buff eth -&amp;gt; net: 将sk_buff通过函数napi_gro_receive调用到内核 net -&amp;gt; net: napi_gro_receive =&amp;gt; napi_skb_finish net -&amp;gt; net: napi_skb_finish =&amp;gt; netif_receive_skb net -&amp;gt; net: netif_receive_skb =&amp;gt; deliver_skb net -&amp;gt; net: deliver_skb =&amp;gt; ip_rcv @enduml 二、驱动定义 # 1.</description>
+    </item>
+    
+    <item>
+      <title>预定义宏</title>
+      <link>/docs/c&#43;&#43;/macro/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/c&#43;&#43;/macro/</guid>
+      <description> 一、变量修饰 # 1. 返回值修饰 # 1.1. _GLIBCXX_NODISCARD # C++17生效，会在返回值没有使用的情况下编译报warning 1// /usr/include/c++/12.2.0/x86_64-pc-linux-gnu/bits/c++config.h 2// Macro to warn about unused results. 3#if __cplusplus &amp;gt;= 201703L 4# define _GLIBCXX_NODISCARD [[__nodiscard__]] 5#else 6# define _GLIBCXX_NODISCARD 7#endif </description>
+    </item>
+    
+    <item>
+      <title>sendmsg</title>
+      <link>/docs/linux/linux-kernel/net/socket/sendmsg/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux/linux-kernel/net/socket/sendmsg/</guid>
+      <description>一、总述 # sendmsg可以像普通的send一样发送消息，也可以进行fd的转发 做fd的转发需要使用域套接字 二、代码流程 # 入口自然是系统调用的定义 1// net/socket.c 2long __sys_sendmsg(int fd, struct user_msghdr __user *msg, unsigned int flags, 3	bool forbid_cmsg_compat) 4{ 5	int fput_needed, err; 6	struct msghdr msg_sys; 7	struct socket *sock; 8 9	if (forbid_cmsg_compat &amp;amp;&amp;amp; (flags &amp;amp; MSG_CMSG_COMPAT)) 10	return -EINVAL; 11 12 // 根据文件句柄号找sock结构体 13	sock = sockfd_lookup_light(fd, &amp;amp;err, &amp;amp;fput_needed); 14	if (!sock) 15	goto out; 16 17	err = ___sys_sendmsg(sock, msg, &amp;amp;msg_sys, flags, NULL, 0); 18 19	fput_light(sock-&amp;gt;file, fput_needed); 20out: 21	return err; 22} 23 24SYSCALL_DEFINE3(sendmsg, int, fd, struct user_msghdr __user *, msg, unsigned int, flags) 25{ 26	return __sys_sendmsg(fd, msg, flags, true); 27} 继续到发送的地方 1// net/socket.</description>
+    </item>
+    
+    <item>
+      <title>数据密集型应用系统设计</title>
+      <link>/docs/examination/system-architect/book-study/designing-data-intensive-application/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/examination/system-architect/book-study/designing-data-intensive-application/</guid>
+      <description>参考书本《数据密集型应用系统设计》
+第一部分 数据系统基础 # 1. 可靠、可拓展与可维护的应用系统 # 1.1. 可靠性 # 用户期望的功能实现 容忍用户错误或不正确的使用方法 性能可以应对的典型场景、压力和数据量 系统可以防止未经授权的访问和滥用 1.2. 可扩展性 # 负载描述
+qps（queries Per Second） 性能描述
+百分位数：类似于中位数，不过是按照百分比计算的中位数 关注的百分位数一般有95%、99%、99.9% 1.3. 可维护性 # 运营
+监视系统健康状况，出现异常快速恢复 追踪问题原因，如系统故障和性能下降 保持软件和平台到最新状态，如安全补丁 避免执行破坏性操作 预测未来可能的问题，如容量不足 建立用于部署、配置管理等实践规范和工具包 执行复杂的维护任务，如迁移 配置更改，维护系统安全稳定 指定流程规范操作行为 传承相关知识 系统设计考虑点
+提供系统运行时行为和内部的观测性，方便监控 自动化标准工具集成 避免特定机器绑定，允许整体运行完整的同时，部分机器停机维护 文档和操作模式良好 默认配置良好 尝试自我修复，并允许管理员手动控制状态 预测可能出现的意外进行处理 简单化
+后续人员好维护 可演化
+应对需求改变的解决方案考虑 2. 数据模型与查询语言 # 2.1. 数据库分类 # 关系型
+数据之间存在关系，查询需要按照关系进行查询 一般是多对多的关系 如sql、网络数据库、图数据库 文档型
+一对多，一个id对应很多数据，但是数据之间关系不大 如json、xml等 第二部分 分布式数据系统 # 第三部分 派生数据 # </description>
+    </item>
+    
+    <item>
+      <title>recvmsg</title>
+      <link>/docs/linux/linux-kernel/net/socket/recvmsg/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux/linux-kernel/net/socket/recvmsg/</guid>
+      <description>一、总述 # recvmsg可以像普通的recv一样接收消息，也可以其他进程提供的文件句柄 二、代码流程 # 入口自然是系统调用的定义 1// net/socket.c 2long __sys_recvmsg(int fd, struct user_msghdr __user *msg, unsigned int flags, 3	bool forbid_cmsg_compat) 4{ 5	int fput_needed, err; 6	struct msghdr msg_sys; 7	struct socket *sock; 8 9	if (forbid_cmsg_compat &amp;amp;&amp;amp; (flags &amp;amp; MSG_CMSG_COMPAT)) 10	return -EINVAL; 11 12	sock = sockfd_lookup_light(fd, &amp;amp;err, &amp;amp;fput_needed); 13	if (!sock) 14	goto out; 15 16	err = ___sys_recvmsg(sock, msg, &amp;amp;msg_sys, flags, 0); 17 18	fput_light(sock-&amp;gt;file, fput_needed); 19out: 20	return err; 21} 22 23SYSCALL_DEFINE3(recvmsg, int, fd, struct user_msghdr __user *, msg, 24	unsigned int, flags) 25{ 26	return __sys_recvmsg(fd, msg, flags, true); 27} 继续到接收的地方 1// net/socket.</description>
+    </item>
+    
+    <item>
+      <title>Creating a New Theme</title>
+      <link>/posts/creating-a-new-theme/</link>
+      <pubDate>Sun, 28 Sep 2014 00:00:00 +0000</pubDate>
+      
+      <guid>/posts/creating-a-new-theme/</guid>
+      <description>Introduction # This tutorial will show you how to create a simple theme in Hugo. I assume that you are familiar with HTML, the bash command line, and that you are comfortable using Markdown to format content. I&amp;rsquo;ll explain how Hugo uses templates and how you can organize your templates to create a theme. I won&amp;rsquo;t cover using CSS to style your theme.
+We&amp;rsquo;ll start with creating a new site with a very basic template.</description>
+    </item>
+    
+    <item>
+      <title>Migrate to Hugo from Jekyll</title>
+      <link>/posts/migrate-from-jekyll/</link>
+      <pubDate>Mon, 10 Mar 2014 00:00:00 +0000</pubDate>
+      
+      <guid>/posts/migrate-from-jekyll/</guid>
+      <description>Move static content to static # Jekyll has a rule that any directory not starting with _ will be copied as-is to the _site output. Hugo keeps all static content under static. You should therefore move it all there. With Jekyll, something that looked like
+▾ &amp;lt;root&amp;gt;/ ▾ images/ logo.png should become
+▾ &amp;lt;root&amp;gt;/ ▾ static/ ▾ images/ logo.png Additionally, you&amp;rsquo;ll want any files that should reside at the root (such as CNAME) to be moved to static.</description>
+    </item>
+    
+    <item>
+      <title></title>
+      <link>/docs/linux/linux-kernel/net/ipv4/ipv4/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux/linux-kernel/net/ipv4/ipv4/</guid>
+      <description>一、总述 # 1. 关键结构体关系 # @startuml xxx class socket { struct sock *sk; } class sock {} class inet_sock implements sock { struct sock sk; } note left of inet_sock inet_sock是在sock基础上做了一些拓展 创建时申请的是inet_sock但是使用sock结构体指针赋值给socket 在inet里面的操作做强转使用 end note class inet_connection_sock implements inet_sock { struct inet_sock icsk_inet; } note left of inet_connection_sock inet_connection_sock是拓展了inet_sock 同样复用sock的指针 end note socket &amp;lt;|-- sock @enduml 2.1. inet_sock # 1// include/net/inet_sock.h 2/** struct inet_sock - representation of INET sockets 3 * 4 * @sk - ancestor class 5 * @pinet6 - pointer to IPv6 control block 6 * @inet_daddr - Foreign IPv4 addr 7 * @inet_rcv_saddr - Bound local IPv4 addr 8 * @inet_dport - Destination port 9 * @inet_num - Local port 10 * @inet_saddr - Sending source 11 * @uc_ttl - Unicast TTL 12 * @inet_sport - Source port 13 * @inet_id - ID counter for DF pkts 14 * @tos - TOS 15 * @mc_ttl - Multicasting TTL 16 * @is_icsk - is this an inet_connection_sock?</description>
+    </item>
+    
+    <item>
+      <title>(Hu)go Template Primer</title>
+      <link>/posts/goisforlovers/</link>
+      <pubDate>Wed, 02 Apr 2014 00:00:00 +0000</pubDate>
+      
+      <guid>/posts/goisforlovers/</guid>
+      <description>Hugo uses the excellent Go html/template library for its template engine. It is an extremely lightweight engine that provides a very small amount of logic. In our experience that it is just the right amount of logic to be able to create a good static website. If you have used other template systems from different languages or frameworks you will find a lot of similarities in Go templates.
+This document is a brief primer on using Go templates.</description>
+    </item>
+    
+    <item>
+      <title>Getting Started with Hugo</title>
+      <link>/posts/hugoisforlovers/</link>
+      <pubDate>Wed, 02 Apr 2014 00:00:00 +0000</pubDate>
+      
+      <guid>/posts/hugoisforlovers/</guid>
+      <description>Step 1. Install Hugo # Go to Hugo releases and download the appropriate version for your OS and architecture.
+Save it somewhere specific as we will be using it in the next step.
+More complete instructions are available at Install Hugo
+Step 2. Build the Docs # Hugo has its own example site which happens to also be the documentation site you are reading right now.
+Follow the following steps:</description>
+    </item>
+    
+    <item>
+      <title></title>
+      <link>/docs/leetcode/hidden/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/leetcode/hidden/</guid>
+      <description>This page is hidden in menu # Quondam non pater est dignior ille Eurotas # Latent te facies # Lorem markdownum arma ignoscas vocavit quoque ille texit mandata mentis ultimus, frementes, qui in vel. Hippotades Peleus pennas conscia cuiquam Caeneus quas.
+Pater demittere evincitque reddunt Maxime adhuc pressit huc Danaas quid freta Soror ego Luctus linguam saxa ultroque prior Tatiumque inquit Saepe liquitur subita superata dederat Anius sudor Cum honorum Latona # O fallor in sustinui iussorum equidem.</description>
+    </item>
+    
+    <item>
+      <title></title>
+      <link>/docs/linux/linux-kernel/drivers/net/igb/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux/linux-kernel/drivers/net/igb/</guid>
+      <description>一、igb操作结构体 # 1// drivers/net/ethernet/intel/igb/igb_main.c 2static const struct net_device_ops igb_netdev_ops = { 3	.ndo_open	= igb_open, 4	.ndo_stop	= igb_close, 5	.ndo_start_xmit	= igb_xmit_frame, 6	.ndo_get_stats64	= igb_get_stats64, 7	.ndo_set_rx_mode	= igb_set_rx_mode, 8	.ndo_set_mac_address	= igb_set_mac, 9	.ndo_change_mtu	= igb_change_mtu, 10	.ndo_eth_ioctl	= igb_ioctl, 11	.ndo_tx_timeout	= igb_tx_timeout, 12	.ndo_validate_addr	= eth_validate_addr, 13	.ndo_vlan_rx_add_vid	= igb_vlan_rx_add_vid, 14	.ndo_vlan_rx_kill_vid	= igb_vlan_rx_kill_vid, 15	.ndo_set_vf_mac	= igb_ndo_set_vf_mac, 16	.ndo_set_vf_vlan	= igb_ndo_set_vf_vlan, 17	.ndo_set_vf_rate	= igb_ndo_set_vf_bw, 18	.</description>
+    </item>
+    
+    <item>
+      <title></title>
+      <link>/docs/linux/linux-kernel/fs/inotify/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux/linux-kernel/fs/inotify/</guid>
+      <description>一、介绍 # 1. 提供的系统调用 # 1SYSCALL_DEFINE1(inotify_init1, int, flags) 2SYSCALL_DEFINE0(inotify_init) 3SYSCALL_DEFINE3(inotify_add_watch, int, fd, const char __user *, pathname, u32, mask) 4SYSCALL_DEFINE2(inotify_rm_watch, int, fd, __s32, wd) 2. 示例用法 # 1class FileMonitor final { 2public: 3 explicit FileMonitor(std::string path) : m_filePath(std::move(path)) {} 4 5 ~FileMonitor() { stop(); } 6 7 void start() { 8 stop(); 9 std::promise&amp;lt;void&amp;gt; p; 10 m_monitorFuture = std::make_shared&amp;lt;std::future&amp;lt;void&amp;gt;&amp;gt;(std::async(std::launch::async, [&amp;amp;p, this]() { 11 p.set_value(); 12 std::string tag = &amp;#34;file(&amp;#34; + m_filePath + &amp;#34;) monitor loop&amp;#34;; 13 LOGI(WHAT(&amp;#34;{} begin&amp;#34;, tag)); 14 15 { 16 std::lock_guard&amp;lt;std::mutex&amp;gt; lock(m_fdMutex); 17 // 设置为非阻塞方式 18 m_monitorFD = inotify_init1(IN_NONBLOCK); 19 if (m_monitorFD &amp;lt; 0) { 20 LOGE(WHAT(&amp;#34;{} failed&amp;#34;, tag), 21 REASON(&amp;#34;inotify_init failed, ec: {}&amp;#34;, 22 std::to_string(std::error_code(errno, std::system_category()))), 23 WILL(&amp;#34;exit thread and won&amp;#39;t watch file&amp;#34;)); 24 return; 25 } 26 } 27 28 // 添加文件监听的函数，返回false说明总的文件描述符被关闭 29 if (!</description>
+    </item>
+    
+    <item>
+      <title></title>
+      <link>/docs/linux/linux-kernel/net/unix/unix/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux/linux-kernel/net/unix/unix/</guid>
+      <description>一、socket创建 # 定义unix的操作集，当socket调用pf-&amp;gt;create会调用到unix_create 1// net/unix/af_unix.c 2static const struct net_proto_family unix_family_ops = { 3	.family = PF_UNIX, 4	.create = unix_create, 5	.owner	= THIS_MODULE, 6}; 7 8// net/unix/af_unix.c 9static int unix_create(struct net *net, struct socket *sock, int protocol, 10	int kern) 11{ 12	struct sock *sk; 13 14	if (protocol &amp;amp;&amp;amp; protocol != PF_UNIX) 15	return -EPROTONOSUPPORT; 16 17	sock-&amp;gt;state = SS_UNCONNECTED; 18 19	switch (sock-&amp;gt;type) { 20	case SOCK_STREAM: 21	sock-&amp;gt;ops = &amp;amp;unix_stream_ops; 22	break; 23	/* 24	*	Believe it or not BSD has AF_UNIX, SOCK_RAW though 25	*	nothing uses it.</description>
+    </item>
+    
+    <item>
+      <title>/proc/diskstats 磁盘信息</title>
+      <link>/docs/linux/debug/proc/diskstats/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux/debug/proc/diskstats/</guid>
+      <description>一、示例 # 1=&amp;gt; lsblk 2NAME MAJ:MIN RM SIZE RO TYPE MOUNTPOINT 3loop0 7:0 0 1G 0 loop /app/chroot/webconsole-promoted/shared 4vda 252:0 0 110G 0 disk 5├─vda1 252:1 0 1G 0 part /boot 6└─vda2 252:2 0 109G 0 part 7 ├─cl-root 253:0 0 10G 0 lvm / 8 ├─cl-swap 253:1 0 4G 0 lvm [SWAP] 9 ├─cl-home 253:2 0 6G 0 lvm 10 │ └─home 253:12 0 6G 0 crypt /home 11 ├─cl-app 253:3 0 15G 0 lvm 12 │ └─app 253:10 0 15G 0 crypt /app 13 ├─cl-package 253:4 0 8G 0 lvm 14 │ └─package 253:11 0 8G 0 crypt /package 15 ├─cl-data 253:5 0 20G 0 lvm /data 16 ├─cl-hislog 253:6 0 10G 0 lvm /hislog 17 ├─cl-cache 253:7 0 2G 0 lvm /cache 18 ├─cl-dap 253:8 0 89G 0 lvm /hislog/dap 19 └─cl-backup 253:9 0 25G 0 lvm 20 └─backup 253:13 0 25G 0 crypt /backup 21vdb 252:16 0 80G 0 disk 22└─vdb1 252:17 0 80G 0 part 23 ├─cl-data 253:5 0 20G 0 lvm /data 24 └─cl-dap 253:8 0 89G 0 lvm /hislog/dap 25=&amp;gt; cat /proc/diskstats 26 252 0 vda 159493845 2056576 5617078371 1552152184 65347508 13783484 1128522539 2070129280 0 886384887 3215786500 0 0 0 0 27 252 1 vda1 25353 2 4622370 323480 486 951 48720 50547 0 229456 371417 0 0 0 0 28 252 2 vda2 159468215 2056574 5612447569 1551825664 53970188 13782533 1128473819 1996831053 0 913941147 3332714673 0 0 0 0 29 252 16 vdb 3123909 59138 127128355 46849021 12110593 15158359 241115137 254789137 0 52500297 203906263 0 0 0 0 30 252 17 vdb1 3123367 59138 127104741 46841127 3897483 15027157 240056553 195792831 0 66678589 235705174 0 0 0 0 31 253 0 dm-0 81966850 0 2541179469 718368091 4835864 0 63945263 181587156 0 543304821 900869292 0 0 0 0 32 253 1 dm-1 39491681 0 315937056 354020275 31737102 0 253896816 2458965561 0 200331242 2823539969 0 0 0 0 33 253 2 dm-2 20568 0 1370523 286000 9033 0 116327 616974 0 686801 903014 0 0 0 0 34 253 3 dm-3 27092223 0 1347467400 330732281 1135223 0 23297583 56219835 0 204377309 387211171 0 0 0 0 35 253 4 dm-4 6419 0 68948 90293 19105 0 120956 717639 0 667774 807949 0 0 0 0 36 253 5 dm-5 2779789 0 507214559 36366385 25248746 0 464602835 704195339 0 347508715 740899295 0 0 0 0 37 253 6 dm-6 5251510 0 523996485 71587841 7380194 0 106399514 194806376 0 118078310 266540312 0 0 0 0 38 253 7 dm-7 1772 0 41329 34931 12184 0 218874 1010468 0 818229 1045418 0 0 0 0 39 253 8 dm-8 6203721 0 221744397 82963780 23626490 0 375040396 2117003466 0 80501448 2203736434 0 0 0 0 40 253 9 dm-9 1913762 0 280471928 27737018 3503920 0 160325095 124124824 0 81257167 151876112 0 0 0 0 41 253 10 dm-10 27091739 0 1347462526 415492329 1135223 0 26608603 87048745 0 238219337 502736856 0 0 0 0 42 253 11 dm-11 5942 0 64130 100222 19105 0 134204 811752 0 727465 912004 0 0 0 0 43 253 12 dm-12 20112 0 1365873 336612 9033 0 131175 739788 0 769232 1076503 0 0 0 0 44 253 13 dm-13 1913304 0 280467138 35087780 3503914 0 162938029 175455182 0 91516697 210566101 0 0 0 0 45 7 0 loop0 1470 0 103611 18992 248 0 5763 32870 0 18410 31578 0 0 0 0 二、数据解释 # 将数据格式化一下</description>
+    </item>
+    
+    <item>
+      <title>1. netfilter驱动使用sk错误引发宕机</title>
+      <link>/docs/linux/kernel-troubleshooting/crash/01-netfilter-driver-crash/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux/kernel-troubleshooting/crash/01-netfilter-driver-crash/</guid>
+      <description>一、堆栈信息 # [28772.702878] BUG: unable to handle kernel paging request at 0000000400080040 [28772.703475] PGD 0 P4D 0 [28772.703614] Oops: 0000 [#1] SMP PTI [28772.703806] CPU: 6 PID: 96951 Comm: sdptun Kdump: loaded Tainted: G W OE 4.19.181 #6 [28772.704255] Hardware name: Bochs Bochs, BIOS 1.13.0-20201211_142035 04/01/2014 [28772.704635] RIP: 0010:tcp_md5_do_lookup+0x15/0x130 [28772.704881] Code: 04 00 00 0f a3 c2 73 01 c3 e9 37 ff ff ff 0f 1f 80 00 00 00 00 66 66 66 66 90 48 8b 87 40 08 00 00 48 85 c0 0f 84 e4 00 00 00 &amp;lt;48&amp;gt; 8b 38 31 c0 48 85 ff 74 62 41 bb 40 00 00 00 49 c7 c2 ff ff ff [28772.</description>
+    </item>
+    
+    <item>
+      <title>2. Kernel panic - not syncing: hung_task: blocked tasks</title>
+      <link>/docs/linux/kernel-troubleshooting/crash/02-hung-task-crash/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux/kernel-troubleshooting/crash/02-hung-task-crash/</guid>
+      <description>一、堆栈信息 # [930452.890969] INFO: task idsd:31761 blocked for more than 480 seconds. [930452.891127] oom_reaper: reaped process 15265 ((irewalld)), now anon-rss:0kB, file-rss:0kB, shmem-rss:0kB [930452.891476] Tainted: G E 4.19.181 #6 [930452.892678] &amp;#34;echo 0 &amp;gt; /proc/sys/kernel/hung_task_timeout_secs&amp;#34; disables this message. [930452.893296] idsd D 0 31761 1 0x00000080 [930452.893721] Call Trace: [930452.893934] __schedule+0x254/0x840 [930452.894217] schedule+0x28/0x80 [930452.894463] rwsem_down_read_failed+0x111/0x180 [930452.894981] ? xfs_file_buffered_aio_read+0x3c/0xe0 [xfs] [930452.895398] call_rwsem_down_read_failed+0x14/0x30 [930452.895798] down_read+0x1c/0x30 [930452.896102] xfs_ilock+0x82/0x100 [xfs] [930452.896435] xfs_file_buffered_aio_read+0x3c/0xe0 [xfs] [930452.896901] xfs_file_read_iter+0x6e/0xd0 [xfs] [930452.</description>
+    </item>
+    
+    <item>
+      <title>atomic 原子变量</title>
+      <link>/docs/linux/linux-kernel/data-structures/atomic/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux/linux-kernel/data-structures/atomic/</guid>
+      <description> 一、实例用法 # 1. atomic_t的用法 # 1 2atomic_t g_running_hooks = ATOMIC_INIT(0); 3 4int main() { 5 int count; 6 7 atomic_inc(&amp;amp;g_running_hooks); // 加一 8 atomic_dec(&amp;amp;g_running_hooks); // 减一 9 atomic_set_release(&amp;amp;g_running_hooks, 1); // 设置为1 10 atomic_set_release(&amp;amp;g_running_hooks, 0); // 设置为0 11 count = atomic_read_acquire(&amp;amp;g_running_hooks); // 读取值 12} </description>
+    </item>
+    
+    <item>
+      <title>Certificate</title>
+      <link>/docs/openssl/ssl/certificate/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/openssl/ssl/certificate/</guid>
+      <description>一、构造请求 # 1. 构造服务端证书 # 2. 构造客户端证书 # 1/* 到这一步的堆栈信息 2libssl.so.3!tls_construct_client_certificate(SSL * s, WPACKET * pkt) (/ssl/statem/statem_clnt.c:3504) 3libssl.so.3!write_state_machine(SSL * s) (/ssl/statem/statem.c:855) 4libssl.so.3!state_machine(SSL * s, int server) (/ssl/statem/statem.c:451) 5libssl.so.3!ossl_statem_connect(SSL * s) (/ssl/statem/statem.c:265) 6libssl.so.3!ssl3_write_bytes(SSL * s, int type, const void * buf_, size_t len, size_t * written) (/ssl/record/rec_layer_s3.c:398) 7libssl.so.3!ssl3_write(SSL * s, const void * buf, size_t len, size_t * written) (/ssl/s3_lib.c:4449) 8libssl.so.3!ssl_write_internal(SSL * s, const void * buf, size_t num, size_t * written) (/ssl/ssl_lib.</description>
+    </item>
+    
+    <item>
+      <title>Certificate Verify</title>
+      <link>/docs/openssl/ssl/certificateVerify/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/openssl/ssl/certificateVerify/</guid>
+      <description>一、构造请求 # 1// ssl/statem/statem_lib.c 2int tls_construct_cert_verify(SSL *s, WPACKET *pkt) 3{ 4 EVP_PKEY *pkey = NULL; 5 const EVP_MD *md = NULL; 6 EVP_MD_CTX *mctx = NULL; 7 EVP_PKEY_CTX *pctx = NULL; 8 size_t hdatalen = 0, siglen = 0; 9 void *hdata; 10 unsigned char *sig = NULL; 11 unsigned char tls13tbs[TLS13_TBS_PREAMBLE_SIZE + EVP_MAX_MD_SIZE]; 12 const SIGALG_LOOKUP *lu = s-&amp;gt;s3.tmp.sigalg; 13 14 if (lu == NULL || s-&amp;gt;s3.tmp.cert == NULL) { 15 SSLfatal(s, SSL_AD_INTERNAL_ERROR, ERR_R_INTERNAL_ERROR); 16 goto err; 17 } 18 // 从证书中取私钥用于签名 19 pkey = s-&amp;gt;s3.</description>
+    </item>
+    
+    <item>
+      <title>dns 根据/etc/resolv.conf发包处理</title>
+      <link>/docs/glibc/nss/hosts/dns/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/glibc/nss/hosts/dns/</guid>
+      <description>gethostbyname # dns的一些系统行为 # 具体代码看 发送udp包给一个dns服务器 1. 什么情况下使用下一个dns服务器，当前结果直接丢弃 # 当前dns服务器接收失败（网络错误，收包错误等） dns服务器返回serverfail、notimplement、refused dns服务器返回正常的情况下，下面条件都满足就尝试下一个 answer为空 当前dns服务器不是authoritive answer 当前dns服务器不能递归查询 resource为空 2. 什么情况下使用tcp进行发送dns # 返回响应中有tc字段为1 源码 # 从_nss_dns_gethostbyname3_r开始 1// resolv/nss_dns/dns-host.c 2enum nss_status 3_nss_dns_gethostbyname3_r (const char *name, int af, struct hostent *result, 4	char *buffer, size_t buflen, int *errnop, 5	int *h_errnop, int32_t *ttlp, char **canonp) 6{ 7 struct resolv_context *ctx = __resolv_context_get (); 8 if (ctx == NULL) 9 { 10 *errnop = errno; 11 *h_errnop = NETDB_INTERNAL; 12 return NSS_STATUS_UNAVAIL; 13 } 14 enum nss_status status = gethostbyname3_context 15 (ctx, name, af, result, buffer, buflen, errnop, h_errnop, ttlp, canonp); 16 __resolv_context_put (ctx); 17 return status; 18} 19libc_hidden_def (_nss_dns_gethostbyname3_r) 1.</description>
+    </item>
+    
+    <item>
+      <title>dns 根据/etc/resolv.conf发包处理</title>
+      <link>/docs/systemd/dns/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/systemd/dns/</guid>
+      <description>gethostbyname # dns的一些系统行为 # 具体代码看 发送udp包给一个dns服务器 1. 什么情况下使用下一个dns服务器，当前结果直接丢弃 # 当前dns服务器接收失败（网络错误，收包错误等） dns服务器返回serverfail、notimplement、refused dns服务器返回正常的情况下，下面条件都满足就尝试下一个 answer为空 当前dns服务器不是authoritive answer 当前dns服务器不能递归查询 resource为空 2. 什么情况下使用tcp进行发送dns # 返回响应中有tc字段为1 源码 # 从_nss_dns_gethostbyname3_r开始 1// resolv/nss_dns/dns-host.c 2enum nss_status 3_nss_dns_gethostbyname3_r (const char *name, int af, struct hostent *result, 4	char *buffer, size_t buflen, int *errnop, 5	int *h_errnop, int32_t *ttlp, char **canonp) 6{ 7 struct resolv_context *ctx = __resolv_context_get (); 8 if (ctx == NULL) 9 { 10 *errnop = errno; 11 *h_errnop = NETDB_INTERNAL; 12 return NSS_STATUS_UNAVAIL; 13 } 14 enum nss_status status = gethostbyname3_context 15 (ctx, name, af, result, buffer, buflen, errnop, h_errnop, ttlp, canonp); 16 __resolv_context_put (ctx); 17 return status; 18} 19libc_hidden_def (_nss_dns_gethostbyname3_r) 1.</description>
+    </item>
+    
+    <item>
+      <title>files 读取/etc/hosts文件</title>
+      <link>/docs/glibc/nss/hosts/files/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/glibc/nss/hosts/files/</guid>
+      <description>gethostbyname # 源码 # 从_nss_files_gethostbyname3_r开始 1// nss/nss_files/files-hosts.c 2enum nss_status 3_nss_files_gethostbyname3_r (const char *name, int af, struct hostent *result, 4	char *buffer, size_t buflen, int *errnop, 5	int *herrnop, int32_t *ttlp, char **canonp) 6{ 7 FILE *stream = NULL; 8 uintptr_t pad = -(uintptr_t) buffer % __alignof__ (struct hostent_data); 9 buffer += pad; 10 buflen = buflen &amp;gt; pad ? buflen - pad : 0; 11 12 /* Open file. */ 13 enum nss_status status = internal_setent (&amp;amp;stream); 14 15 if (status == NSS_STATUS_SUCCESS) 16 { 17 while ((status = internal_getent (stream, result, buffer, buflen, errnop, 18	herrnop, af)) 19	== NSS_STATUS_SUCCESS) 20	{ 21	LOOKUP_NAME_CASE (h_name, h_aliases) 22	} 23 24 if (status == NSS_STATUS_SUCCESS 25	&amp;amp;&amp;amp; _res_hconf.</description>
+    </item>
+    
+    <item>
+      <title>hashtable 哈希表</title>
+      <link>/docs/linux/linux-kernel/data-structures/hashtable/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux/linux-kernel/data-structures/hashtable/</guid>
+      <description>一、前言 # 内核里面实现哈希表很简单粗暴，使用一个数组作为hash查找，每一个元素里面就是一个链表。
+二、示例 # 1. 内核标准实现 # 1#include &amp;lt;linux/hashtable.h&amp;gt; 2#include &amp;lt;linux/printk.h&amp;gt; 3 4// 定义2^3的hash表，也就是8个桶 5DEFINE_HASHTABLE(test_hash_table, 3); 6 7typedef struct test_hash_node { 8 struct hlist_node list; 9 int key; 10 int value; 11} test_hash_node_t; 12 13void test_hash(void) { 14 test_hash_node_t item[10]; 15 test_hash_node_t *entry; 16 size_t i; 17 int key; 18 19 // DEFINE_HASHTABLE定义的不用初始化 20 // DECLARE_HASHTABLE定义的一定要初始化，默认的table中的first可能没有清零，导致后面遍历崩掉 21 // hash_init(test_hash_table); 22 23 for (i = 0; i &amp;lt; 10; i++) { 24 entry = &amp;amp;item[i]; 25 // 初始化node，也就是将两个指针清零 26 INIT_HLIST_NODE(&amp;amp;entry-&amp;gt;list); 27 28 entry-&amp;gt;key = i; 29 entry-&amp;gt;value = i; 30 // 插入hash表 31 hash_add(test_hash_table, &amp;amp;entry-&amp;gt;list, entry-&amp;gt;key); 32 } 33 34 // 查询 35 key = 5; 36 hash_for_each_possible(test_hash_table, entry, list, key) { 37 if (entry-&amp;gt;key == key) { 38 printk(&amp;#34;key: %d, value: %d\n&amp;#34;, entry-&amp;gt;key, entry-&amp;gt;value); 39 } 40 } 41 42 // 遍历所有的key 43 hash_for_each(test_hash_table, i, entry, list) { 44 printk(&amp;#34;hash idx %ld, key: %d, value: %d\n&amp;#34;, i, entry-&amp;gt;key, entry-&amp;gt;value); 45 } 46} 2.</description>
+    </item>
+    
+    <item>
+      <title>hash和编码算法列表</title>
+      <link>/docs/ctf/knowledge/encoder-decoder/algorithm/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/ctf/knowledge/encoder-decoder/algorithm/</guid>
+      <description>一、hash算法对应的场景 # hash均为不可逆加密，一般用于密码的校验 算法名称 位数 用途 hashcat编号 备注 NTLM v2为16位 windows密码 1000 先算hex，再使用unicode编码，再计算md4
+爆破的hash类似a7fcb22a88038f35a8f39d503e7f0062 RAR5 压缩包密码 13000 爆破的hash类似$rar5$16$1e71cb65fbc2e25d134279f2cb5be013$15$f6115d7dee842c1f8901b057e2bc8952$8$1988f3ce18017cdb RAR3-hp 压缩包密码 12500 爆破的hash类似$RAR3$*0*f3e592b768e33df0*f304b7cfd600a36ea3930f7a3c1db19b 二、编码算法对应场景 # 算法名称 位数 用途 备注 base64 数据编码传输 在线加解密https://the-x.cn/encodings/Base64.aspx brainfuck 数据编码 在线编码解码https://www.splitbrain.org/services/ook Ook! 数据编码 在线编码解码https://www.splitbrain.org/services/ook 与佛论禅 数据加密 在线加解密http://www.keyfc.net/bbs/tools/tudoucode.aspx 1. brainfuck # 1.1. 示例 # +++++ +++++ [-&amp;gt;++ +++++ +++&amp;lt;] &amp;gt;++.+ +++++ .&amp;lt;+++ [-&amp;gt;-- -&amp;lt;]&amp;gt;- -.+++ +++.&amp;lt; ++++[ -&amp;gt;+++ +&amp;lt;]&amp;gt;+ +++.&amp;lt; +++++ +[-&amp;gt;- ----- &amp;lt;]&amp;gt;-- ----- --.&amp;lt;+ +++[- &amp;gt;---- &amp;lt;]&amp;gt;-- ----- .</description>
+    </item>
+    
+    <item>
+      <title>kfifo 无锁循环队列</title>
+      <link>/docs/linux/linux-kernel/data-structures/kfifo/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux/linux-kernel/data-structures/kfifo/</guid>
+      <description>一、提供的接口 # 1. 定义相关 # 声明和初始化 1// include/linux/kfifo.h 2/** 3 * DECLARE_KFIFO - macro to declare a fifo object 4 * @fifo: name of the declared fifo 5 * @type: type of the fifo elements 6 * @size: the number of elements in the fifo, this must be a power of 2 7 */ 8#define DECLARE_KFIFO(fifo, type, size) STRUCT_KFIFO(type, size) fifo 9 10/** 11 * INIT_KFIFO - Initialize a fifo declared by DECLARE_KFIFO 12 * @fifo: name of the declared fifo datatype 13 */ 14#define INIT_KFIFO(fifo) \ 15(void)({ \ 16 typeof(&amp;amp;(fifo)) __tmp = &amp;amp;(fifo); \ 17 struct __kfifo *__kfifo = &amp;amp;__tmp-&amp;gt;kfifo; \ 18 __kfifo-&amp;gt;in = 0; \ 19 __kfifo-&amp;gt;out = 0; \ 20 __kfifo-&amp;gt;mask = __is_kfifo_ptr(__tmp) ?</description>
+    </item>
+    
+    <item>
+      <title>list 链表</title>
+      <link>/docs/linux/linux-kernel/data-structures/list/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux/linux-kernel/data-structures/list/</guid>
+      <description>一、前言 # 内核里面链表的实现有很多种
+名称 用途 定义 list_head 双向链表 include/linux/types.h hlist_head &amp;amp; hlist_node 带头节点的双向链表 include/linux/types.h hlist_bl_head &amp;amp; hlist_bl_node 带自旋锁和头节点的双向链表 include/linux/list_bl.h hlist_nulls_head &amp;amp; hlist_nulls_node 使用ptr最后一位代表end的双向链表 include/linux/list_nulls.h 二、使用实例 # 1. 在链表中间插入 # 1void test() { 2	// 按照到期时间排序插入 3 struct TIMER *node; 4 struct TIMER *prev = NULL; // 记录要插入的节点前一个的节点 5 6 hlist_for_each_entry(node, &amp;amp;s_timer_list, entry) { 7 if (node-&amp;gt;expires &amp;gt; timer-&amp;gt;expires) { 8 break; 9 } 10 prev = node; 11 } 12 if (prev == NULL) { 13 // 没有前一个节点，说明要插入到第一个 14 // 1.</description>
+    </item>
+    
+    <item>
+      <title>ngx_stream_lua_socket_tcp.c</title>
+      <link>/docs/nginx/openresty/stream/socket-tcp/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/nginx/openresty/stream/socket-tcp/</guid>
+      <description> 一、使用 # 二、流程 # </description>
+    </item>
+    
+    <item>
+      <title>rbtree 红黑树</title>
+      <link>/docs/linux/linux-kernel/data-structures/rbtree/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux/linux-kernel/data-structures/rbtree/</guid>
+      <description>1// include/linux/rbtree.h 2struct rb_node { 3	unsigned long __rb_parent_color; 4	struct rb_node *rb_right; 5	struct rb_node *rb_left; 6} __attribute__((aligned(sizeof(long)))); 先参考 地址对齐 了解为什么可以使用__rb_parent_color的低两位作为颜色 </description>
+    </item>
+    
+    <item>
+      <title>RCU Read-Copy-Update</title>
+      <link>/docs/linux/linux-kernel/data-structures/rcu/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux/linux-kernel/data-structures/rcu/</guid>
+      <description> 一文带你深入解析Linux内核-RCU机制（超详细~） Linux 内核：RCU机制与使用
+一、原理 # 对一块数据要写入时，先拷贝一份，更新数据完成后，再更新到原数据结构 保证要么读取老数据，要么读取新数据，不会出现读取一半的情况 写的时候锁住，等待读，应对写少读多的场景 二、关键思想 # 复制后更新数据 延迟回收内存，当没有老数据结构引用的读者时，才回收内存 </description>
+    </item>
+    
+    <item>
+      <title>std::move</title>
+      <link>/docs/c&#43;&#43;/move/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/c&#43;&#43;/move/</guid>
+      <description> 源码 # 1// /usr/include/c++/12.2.0/bits/move.h 2 /** 3 * @brief Convert a value to an rvalue. 4 * @param __t A thing of arbitrary type. 5 * @return The parameter cast to an rvalue-reference to allow moving it. 6 */ 7 template&amp;lt;typename _Tp&amp;gt; 8 _GLIBCXX_NODISCARD 9 constexpr typename std::remove_reference&amp;lt;_Tp&amp;gt;::type&amp;amp;&amp;amp; 10 move(_Tp&amp;amp;&amp;amp; __t) noexcept 11 { return static_cast&amp;lt;typename std::remove_reference&amp;lt;_Tp&amp;gt;::type&amp;amp;&amp;amp;&amp;gt;(__t); } 可以看到std::move仅对类型做了一次转换，变成右值 在调用=时会匹配到移动赋值函数，所以对象内容会被转移（具体看对应的实现） 如果仅使用std::move(xxx)没有任何效果 </description>
+    </item>
+    
+    <item>
+      <title>std::shared_ptr</title>
+      <link>/docs/c&#43;&#43;/shared_ptr/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/c&#43;&#43;/shared_ptr/</guid>
+      <description>一、shared_ptr(_Yp* __p)分析 # 1. 初始化 # 1// /usr/include/c++/12.2.0/bits/shared_ptr.h 2 3 template&amp;lt;typename _Tp&amp;gt; 4 class shared_ptr : public __shared_ptr&amp;lt;_Tp&amp;gt; 5 { 6 ... 7 public: 8 ... 9 /** 10 * @brief Construct a %shared_ptr that owns the pointer @a __p. 11 * @param __p A pointer that is convertible to element_type*. 12 * @post use_count() == 1 &amp;amp;&amp;amp; get() == __p 13 * @throw std::bad_alloc, in which case @c delete @a __p is called.</description>
+    </item>
+    
+    <item>
+      <title>udp</title>
+      <link>/docs/linux/linux-kernel/net/ipv4/udp/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux/linux-kernel/net/ipv4/udp/</guid>
+      <description>一、udp socket如何进行收包 # udp会注册udp_protocol到inet_protos里面 1// net/ipv4/af_inet.c 2static const struct net_protocol udp_protocol = { 3	.handler =	udp_rcv, 4	.err_handler =	udp_err, 5	.no_policy =	1, 6}; 7... 8static int __init inet_init(void) 9{ 10... 11	if (inet_add_protocol(&amp;amp;udp_protocol, IPPROTO_UDP) &amp;lt; 0) 12	pr_crit(&amp;#34;%s: Cannot add UDP protocol\n&amp;#34;, __func__); 13... 14} ipv4里面分析了，当ip层收到驱动的包之后，根据IPPROTO_UDP找到udp_protocol，然后调用handler函数对应udp_rcv 1// net/ipv4/udp.c 2/* 3 *	All we need to do is get the socket, and then do a checksum. 4 */ 5// udp_rcv -call-&amp;gt; __udp4_lib_rcv 6int __udp4_lib_rcv(struct sk_buff *skb, struct udp_table *udptable, 7	int proto) 8{ 9	struct sock *sk; 10	struct udphdr *uh; 11	unsigned short ulen; 12	struct rtable *rt = skb_rtable(skb); 13	__be32 saddr, daddr; 14	struct net *net = dev_net(skb-&amp;gt;dev); 15	bool refcounted; 16	int drop_reason; 17 18	drop_reason = SKB_DROP_REASON_NOT_SPECIFIED; 19 20	/* 21	* Validate the packet.</description>
+    </item>
+    
+    <item>
+      <title>X509证书</title>
+      <link>/docs/openssl/crypto/X509/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/openssl/crypto/X509/</guid>
+      <description>一、证书转X509结构体 # 1. PEM格式 # 接口如下，从BIO中读取X509结构体 1// 从bio读取 2X509 *PEM_read_bio_X509(BIO *out, X509 **x, pem_password_cb *cb, void *u); 3// 从fp中读取 4X509 *PEM_read_X509(FILE *out, X509 **x, pem_password_cb *cb, void *u)； 从pem格式的证书文件中读取证书信息
+从bio读取 1int main(int argc, char* argv[]) { 2 BIO* b = NULL; 3 X509* pcert; 4 5 // 读取PEM格式证书文件 6 FILE* fp = fopen(&amp;#34;/home/wangyubo/work/src/local/openssl/20230418/ssl_diy/domain.crt&amp;#34;, &amp;#34;r&amp;#34;); 7 // 获取文件大小 8 fseek(fp, 0, SEEK_END); 9 auto file_size = ftell(fp); 10 rewind(fp); 11 // 分配内存 12 auto buffer = (char*)malloc(sizeof(char) * file_size); 13 if (buffer == NULL) { 14 printf(&amp;#34;内存分配失败\n&amp;#34;); 15 exit(1); 16 } 17 // 读取文件 18 fread(buffer, file_size, 1, fp); 19 // 关闭文件 20 fclose(fp); 21 22 // 转到bio中 23 if ((b = BIO_new(BIO_s_mem())) == NULL) { 24 printf(&amp;#34;内存分配失败\n&amp;#34;); 25 exit(1); 26 } 27 BIO_write(b, buffer, file_size); 28 // 从bio读取证书，X509为NULL代表里面申请内存，后面的密码回调和密码回调参数按需处理 29 pcert = PEM_read_bio_X509(b, NULL, NULL, NULL); 30 return 0; 31} 从fp中读取证书 1int main(int argc, char* argv[]) { 2 BIO* b = NULL; 3 X509* pcert; 4 5 // 读取PEM格式证书文件 6 FILE* fp = fopen(&amp;#34;/home/wangyubo/work/src/local/openssl/20230418/ssl_diy/domain.</description>
+    </item>
+    
+    <item>
+      <title>zip</title>
+      <link>/docs/ctf/knowledge/compress/zip/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/ctf/knowledge/compress/zip/</guid>
+      <description> 一、文件格式 # zip文件格式
+二、判断真伪加密 # 无加密：压缩源文件数据区的全局全局方式位和压缩源文件目录区的全局方式位标记均为00 00 伪加密：压缩源文件数据区的全局全局方式位为00 00，压缩源文件目录区的全局方式位标记为09 00 真加密：压缩源文件数据区的全局全局方式位为09 00，压缩源文件目录区的全局方式位标记为09 00 </description>
+    </item>
+    
+    <item>
+      <title>文件格式</title>
+      <link>/docs/ctf/knowledge/file/file-struct/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/ctf/knowledge/file/file-struct/</guid>
+      <description>一、图片 # 1. gif # gif一般开头以GIF89a或GIF87a开头 1=&amp;gt; hexdump -C 篮球.gif | head -n 5 200000000 47 49 46 38 39 61 b4 00 40 01 f6 31 00 1c 18 25 |GIF89a..@..1...%| 300000010 1d 1a 2b 1e 1f 36 21 1c 2c 24 1e 34 28 23 39 36 |..+..6!.,$.4(#96| 400000020 28 39 27 26 43 3c 2d 43 45 37 4d 51 43 56 56 4f |(9&amp;#39;&amp;amp;C&amp;lt;-CE7MQCVVO| 500000030 67 6a 58 6d 78 64 78 77 6d 89 8a 74 89 88 7a 97 |gjXmxdxwm.</description>
+    </item>
+    
+    <item>
+      <title>面具下的flag</title>
+      <link>/docs/ctf/buuctf/misc/%E9%9D%A2%E5%85%B7%E4%B8%8B%E7%9A%84flag/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/ctf/buuctf/misc/%E9%9D%A2%E5%85%B7%E4%B8%8B%E7%9A%84flag/</guid>
+      <description>一、解压压缩包 # . └── 面具下的flag └── mianju.jpg 图片使用hexdump看好像后面有一个flag.vmdk，那么可能使用了隐写技术 二、解隐写图片 # 使用binwalk进行查看 1=&amp;gt; binwalk mianju.jpg 2 3DECIMAL HEXADECIMAL DESCRIPTION 4-------------------------------------------------------------------------------- 50 0x0 JPEG image data, EXIF standard 612 0xC TIFF image data, little-endian offset of first image directory: 8 7478718 0x74DFE Zip archive data, at least v2.0 to extract, compressed size: 153767, uncompressed size: 3145728, name: flag.vmdk 8632615 0x9A727 End of Zip archive, footer length: 22 里面确实有一个压缩包，那么解一下隐写 1=&amp;gt; cd temp &amp;amp;&amp;amp; cd temp 2=&amp;gt; binwalk -e .</description>
+    </item>
+    
+  </channel>
+</rss>

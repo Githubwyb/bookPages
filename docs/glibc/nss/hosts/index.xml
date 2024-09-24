@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>hosts dns解析服务 on 技术的路上奔跑</title>
+    <link>/docs/glibc/nss/hosts/</link>
+    <description>Recent content in hosts dns解析服务 on 技术的路上奔跑</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language><atom:link href="/docs/glibc/nss/hosts/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>dns 根据/etc/resolv.conf发包处理</title>
+      <link>/docs/glibc/nss/hosts/dns/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/glibc/nss/hosts/dns/</guid>
+      <description>gethostbyname # dns的一些系统行为 # 具体代码看 发送udp包给一个dns服务器 1. 什么情况下使用下一个dns服务器，当前结果直接丢弃 # 当前dns服务器接收失败（网络错误，收包错误等） dns服务器返回serverfail、notimplement、refused dns服务器返回正常的情况下，下面条件都满足就尝试下一个 answer为空 当前dns服务器不是authoritive answer 当前dns服务器不能递归查询 resource为空 2. 什么情况下使用tcp进行发送dns # 返回响应中有tc字段为1 源码 # 从_nss_dns_gethostbyname3_r开始 1// resolv/nss_dns/dns-host.c 2enum nss_status 3_nss_dns_gethostbyname3_r (const char *name, int af, struct hostent *result, 4	char *buffer, size_t buflen, int *errnop, 5	int *h_errnop, int32_t *ttlp, char **canonp) 6{ 7 struct resolv_context *ctx = __resolv_context_get (); 8 if (ctx == NULL) 9 { 10 *errnop = errno; 11 *h_errnop = NETDB_INTERNAL; 12 return NSS_STATUS_UNAVAIL; 13 } 14 enum nss_status status = gethostbyname3_context 15 (ctx, name, af, result, buffer, buflen, errnop, h_errnop, ttlp, canonp); 16 __resolv_context_put (ctx); 17 return status; 18} 19libc_hidden_def (_nss_dns_gethostbyname3_r) 1.</description>
+    </item>
+    
+    <item>
+      <title>files 读取/etc/hosts文件</title>
+      <link>/docs/glibc/nss/hosts/files/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/glibc/nss/hosts/files/</guid>
+      <description>gethostbyname # 源码 # 从_nss_files_gethostbyname3_r开始 1// nss/nss_files/files-hosts.c 2enum nss_status 3_nss_files_gethostbyname3_r (const char *name, int af, struct hostent *result, 4	char *buffer, size_t buflen, int *errnop, 5	int *herrnop, int32_t *ttlp, char **canonp) 6{ 7 FILE *stream = NULL; 8 uintptr_t pad = -(uintptr_t) buffer % __alignof__ (struct hostent_data); 9 buffer += pad; 10 buflen = buflen &amp;gt; pad ? buflen - pad : 0; 11 12 /* Open file. */ 13 enum nss_status status = internal_setent (&amp;amp;stream); 14 15 if (status == NSS_STATUS_SUCCESS) 16 { 17 while ((status = internal_getent (stream, result, buffer, buflen, errnop, 18	herrnop, af)) 19	== NSS_STATUS_SUCCESS) 20	{ 21	LOOKUP_NAME_CASE (h_name, h_aliases) 22	} 23 24 if (status == NSS_STATUS_SUCCESS 25	&amp;amp;&amp;amp; _res_hconf.</description>
+    </item>
+    
+  </channel>
+</rss>

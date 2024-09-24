@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>压缩和解压缩 on 技术的路上奔跑</title>
+    <link>/docs/ctf/knowledge/compress/</link>
+    <description>Recent content in 压缩和解压缩 on 技术的路上奔跑</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language><atom:link href="/docs/ctf/knowledge/compress/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>zip</title>
+      <link>/docs/ctf/knowledge/compress/zip/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/ctf/knowledge/compress/zip/</guid>
+      <description> 一、文件格式 # zip文件格式
+二、判断真伪加密 # 无加密：压缩源文件数据区的全局全局方式位和压缩源文件目录区的全局方式位标记均为00 00 伪加密：压缩源文件数据区的全局全局方式位为00 00，压缩源文件目录区的全局方式位标记为09 00 真加密：压缩源文件数据区的全局全局方式位为09 00，压缩源文件目录区的全局方式位标记为09 00 </description>
+    </item>
+    
+  </channel>
+</rss>

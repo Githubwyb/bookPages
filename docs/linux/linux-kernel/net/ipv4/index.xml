@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>ipv4/ ipv4的处理部分 on 技术的路上奔跑</title>
+    <link>/docs/linux/linux-kernel/net/ipv4/</link>
+    <description>Recent content in ipv4/ ipv4的处理部分 on 技术的路上奔跑</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language><atom:link href="/docs/linux/linux-kernel/net/ipv4/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title></title>
+      <link>/docs/linux/linux-kernel/net/ipv4/ipv4/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux/linux-kernel/net/ipv4/ipv4/</guid>
+      <description>一、总述 # 1. 关键结构体关系 # @startuml xxx class socket { struct sock *sk; } class sock {} class inet_sock implements sock { struct sock sk; } note left of inet_sock inet_sock是在sock基础上做了一些拓展 创建时申请的是inet_sock但是使用sock结构体指针赋值给socket 在inet里面的操作做强转使用 end note class inet_connection_sock implements inet_sock { struct inet_sock icsk_inet; } note left of inet_connection_sock inet_connection_sock是拓展了inet_sock 同样复用sock的指针 end note socket &amp;lt;|-- sock @enduml 2.1. inet_sock # 1// include/net/inet_sock.h 2/** struct inet_sock - representation of INET sockets 3 * 4 * @sk - ancestor class 5 * @pinet6 - pointer to IPv6 control block 6 * @inet_daddr - Foreign IPv4 addr 7 * @inet_rcv_saddr - Bound local IPv4 addr 8 * @inet_dport - Destination port 9 * @inet_num - Local port 10 * @inet_saddr - Sending source 11 * @uc_ttl - Unicast TTL 12 * @inet_sport - Source port 13 * @inet_id - ID counter for DF pkts 14 * @tos - TOS 15 * @mc_ttl - Multicasting TTL 16 * @is_icsk - is this an inet_connection_sock?</description>
+    </item>
+    
+    <item>
+      <title>udp</title>
+      <link>/docs/linux/linux-kernel/net/ipv4/udp/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux/linux-kernel/net/ipv4/udp/</guid>
+      <description>一、udp socket如何进行收包 # udp会注册udp_protocol到inet_protos里面 1// net/ipv4/af_inet.c 2static const struct net_protocol udp_protocol = { 3	.handler =	udp_rcv, 4	.err_handler =	udp_err, 5	.no_policy =	1, 6}; 7... 8static int __init inet_init(void) 9{ 10... 11	if (inet_add_protocol(&amp;amp;udp_protocol, IPPROTO_UDP) &amp;lt; 0) 12	pr_crit(&amp;#34;%s: Cannot add UDP protocol\n&amp;#34;, __func__); 13... 14} ipv4里面分析了，当ip层收到驱动的包之后，根据IPPROTO_UDP找到udp_protocol，然后调用handler函数对应udp_rcv 1// net/ipv4/udp.c 2/* 3 *	All we need to do is get the socket, and then do a checksum. 4 */ 5// udp_rcv -call-&amp;gt; __udp4_lib_rcv 6int __udp4_lib_rcv(struct sk_buff *skb, struct udp_table *udptable, 7	int proto) 8{ 9	struct sock *sk; 10	struct udphdr *uh; 11	unsigned short ulen; 12	struct rtable *rt = skb_rtable(skb); 13	__be32 saddr, daddr; 14	struct net *net = dev_net(skb-&amp;gt;dev); 15	bool refcounted; 16	int drop_reason; 17 18	drop_reason = SKB_DROP_REASON_NOT_SPECIFIED; 19 20	/* 21	* Validate the packet.</description>
+    </item>
+    
+  </channel>
+</rss>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>/fs/ 文件部分 on 技术的路上奔跑</title>
+    <link>/docs/linux/linux-kernel/fs/</link>
+    <description>Recent content in /fs/ 文件部分 on 技术的路上奔跑</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language><atom:link href="/docs/linux/linux-kernel/fs/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title></title>
+      <link>/docs/linux/linux-kernel/fs/inotify/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/docs/linux/linux-kernel/fs/inotify/</guid>
+      <description>一、介绍 # 1. 提供的系统调用 # 1SYSCALL_DEFINE1(inotify_init1, int, flags) 2SYSCALL_DEFINE0(inotify_init) 3SYSCALL_DEFINE3(inotify_add_watch, int, fd, const char __user *, pathname, u32, mask) 4SYSCALL_DEFINE2(inotify_rm_watch, int, fd, __s32, wd) 2. 示例用法 # 1class FileMonitor final { 2public: 3 explicit FileMonitor(std::string path) : m_filePath(std::move(path)) {} 4 5 ~FileMonitor() { stop(); } 6 7 void start() { 8 stop(); 9 std::promise&amp;lt;void&amp;gt; p; 10 m_monitorFuture = std::make_shared&amp;lt;std::future&amp;lt;void&amp;gt;&amp;gt;(std::async(std::launch::async, [&amp;amp;p, this]() { 11 p.set_value(); 12 std::string tag = &amp;#34;file(&amp;#34; + m_filePath + &amp;#34;) monitor loop&amp;#34;; 13 LOGI(WHAT(&amp;#34;{} begin&amp;#34;, tag)); 14 15 { 16 std::lock_guard&amp;lt;std::mutex&amp;gt; lock(m_fdMutex); 17 // 设置为非阻塞方式 18 m_monitorFD = inotify_init1(IN_NONBLOCK); 19 if (m_monitorFD &amp;lt; 0) { 20 LOGE(WHAT(&amp;#34;{} failed&amp;#34;, tag), 21 REASON(&amp;#34;inotify_init failed, ec: {}&amp;#34;, 22 std::to_string(std::error_code(errno, std::system_category()))), 23 WILL(&amp;#34;exit thread and won&amp;#39;t watch file&amp;#34;)); 24 return; 25 } 26 } 27 28 // 添加文件监听的函数，返回false说明总的文件描述符被关闭 29 if (!</description>
+    </item>
+    
+  </channel>
+</rss>
